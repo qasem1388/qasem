@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آلة حاسبة مضيئة</title>
+<style>
+  :root {
+    --hue: 280;
+    --glow: hsl(var(--hue) 100% 60%);
+    --glow-soft: hsl(var(--hue) 100% 60% / .35);
+    --bg: #07070d;
+    --panel: #11111c;
+    --key: #181826;
+    --text: #f2f2ff;
+    --muted: #8a8aa8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(circle at 50% 30%, hsl(var(--hue) 60% 12%), var(--bg) 70%);
+    color: var(--text);
+    font-family: system-ui, "Segoe UI", Tahoma, sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    transition: background 1s;
+  }
+
+  /* الإطار ذو الإضاءة الملونة المتحركة */
+  .frame {
+    position: relative;
+    border-radius: 28px;
+    padding: 3px;
+    width: min(360px, 100%);
+    isolation: isolate;
+  }
+  .frame::before, .frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(from var(--angle, 0deg),
+      #ff004c, #ff9a00, #f6ff00, #00ff6a, #00e5ff, #3d5bff, #c300ff, #ff004c);
+    z-index: -1;
+    animation: spin 4s linear infinite;
+  }
+  .frame::after { filter: blur(28px); opacity: .75; }
+  .frame.solid::before, .frame.solid::after {
+    background: var(--glow);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  .frame.off::before, .frame.off::after { background: #2a2a3a; animation: none; }
+  .frame.off::after { opacity: 0; }
+
+  @property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  @keyframes spin { to { --angle: 360deg; } }
+  @keyframes pulse { 50% { opacity: .45; } }
+
+  .calc {
+    background: var(--panel);
+    border-radius: 26px;
+    padding: 20px;
+  }
+
+  .lights {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .lights button {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  .lights button.active { border-color: #fff; }
+  .lights .rgb { background: conic-gradient(#ff004c, #f6ff00, #00ff6a, #00e5ff, #c300ff, #ff004c); }
+  .lights .off { background: #2a2a3a; }
+
+  .display {
+    direction: ltr;
+    background: #05050a;
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    text-align: right;
+    min-height: 96px;
+    box-shadow: inset 0 0 18px var(--glow-soft);
+    overflow: hidden;
+  }
+  .expr { color: var(--muted); font-size: 15px; min-height: 20px; word-break: break-all; }
+  .result {
+    font-size: 40px;
+    font-weight: 600;
+    margin-top: 6px;
+    word-break: break-all;
+    text-shadow: 0 0 12px var(--glow);
+    transition: text-shadow .4s;
+  }
+  .result.error { color: #ff5a7a; text-shadow: 0 0 12px #ff004c; }
+
+  .keys {
+    direction: ltr;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .keys button {
+    font: inherit;
+    font-size: 22px;
+    color: var(--text);
+    background: var(--key);
+    border: 1px solid #262638;
+    border-radius: 16px;
+    height: 62px;
+    cursor: pointer;
+    transition: transform .08s, box-shadow .25s, background .25s;
+  }
+  .keys button:hover { box-shadow: 0 0 14px var(--glow-soft); border-color: var(--glow); }
+  .keys button:active, .keys button.pressed {
+    transform: scale(.94);
+    background: var(--glow);
+    color: #000;
+    box-shadow: 0 0 24px var(--glow);
+  }
+  .keys .op { color: var(--glow); font-weight: 700; }
+  .keys .fn { color: var(--muted); }
+  .keys .eq {
+    background: var(--glow);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 0 18px var(--glow-soft);
+  }
+  .keys .zero { grid-column: span 2; }
+</style>
+</head>
+<body>
+  <div class="frame" id="frame">
+    <div class="calc">
+      <div class="lights" id="lights" aria-label="لون الإضاءة">
+        <button class="rgb active" data-mode="rgb" title="قوس قزح"></button>
+        <button data-hue="280" style="background:hsl(280 100% 60%)" title="بنفسجي"></button>
+        <button data-hue="190" style="background:hsl(190 100% 55%)" title="سماوي"></button>
+        <button data-hue="140" style="background:hsl(140 100% 50%)" title="أخضر"></button>
+        <button data-hue="35"  style="background:hsl(35 100% 55%)"  title="برتقالي"></button>
+        <button data-hue="340" style="background:hsl(340 100% 60%)" title="وردي"></button>
+        <button class="off" data-mode="off" title="إطفاء"></button>
+      </div>
+
+      <div class="display">
+        <div class="expr" id="expr"></div>
+        <div class="result" id="result">0</div>
+      </div>
+
+      <div class="keys" id="keys">
+        <button class="fn" data-k="C">AC</button>
+        <button class="fn" data-k="⌫">⌫</button>
+        <button class="fn" data-k="%">%</button>
+        <button class="op" data-k="/">÷</button>
+
+        <button data-k="7">7</button>
+        <button data-k="8">8</button>
+        <button data-k="9">9</button>
+        <button class="op" data-k="*">×</button>
+
+        <button data-k="4">4</button>
+        <button data-k="5">5</button>
+        <button data-k="6">6</button>
+        <button class="op" data-k="-">−</button>
+
+        <button data-k="1">1</button>
+        <button data-k="2">2</button>
+        <button data-k="3">3</button>
+        <button class="op" data-k="+">+</button>
+
+        <button class="zero" data-k="0">0</button>
+        <button data-k=".">.</button>
+        <button class="eq" data-k="=">=</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const exprEl = document.getElementById('expr');
+  const resultEl = document.getElementById('result');
+  const frame = document.getElementById('frame');
+  const root = document.documentElement;
+  const OPS = '+-*/';
+  const SYMBOL = { '*': '×', '/': '÷', '-': '−', '+': '+' };
+
+  let expr = '';
+  let justEvaluated = false;
+  let rgbTimer = null;
+
+  // ---------- تقييم آمن للتعبير (بدون eval) ----------
+  function tokenize(s) {
+    const tokens = [];
+    let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if ('0123456789.'.includes(c)) {
+        let n = '';
+        while (i < s.length && '0123456789.'.includes(s[i])) n += s[i++];
+        if (s[i] === '%') { tokens.push(parseFloat(n) / 100); i++; }
+        else tokens.push(parseFloat(n));
+      } else if (OPS.includes(c)) {
+        const prev = tokens[tokens.length - 1];
+        // سالب أحادي
+        if (c === '-' && (prev === undefined || typeof prev === 'string')) {
+          tokens.push(0); tokens.push('-');
+        } else tokens.push(c);
+        i++;
+      } else throw new Error('رمز غير صالح');
+    }
+    return tokens;
+  }
+
+  function evaluate(s) {
+    const t = tokenize(s);
+    if (typeof t[t.length - 1] === 'string') t.pop();
+    if (!t.length) return 0;
+    // الضرب والقسمة أولاً
+    const stack = [t[0]];
+    for (let i = 1; i < t.length; i += 2) {
+      const op = t[i], n = t[i + 1];
+      if (op === '*') stack.push(stack.pop() * n);
+      else if (op === '/') {
+        if (n === 0) throw new Error('لا يمكن القسمة على صفر');
+        stack.push(stack.pop() / n);
+      } else stack.push(op, n);
+    }
+    let r = stack[0];
+    for (let i = 1; i < stack.length; i += 2) {
+      r = stack[i] === '+' ? r + stack[i + 1] : r - stack[i + 1];
+    }
+    if (!isFinite(r)) throw new Error('خطأ');
+    return parseFloat(r.toPrecision(12));
+  }
+
+  function pretty(s) {
+    return s.replace(/[*/\-+]/g, m => ` ${SYMBOL[m]} `);
+  }
+
+  function render(preview = true) {
+    exprEl.textContent = pretty(expr);
+    resultEl.classList.remove('error');
+    if (!preview) return;
+    try { resultEl.textContent = expr ? evaluate(expr).toLocaleString('en', { maximumFractionDigits: 10 }) : '0'; }
+    catch { /* اترك النتيجة السابقة أثناء الكتابة */ }
+  }
+
+  function currentNumber() {
+    const m = expr.match(/[\d.]*%?$/);
+    return m ? m[0] : '';
+  }
+
+  function press(k) {
+    if (k === 'C') { expr = ''; justEvaluated = false; resultEl.textContent = '0'; return render(false); }
+    if (k === '⌫') { expr = expr.slice(0, -1); justEvaluated = false; return render(); }
+
+    if (k === '=') {
+      if (!expr) return;
+      try {
+        const r = evaluate(expr);
+        exprEl.textContent = pretty(expr) + ' =';
+        resultEl.textContent = r.toLocaleString('en', { maximumFractionDigits: 10 });
+        resultEl.classList.remove('error');
+        expr = String(r);
+        justEvaluated = true;
+        flash();
+      } catch (e) {
+        resultEl.textContent = e.message;
+        resultEl.classList.add('error');
+        expr = '';
+      }
+      return;
+    }
+
+    if (OPS.includes(k)) {
+      justEvaluated = false;
+      const last = expr.slice(-1);
+      if (!expr && k !== '-') return;
+      if (OPS.includes(last)) expr = expr.slice(0, -1);
+      expr += k;
+      return render();
+    }
+
+    if (k === '%') {
+      const n = currentNumber();
+      if (n && !n.endsWith('%')) expr += '%';
+      return render();
+    }
+
+    // أرقام والنقطة العشرية
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    const n = currentNumber();
+    if (n.endsWith('%')) return;
+    if (k === '.') {
+      if (n.includes('.')) return;
+      if (!n) expr += '0';
+    }
+    if (n === '0' && k !== '.') expr = expr.slice(0, -1);
+    expr += k;
+    render();
+  }
+
+  // وميض الإضاءة عند ظهور النتيجة
+  function flash() {
+    resultEl.animate(
+      [{ textShadow: '0 0 40px var(--glow), 0 0 80px var(--glow)' }, { textShadow: '0 0 12px var(--glow)' }],
+      { duration: 600, easing: 'ease-out' }
+    );
+  }
+
+  // ---------- أحداث الأزرار ولوحة المفاتيح ----------
+  document.getElementById('keys').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b) press(b.dataset.k);
+  });
+
+  const KEYMAP = { Enter: '=', '=': '=', Backspace: '⌫', Escape: 'C', Delete: 'C', x: '*', X: '*' };
+  document.addEventListener('keydown', e => {
+    let k = KEYMAP[e.key] || e.key;
+    if (!/^[0-9.+\-*/%=C⌫]$/.test(k)) return;
+    e.preventDefault();
+    press(k);
+    const btn = document.querySelector(`.keys button[data-k="${CSS.escape(k)}"]`);
+    if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 120); }
+  });
+
+  // ---------- التحكم بالإضاءة ----------
+  function setLight(btn) {
+    document.querySelectorAll('#lights button').forEach(b => b.classList.toggle('active', b === btn));
+    clearInterval(rgbTimer);
+    frame.classList.remove('solid', 'off');
+    const mode = btn.dataset.mode;
+    if (mode === 'rgb') {
+      let h = parseInt(getComputedStyle(root).getPropertyValue('--hue')) || 0;
+      rgbTimer = setInterval(() => root.style.setProperty('--hue', h = (h + 1) % 360), 40);
+    } else if (mode === 'off') {
+      frame.classList.add('off');
+      root.style.setProperty('--hue', 240);
+    } else {
+      frame.classList.add('solid');
+      root.style.setProperty('--hue', btn.dataset.hue);
+    }
+  }
+  document.getElementById('lights').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b) setLight(b);
+  });
+
+  setLight(document.querySelector('#lights .rgb'));
+</script>
+</body>
+</html>
