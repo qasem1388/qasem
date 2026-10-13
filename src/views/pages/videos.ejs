@@ -1,0 +1,8 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('videos') }) %>
+<section class="section">
+  <div class="container">
+    <% if (videos.length) { %><div class="grid grid--3"><% videos.forEach(function (v) { %><%- include('../partials/video-card', { v: v }) %><% }) %></div><% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

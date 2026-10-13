@@ -1,0 +1,20 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: title }) %>
+<section class="section">
+  <div class="container narrow">
+    <% if (stats.length) { %><div class="stats-band"><%- include('../partials/stats', { stats: stats }) %></div><% } %>
+    <% sections.forEach(function (sec) { %>
+      <article class="content-block" id="sec-<%= sec.id %>">
+        <h2 class="block-title"><%= sec.title %><% if (sec.survey_year) { %> <span class="tag"><%= sec.survey_year %></span><% } %></h2>
+        <% if (sec.satisfaction_rate != null) { %>
+          <div class="progress" role="img" aria-label="<%= t('satisfaction_rate') %> <%= sec.satisfaction_rate %>%"><span class="progress__label"><%= t('satisfaction_rate') %></span><span class="progress__bar"><span style="width: <%= Math.min(100, Math.max(0, Number(sec.satisfaction_rate))) %>%"></span></span><strong><%= sec.satisfaction_rate %>%</strong></div>
+        <% } %>
+        <div class="rich"><%- sec.content || '' %></div>
+        <% if (sec.survey_url) { %><p><a class="btn" href="<%= sec.survey_url %>" target="_blank" rel="noopener"><i class="fa-solid fa-clipboard-list"></i> <%= t('take_survey') %></a></p><% } %>
+        <%- include('../partials/attachments', { files: sec.attachments }) %>
+      </article>
+    <% }) %>
+    <% if (!sections.length && !stats.length) { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

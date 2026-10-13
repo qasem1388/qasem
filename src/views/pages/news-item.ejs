@@ -1,0 +1,38 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: n.title }) %>
+<section class="section">
+  <div class="container narrow">
+    <article class="article">
+      <div class="meta meta--lg">
+        <span><i class="fa-regular fa-calendar"></i> <time datetime="<%= n.published_at %>"><%= formatDate(n.published_at) %></time></span>
+        <% if (n.author_name) { %><span><i class="fa-regular fa-user"></i> <%= t('author') %>: <%= n.author_name %></span><% } %>
+        <% if (n.category_name) { %><a class="tag" href="/media-center/news?category=<%= encodeURIComponent(n.category_slug) %>"><%= n.category_name %></a><% } %>
+      </div>
+      <% if (n.image) { %><img class="featured-image" src="<%= n.image %>" alt="<%= n.title %>"><% } %>
+      <div class="rich"><%- n.content || '' %></div>
+      <% if (n.video_url) { var vid = (n.video_url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/) || [])[1]; if (vid) { %>
+        <div class="video-embed video-embed--wide" data-youtube="<%= vid %>" data-title="<%= n.title %>"><img src="https://i.ytimg.com/vi/<%= vid %>/hqdefault.jpg" alt="" loading="lazy"><button class="video-embed__play" type="button" aria-label="<%= t('video') %>"><i class="fa-solid fa-play"></i></button></div>
+      <% } } %>
+      <% if (n.gallery.length) { %>
+        <div class="photo-grid" data-gallery><% n.gallery.forEach(function (g) { %><a href="<%= g.url %>" data-caption="<%= g.caption || '' %>"><img src="<%= g.url %>" alt="<%= g.caption || '' %>" loading="lazy"></a><% }) %></div>
+      <% } %>
+      <%- include('../partials/attachments', { files: n.attachments }) %>
+      <div class="share">
+        <span><%= t('share') %>:</span>
+        <a href="https://x.com/intent/post?url=<%= encodeURIComponent(shareUrl) %>&text=<%= encodeURIComponent(n.title) %>" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="https://wa.me/?text=<%= encodeURIComponent(n.title + ' ' + shareUrl) %>" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(shareUrl) %>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url=<%= encodeURIComponent(shareUrl) %>" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
+    </article>
+  </div>
+</section>
+<% if (related.length) { %>
+<section class="section section--alt">
+  <div class="container">
+    <h2 class="section-title"><%= t('related_news') %></h2>
+    <div class="grid grid--3"><% related.forEach(function (item) { %><%- include('../partials/news-card', { item: item }) %><% }) %></div>
+  </div>
+</section>
+<% } %>
+<%- include('../partials/footer') %>

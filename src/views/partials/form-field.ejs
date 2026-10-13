@@ -1,0 +1,10 @@
+<% var err = errors[name]; var val = values[name] == null ? '' : values[name]; var id = 'f_' + name; %>
+<div class="form-field<%= locals.wide ? ' form-field--wide' : '' %><%= err ? ' has-error' : '' %>">
+  <label for="<%= id %>"><%= label %><% if (locals.required) { %> <span class="req" aria-hidden="true">*</span><% } %></label>
+  <% if (locals.type === 'textarea') { %>
+    <textarea id="<%= id %>" name="<%= name %>" rows="<%= locals.rows || 4 %>" maxlength="<%= locals.max || 3000 %>"<%= locals.required ? ' required' : '' %><% if (err) { %> aria-invalid="true" aria-describedby="<%= id %>_err"<% } %>><%= val %></textarea>
+  <% } else { %>
+    <input id="<%= id %>" name="<%= name %>" type="<%= locals.type || 'text' %>" value="<%= val %>" maxlength="<%= locals.max || 255 %>"<%= locals.required ? ' required' : '' %><% if (locals.inputmode) { %> inputmode="<%= inputmode %>"<% } %><% if (locals.autocomplete) { %> autocomplete="<%= autocomplete %>"<% } %><% if (locals.placeholder) { %> placeholder="<%= placeholder %>"<% } %><% if (locals.pattern) { %> pattern="<%= pattern %>"<% } %><% if (locals.ltr) { %> dir="ltr"<% } %><% if (err) { %> aria-invalid="true" aria-describedby="<%= id %>_err"<% } %>>
+  <% } %>
+  <% if (err) { %><span class="form-error" id="<%= id %>_err"><%= err %></span><% } %>
+</div>

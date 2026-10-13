@@ -1,0 +1,95 @@
+<%- include('../partials/head') %>
+<% if (slides.length) { %>
+<section class="hero-slider" data-slider data-interval="<%= (Number(s.home_slider_interval) || 6) * 1000 %>" aria-roledescription="carousel" aria-label="<%= s.org_name %>">
+  <div class="hero-slider__track">
+    <% slides.forEach(function (sl, i) { %>
+      <div class="hero-slide<%= i === 0 ? ' is-active' : '' %>" role="group" aria-roledescription="slide" aria-label="<%= (i + 1) + ' / ' + slides.length %>"<%= i ? ' aria-hidden=true' : '' %>>
+        <% if (sl.image) { %><img class="hero-slide__bg" src="<%= sl.image %>" alt="" <%= i === 0 ? 'fetchpriority=high' : 'loading=lazy' %>><% } %>
+        <div class="container hero-slide__content">
+          <% if (i === 0) { %><h1 class="hero-slide__title"><%= sl.title %></h1><% } else { %><h2 class="hero-slide__title"><%= sl.title %></h2><% } %>
+          <% if (sl.description) { %><p class="hero-slide__desc"><%= sl.description %></p><% } %>
+          <% if (sl.button_text && sl.button_url) { %><a class="btn btn--accent" href="<%= sl.button_url %>"<% if (sl.open_new_tab) { %> target="_blank" rel="noopener"<% } %>><%= sl.button_text %> <i class="fa-solid fa-arrow-left"></i></a><% } %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+  <% if (slides.length > 1) { %>
+    <button class="hero-slider__arrow hero-slider__arrow--prev" type="button" data-prev aria-label="<%= t('prev') %>"><i class="fa-solid fa-chevron-right"></i></button>
+    <button class="hero-slider__arrow hero-slider__arrow--next" type="button" data-next aria-label="<%= t('next') %>"><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="hero-slider__dots"><% slides.forEach(function (sl, i) { %><button type="button" data-dot="<%= i %>" aria-label="<%= i + 1 %>"<%= i === 0 ? ' aria-current=true' : '' %>></button><% }) %></div>
+  <% } %>
+</section>
+<% } else { %>
+<h1 class="sr-only"><%= s.org_name %></h1>
+<% } %>
+
+<% if (s.home_show_about !== false && s.home_about_text) { %>
+<section class="section section--tight about-strip">
+  <div class="container about-strip__inner">
+    <p class="about-strip__text"><%= s.home_about_text %></p>
+    <a class="link-more" href="/about"><%= s.home_about_link_text || t('read_more') %> <i class="fa-solid fa-arrow-left"></i></a>
+  </div>
+</section>
+<% } %>
+
+<% if (mvv.length) { %>
+<section class="section" aria-labelledby="mvvTitle">
+  <div class="container">
+    <h2 class="sr-only" id="mvvTitle"><%= t('mission_vision_values') %></h2>
+    <div class="mvv-grid">
+      <% mvv.forEach(function (m) { %>
+        <article class="mvv-card">
+          <span class="mvv-card__icon"><i class="<%= m.icon || 'fa-solid fa-star' %>"></i></span>
+          <h3 class="mvv-card__title"><%= m.title %></h3>
+          <p class="mvv-card__text"><%= m.content %></p>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<% if (stats.length) { %>
+<section class="section section--brand" aria-labelledby="statsTitle">
+  <div class="container">
+    <h2 class="section-title section-title--light" id="statsTitle"><%= s.home_stats_title %></h2>
+    <%- include('../partials/stats', { stats: stats }) %>
+  </div>
+</section>
+<% } %>
+
+<% if (services.length) { %>
+<section class="section" aria-labelledby="servicesTitle">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="section-title" id="servicesTitle"><%= s.home_services_title || t('our_services') %></h2>
+      <% if (s.home_services_subtitle) { %><p class="section-subtitle"><%= s.home_services_subtitle %></p><% } %>
+    </div>
+    <div class="grid grid--3">
+      <% services.forEach(function (sv) { %>
+        <article class="card service-card">
+          <% if (sv.image) { %><div class="card__media"><img src="<%= sv.image %>" alt="" loading="lazy"></div><% } else { %><span class="service-card__icon"><i class="<%= sv.icon || 'fa-solid fa-hand-holding-heart' %>"></i></span><% } %>
+          <div class="card__body">
+            <h3 class="card__title"><%= sv.title %></h3>
+            <% if (sv.description) { %><p class="card__text"><%= sv.description %></p><% } %>
+            <% if (sv.button_text && sv.button_url) { %><a class="link-more" href="<%= sv.button_url %>"><%= sv.button_text %> <i class="fa-solid fa-arrow-left"></i></a><% } %>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<% if (news.length) { %>
+<section class="section section--alt" aria-labelledby="newsTitle">
+  <div class="container">
+    <div class="section-head section-head--row">
+      <h2 class="section-title" id="newsTitle"><%= s.home_news_title || t('latest_news') %></h2>
+      <a class="btn btn--outline btn--sm" href="/media-center/news"><%= t('view_all') %></a>
+    </div>
+    <div class="grid grid--3"><% news.forEach(function (item) { %><%- include('../partials/news-card', { item: item }) %><% }) %></div>
+  </div>
+</section>
+<% } %>
+<%- include('../partials/footer') %>

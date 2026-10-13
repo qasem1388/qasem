@@ -1,0 +1,29 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('jobs'), heroSubtitle: s.jobs_intro }) %>
+<section class="section">
+  <div class="container">
+    <% if (jobs.length) { %>
+    <div class="grid grid--2">
+      <% jobs.forEach(function (j) { %>
+        <article class="card job-card">
+          <div class="card__body">
+            <div class="job-card__head">
+              <h2 class="card__title"><a href="/jobs/<%= encodeURIComponent(j.slug) %>"><%= j.title %></a></h2>
+              <span class="badge <%= j.open ? 'badge--success' : 'badge--muted' %>"><%= j.open ? t('open') : t('closed') %></span>
+            </div>
+            <ul class="job-meta">
+              <% if (j.department) { %><li><i class="fa-solid fa-building"></i> <%= j.department %></li><% } %>
+              <% if (j.job_type) { %><li><i class="fa-solid fa-briefcase"></i> <%= optLabel('JOB_TYPE', j.job_type) %></li><% } %>
+              <% if (j.location) { %><li><i class="fa-solid fa-location-dot"></i> <%= j.location %></li><% } %>
+              <% if (j.end_date) { %><li><i class="fa-regular fa-calendar-xmark"></i> <%= t('ad_end') %>: <%= formatDate(j.end_date) %></li><% } %>
+            </ul>
+            <p class="card__text"><%= excerpt(j.description, 140) %></p>
+            <a class="btn btn--sm" href="/jobs/<%= encodeURIComponent(j.slug) %>"><%= j.open ? t('apply_job') : t('details') %></a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+    <% } else { %><p class="empty">لا توجد وظائف متاحة حاليًا. تابعنا للاطلاع على الفرص القادمة.</p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

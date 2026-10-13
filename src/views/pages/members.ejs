@@ -1,0 +1,18 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('members'), heroSubtitle: s.members_intro }) %>
+<section class="section">
+  <div class="container">
+    <div class="tabs" data-tabs>
+      <div class="tabs__list" role="tablist">
+        <% groups.forEach(function (g, i) { %><button class="tabs__tab" role="tab" type="button" id="tab-<%= g.key %>" aria-controls="panel-<%= g.key %>" aria-selected="<%= i === 0 %>"><%= g.title %> <span class="count"><%= g.people.length %></span></button><% }) %>
+      </div>
+      <% groups.forEach(function (g, i) { %>
+        <div class="tabs__panel" role="tabpanel" id="panel-<%= g.key %>" aria-labelledby="tab-<%= g.key %>"<%= i ? ' hidden' : '' %>>
+          <h2 class="sr-only"><%= g.title %></h2>
+          <% if (g.people.length) { %><div class="grid grid--4"><% g.people.forEach(function (p) { %><%- include('../partials/person-card', { person: p }) %><% }) %></div><% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

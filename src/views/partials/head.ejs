@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="<%= locale.lang %>" dir="<%= locale.dir %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= seo.title || s.org_name %></title>
+  <% if (seo.description) { %><meta name="description" content="<%= seo.description %>"><% } %>
+  <% if (seo.keywords) { %><meta name="keywords" content="<%= seo.keywords %>"><% } %>
+  <meta name="robots" content="<%= seo.noindex ? 'noindex, nofollow' : 'index, follow' %>">
+  <% if (seo.canonical) { %><link rel="canonical" href="<%= seo.canonical %>"><% } %>
+  <% if (s.google_site_verification) { %><meta name="google-site-verification" content="<%= s.google_site_verification %>"><% } %>
+  <meta property="og:site_name" content="<%= s.org_name %>">
+  <meta property="og:locale" content="ar_SA">
+  <meta property="og:type" content="<%= seo.type || 'website' %>">
+  <meta property="og:title" content="<%= seo.ogTitle || seo.title %>">
+  <% if (seo.description) { %><meta property="og:description" content="<%= seo.description %>"><% } %>
+  <% if (seo.canonical) { %><meta property="og:url" content="<%= seo.canonical %>"><% } %>
+  <% if (seo.image) { %><meta property="og:image" content="<%= seo.image %>"><meta name="twitter:image" content="<%= seo.image %>"><% } %>
+  <meta name="twitter:card" content="<%= seo.image ? 'summary_large_image' : 'summary' %>">
+  <meta name="theme-color" content="<%= s.color_primary || '#0f766e' %>">
+  <% if (s.favicon || s.logo) { %><link rel="icon" href="<%= s.favicon || s.logo %>"><link rel="apple-touch-icon" href="<%= s.favicon || s.logo %>"><% } %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="<%= fontHref %>">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <style><%- theme %></style>
+  <% if (seo.jsonLd) { %><script type="application/ld+json"><%- json(seo.jsonLd) %></script><% } %>
+  <% if (breadcrumbs.length > 1) { %><script type="application/ld+json"><%- json({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: breadcrumbs.map((b, i) => ({ '@type': 'ListItem', position: i + 1, name: b.label, item: b.href ? absUrl(b.href) : undefined })) }) %></script><% } %>
+</head>
+<body>
+  <a class="skip-link" href="#main"><%= t('skip_to_content') %></a>
+  <% if (preview) { %><div class="preview-bar"><i class="fa-solid fa-eye"></i> <%= t('preview_mode') %></div><% } %>
+  <%- include('header') %>
+  <main id="main">

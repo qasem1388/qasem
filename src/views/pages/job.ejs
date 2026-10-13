@@ -1,0 +1,47 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: job.title }) %>
+<section class="section">
+  <div class="container job-layout">
+    <article class="job-detail">
+      <ul class="facts">
+        <% if (job.department) { %><li><i class="fa-solid fa-building"></i> <%= t('department') %>: <strong><%= job.department %></strong></li><% } %>
+        <% if (job.job_type) { %><li><i class="fa-solid fa-briefcase"></i> <%= t('job_type') %>: <strong><%= optLabel('JOB_TYPE', job.job_type) %></strong></li><% } %>
+        <% if (job.location) { %><li><i class="fa-solid fa-location-dot"></i> <%= t('location') %>: <strong><%= job.location %></strong></li><% } %>
+        <% if (job.start_date) { %><li><i class="fa-regular fa-calendar"></i> <%= t('ad_start') %>: <strong><%= formatDate(job.start_date) %></strong></li><% } %>
+        <% if (job.end_date) { %><li><i class="fa-regular fa-calendar-xmark"></i> <%= t('ad_end') %>: <strong><%= formatDate(job.end_date) %></strong></li><% } %>
+      </ul>
+      <% if (job.description) { %><h2 class="block-title"><%= t('job_description') %></h2><div class="rich"><%- job.description %></div><% } %>
+      <% [['qualifications', 'qualifications'], ['experience', 'experience'], ['skills', 'skills']].forEach(function (pair) { var items = lines(job[pair[0]]); if (items.length) { %>
+        <h2 class="block-title"><%= t(pair[1]) %></h2>
+        <ul class="check-list"><% items.forEach(function (it) { %><li><%= it %></li><% }) %></ul>
+      <% } }) %>
+    </article>
+    <aside class="job-apply" id="apply">
+      <% if (success) { %>
+        <div class="alert alert--success" role="status"><i class="fa-solid fa-circle-check"></i> <%= t('application_success') %></div>
+      <% } else if (!job.open) { %>
+        <div class="alert alert--info"><i class="fa-solid fa-circle-info"></i> <%= t('job_closed') %></div>
+      <% } else { %>
+      <form class="card form-card" method="post" action="/jobs/<%= encodeURIComponent(job.slug) %>/apply#apply" enctype="multipart/form-data" novalidate>
+        <h2 class="block-title"><%= t('apply_job') %></h2>
+        <%- include('../partials/form-guard') %>
+        <div class="form-grid form-grid--1">
+          <%- include('../partials/form-field', { name: 'full_name', label: 'الاسم', required: true, autocomplete: 'name' }) %>
+          <%- include('../partials/form-field', { name: 'mobile', label: 'رقم الجوال', required: true, type: 'tel', inputmode: 'tel', placeholder: '05xxxxxxxx', ltr: true }) %>
+          <%- include('../partials/form-field', { name: 'email', label: 'البريد الإلكتروني', required: true, type: 'email', ltr: true }) %>
+          <%- include('../partials/form-field', { name: 'qualification', label: 'المؤهل', required: true }) %>
+          <%- include('../partials/form-field', { name: 'experience', label: 'الخبرات', type: 'textarea', rows: 3 }) %>
+          <div class="form-field<%= errors.cv ? ' has-error' : '' %>">
+            <label for="f_cv">السيرة الذاتية (PDF) <span class="req">*</span></label>
+            <input id="f_cv" type="file" name="cv" accept="application/pdf,.pdf" required>
+            <% if (errors.cv) { %><span class="form-error"><%= errors.cv %></span><% } %>
+          </div>
+          <%- include('../partials/form-field', { name: 'message', label: 'رسالة للجهة', type: 'textarea', rows: 3 }) %>
+        </div>
+        <button class="btn btn--block" type="submit"><i class="fa-solid fa-paper-plane"></i> <%= t('submit_application') %></button>
+      </form>
+      <% } %>
+    </aside>
+  </div>
+</section>
+<%- include('../partials/footer') %>

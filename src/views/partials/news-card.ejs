@@ -1,0 +1,14 @@
+<article class="card news-card">
+  <a class="card__media" href="/media-center/news/<%= encodeURIComponent(item.slug) %>" tabindex="-1" aria-hidden="true">
+    <% if (item.image) { %><img src="<%= item.image %>" alt="" loading="lazy"><% } else { %><span class="card__placeholder"><i class="fa-regular fa-newspaper"></i></span><% } %>
+  </a>
+  <div class="card__body">
+    <div class="meta">
+      <span><i class="fa-regular fa-calendar"></i> <%= formatDate(item.published_at) %></span>
+      <% if (item.category_name) { %><span class="tag"><%= item.category_name %></span><% } %>
+    </div>
+    <h3 class="card__title"><a href="/media-center/news/<%= encodeURIComponent(item.slug) %>"><%= item.title %></a></h3>
+    <p class="card__text"><%= excerpt(item.excerpt || item.content, 130) %></p>
+    <a class="link-more" href="/media-center/news/<%= encodeURIComponent(item.slug) %>"><%= t('read_more') %> <i class="fa-solid fa-arrow-left"></i></a>
+  </div>
+</article>

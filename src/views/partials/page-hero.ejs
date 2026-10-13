@@ -1,0 +1,15 @@
+<section class="page-hero">
+  <div class="container">
+    <% if (breadcrumbs.length > 1) { %>
+    <nav class="breadcrumbs" aria-label="<%= t('breadcrumb') %>">
+      <ol>
+        <% breadcrumbs.forEach(function (b, i) { %>
+          <li><% if (b.href && i < breadcrumbs.length - 1) { %><a href="<%= b.href %>"><%= b.label %></a><% } else { %><span aria-current="page"><%= b.label %></span><% } %></li>
+        <% }) %>
+      </ol>
+    </nav>
+    <% } %>
+    <h1 class="page-hero__title"><%= heroTitle %></h1>
+    <% if (locals.heroSubtitle) { %><p class="page-hero__subtitle"><%= heroSubtitle %></p><% } %>
+  </div>
+</section>

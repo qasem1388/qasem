@@ -1,0 +1,17 @@
+<% if (files && files.length) { %>
+<div class="attachments">
+  <h2 class="block-title"><i class="fa-solid fa-paperclip"></i> <%= t('attachments') %></h2>
+  <ul class="file-list">
+    <% files.forEach(function (f) { var isPdf = /\.pdf$/i.test(f.url); %>
+      <li class="file-item">
+        <span class="file-item__icon"><i class="fa-solid <%= isPdf ? 'fa-file-pdf' : 'fa-file-image' %>"></i></span>
+        <span class="file-item__name"><%= f.name || f.url.split('/').pop() %></span>
+        <span class="file-item__actions">
+          <% if (isPdf) { %><button class="btn btn--sm btn--outline" type="button" data-pdf="<%= f.url %>" data-title="<%= f.name || '' %>"><i class="fa-regular fa-eye"></i> <%= t('view') %></button><% } else { %><a class="btn btn--sm btn--outline" href="<%= f.url %>" target="_blank" rel="noopener"><i class="fa-regular fa-eye"></i> <%= t('view') %></a><% } %>
+          <a class="btn btn--sm" href="<%= f.url %>" download><i class="fa-solid fa-download"></i> <%= t('download') %></a>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+<% } %>

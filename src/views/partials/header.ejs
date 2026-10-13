@@ -1,0 +1,53 @@
+<div class="topbar">
+  <div class="container topbar__inner">
+    <div class="topbar__contact">
+      <% if (s.phone) { %><a href="tel:<%= s.phone %>"><i class="fa-solid fa-phone"></i> <span dir="ltr"><%= s.phone %></span></a><% } %>
+      <% if (s.email) { %><a href="mailto:<%= s.email %>"><i class="fa-solid fa-envelope"></i> <%= s.email %></a><% } %>
+      <% if (s.license_number) { %><span class="hide-sm"><i class="fa-solid fa-certificate"></i> <%= t('license') %>: <%= s.license_number %></span><% } %>
+    </div>
+    <div class="social social--sm">
+      <% social.forEach(function (x) { %><a href="<%= x.url %>" target="_blank" rel="noopener" aria-label="<%= x.name %>"><i class="<%= x.icon %>"></i></a><% }) %>
+    </div>
+  </div>
+</div>
+<header class="site-header" id="siteHeader">
+  <div class="container site-header__inner">
+    <a class="brand" href="/" aria-label="<%= s.org_name %>">
+      <% if (s.logo) { %><img class="brand__logo" src="<%= s.logo %>" alt="<%= s.org_name %>" width="64" height="64"><% } else { %><span class="brand__mark"><i class="fa-solid fa-hand-holding-heart"></i></span><% } %>
+      <span class="brand__text">
+        <strong class="brand__name"><%= s.org_name %></strong>
+        <% if (s.org_tagline) { %><span class="brand__tagline"><%= s.org_tagline %></span><% } %>
+      </span>
+    </a>
+    <nav class="main-nav" id="mainNav" aria-label="<%= t('menu') %>">
+      <div class="main-nav__head">
+        <strong><%= t('menu') %></strong>
+        <button class="icon-btn" type="button" data-nav-close aria-label="<%= t('close') %>"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <ul class="main-nav__list">
+        <% nav.forEach(function (item) {
+             var isActive = item.href === currentPath || (item.href !== '/' && currentPath.indexOf(item.href + '/') === 0) || item.children.some(function (c) { return c.href === currentPath; }); %>
+          <li class="main-nav__item<%= item.children.length ? ' has-children' : '' %><%= isActive ? ' is-active' : '' %>">
+            <a href="<%= item.href %>"<% if (item.open_new_tab) { %> target="_blank" rel="noopener"<% } %><% if (item.children.length) { %> aria-haspopup="true"<% } %>><%= item.label %></a>
+            <% if (item.children.length) { %>
+              <button class="submenu-toggle" type="button" aria-expanded="false" aria-label="<%= item.label %>"><i class="fa-solid fa-chevron-down"></i></button>
+              <ul class="submenu">
+                <% item.children.forEach(function (c) { %><li><a href="<%= c.href %>"<% if (c.open_new_tab) { %> target="_blank" rel="noopener"<% } %><%= c.href === currentPath ? ' aria-current=page' : '' %>><%= c.label %></a></li><% }) %>
+              </ul>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="main-nav__actions">
+        <a class="btn btn--outline" href="/contact"><i class="fa-solid fa-headset"></i> <%= t('contact_us') %></a>
+        <a class="btn btn--accent" href="/volunteer"><i class="fa-solid fa-handshake-angle"></i> <%= t('volunteer_now') %></a>
+      </div>
+    </nav>
+    <div class="header-actions">
+      <a class="btn btn--outline btn--sm hide-md" href="/contact"><%= t('contact_us') %></a>
+      <a class="btn btn--accent btn--sm hide-md" href="/volunteer"><i class="fa-solid fa-handshake-angle"></i> <%= t('volunteer_now') %></a>
+      <button class="icon-btn nav-toggle" type="button" data-nav-open aria-controls="mainNav" aria-expanded="false" aria-label="<%= t('menu') %>"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </div>
+  <div class="nav-backdrop" data-nav-close></div>
+</header>

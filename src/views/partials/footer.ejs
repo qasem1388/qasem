@@ -1,0 +1,66 @@
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-col footer-col--about">
+        <a class="brand brand--footer" href="/">
+          <% if (s.logo) { %><img class="brand__logo" src="<%= s.logo %>" alt="" width="56" height="56" loading="lazy"><% } %>
+          <span class="brand__text"><strong class="brand__name"><%= s.org_name %></strong><% if (s.org_tagline) { %><span class="brand__tagline"><%= s.org_tagline %></span><% } %></span>
+        </a>
+        <% if (s.footer_about || s.org_description) { %><p><%= s.footer_about || s.org_description %></p><% } %>
+        <% if (s.license_number) { %><p class="muted-light"><i class="fa-solid fa-certificate"></i> <%= t('license') %>: <%= s.license_number %></p><% } %>
+        <div class="social">
+          <% social.forEach(function (x) { %><a href="<%= x.url %>" target="_blank" rel="noopener" aria-label="<%= x.name %>" title="<%= x.label || x.name %>"><i class="<%= x.icon %>"></i></a><% }) %>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h2 class="footer-title"><%= s.footer_links_title || t('quick_links') %></h2>
+        <ul class="footer-links">
+          <% nav.forEach(function (item) { %><li><a href="<%= item.href %>"<% if (item.open_new_tab) { %> target="_blank" rel="noopener"<% } %>><%= item.label %></a></li><% }) %>
+          <% footerPages.forEach(function (p) { %><li><a href="/page/<%= encodeURIComponent(p.slug) %>"><%= p.name %></a></li><% }) %>
+        </ul>
+      </div>
+      <% if (footerLinks.length) { %>
+      <div class="footer-col">
+        <h2 class="footer-title"><%= s.footer_important_title || 'روابط مهمة' %></h2>
+        <ul class="footer-links">
+          <% footerLinks.forEach(function (item) { %><li><a href="<%= item.href %>"<% if (item.open_new_tab) { %> target="_blank" rel="noopener"<% } %>><%= item.label %></a></li><% }) %>
+        </ul>
+      </div>
+      <% } %>
+      <div class="footer-col">
+        <h2 class="footer-title"><%= t('contact_info') %></h2>
+        <ul class="footer-contact">
+          <% if (s.address) { %><li><i class="fa-solid fa-location-dot"></i><span><%= s.address %></span></li><% } %>
+          <% if (s.phone) { %><li><i class="fa-solid fa-phone"></i><a href="tel:<%= s.phone %>" dir="ltr"><%= s.phone %></a></li><% } %>
+          <% if (s.mobile) { %><li><i class="fa-solid fa-mobile-screen"></i><a href="tel:<%= s.mobile %>" dir="ltr"><%= s.mobile %></a></li><% } %>
+          <% if (s.email) { %><li><i class="fa-solid fa-envelope"></i><a href="mailto:<%= s.email %>"><%= s.email %></a></li><% } %>
+          <% if (s.working_hours) { %><li><i class="fa-solid fa-clock"></i><span><%= s.working_hours %></span></li><% } %>
+          <% if (s.map_url && s.footer_show_map !== false) { %><li><i class="fa-solid fa-map-location-dot"></i><a href="<%= s.map_url %>" target="_blank" rel="noopener"><%= t('map') %></a></li><% } %>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">© <%= year %> <%= s.org_name %> — <%= s.footer_copyright || t('all_rights') %></div>
+    </div>
+  </footer>
+  <% if (s.whatsapp_number) { %><a class="whatsapp-float" href="https://wa.me/<%= String(s.whatsapp_number).replace(/[^0-9]/g, '') %>" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a><% } %>
+  <dialog class="pdf-modal" id="pdfModal" aria-label="<%= t('pdf_viewer') %>">
+    <div class="pdf-modal__bar">
+      <strong class="pdf-modal__title" id="pdfTitle"></strong>
+      <div class="pdf-modal__actions">
+        <a class="btn btn--sm btn--outline" id="pdfOpen" target="_blank" rel="noopener"><i class="fa-solid fa-up-right-from-square"></i> <span class="hide-sm"><%= t('open_new') %></span></a>
+        <a class="btn btn--sm" id="pdfDownload" download><i class="fa-solid fa-download"></i> <span class="hide-sm"><%= t('download') %></span></a>
+        <button class="icon-btn" type="button" data-pdf-close aria-label="<%= t('close') %>"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <iframe id="pdfFrame" title="<%= t('pdf_viewer') %>"></iframe>
+  </dialog>
+  <dialog class="lightbox" id="lightbox" aria-label="<%= t('gallery') %>">
+    <button class="icon-btn lightbox__close" type="button" data-lb-close aria-label="<%= t('close') %>"><i class="fa-solid fa-xmark"></i></button>
+    <button class="icon-btn lightbox__nav lightbox__prev" type="button" data-lb-prev aria-label="<%= t('prev') %>"><i class="fa-solid fa-chevron-right"></i></button>
+    <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+    <button class="icon-btn lightbox__nav lightbox__next" type="button" data-lb-next aria-label="<%= t('next') %>"><i class="fa-solid fa-chevron-left"></i></button>
+  </dialog>
+  <script src="/assets/js/site.js" defer></script>
+</body>
+</html>

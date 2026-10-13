@@ -1,0 +1,48 @@
+{
+  "name": "ngo-cms",
+  "version": "1.0.0",
+  "description": "نظام موقع إلكتروني ولوحة تحكم CMS للجمعيات الأهلية",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "db:reset": "node scripts/migrate.js --reset && node scripts/seed.js",
+    "admin:create": "node scripts/create-admin.js",
+    "backup": "node scripts/backup.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qasem1388/qasem.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/qasem1388/qasem/issues"
+  },
+  "homepage": "https://github.com/qasem1388/qasem#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "compression": "^1.8.2",
+    "dotenv": "^18.0.7",
+    "ejs": "^7.0.1",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "knex": "^3.3.0",
+    "multer": "^2.4.0",
+    "pg": "^8.23.1",
+    "sanitize-html": "^2.18.0",
+    "sortablejs": "^1.15.7",
+    "tinymce": "^8.9.3",
+    "tinymce-i18n": "^26.9.28"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "private": true
+}

@@ -1,0 +1,9 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: p.title }) %>
+<section class="section">
+  <div class="container narrow">
+    <% if (p.image) { %><img class="featured-image" src="<%= p.image %>" alt="<%= p.title %>"><% } %>
+    <div class="rich"><%- p.content || '' %></div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

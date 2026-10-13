@@ -1,0 +1,26 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('media_center') }) %>
+<section class="section">
+  <div class="container">
+    <div class="media-nav">
+      <a class="media-nav__item" href="/media-center/news"><i class="fa-regular fa-newspaper"></i><span><%= t('news') %></span></a>
+      <a class="media-nav__item" href="/media-center/gallery"><i class="fa-regular fa-images"></i><span><%= t('gallery') %></span></a>
+      <a class="media-nav__item" href="/media-center/videos"><i class="fa-brands fa-youtube"></i><span><%= t('videos') %></span></a>
+    </div>
+    <% if (news.length) { %>
+      <div class="section-head section-head--row"><h2 class="section-title"><%= t('latest_news') %></h2><a class="btn btn--outline btn--sm" href="/media-center/news"><%= t('view_all') %></a></div>
+      <div class="grid grid--3"><% news.forEach(function (item) { %><%- include('../partials/news-card', { item: item }) %><% }) %></div>
+    <% } %>
+    <% if (albums.length) { %>
+      <div class="section-head section-head--row mt"><h2 class="section-title"><%= t('gallery') %></h2><a class="btn btn--outline btn--sm" href="/media-center/gallery"><%= t('view_all') %></a></div>
+      <div class="grid grid--3"><% albums.forEach(function (a) { %>
+        <a class="card album-card" href="/media-center/gallery/<%= encodeURIComponent(a.slug) %>"><span class="card__media"><% if (a.cover_image) { %><img src="<%= a.cover_image %>" alt="" loading="lazy"><% } else { %><span class="card__placeholder"><i class="fa-regular fa-images"></i></span><% } %></span><span class="card__body"><strong class="card__title"><%= a.title %></strong></span></a>
+      <% }) %></div>
+    <% } %>
+    <% if (videos.length) { %>
+      <div class="section-head section-head--row mt"><h2 class="section-title"><%= t('videos') %></h2><a class="btn btn--outline btn--sm" href="/media-center/videos"><%= t('view_all') %></a></div>
+      <div class="grid grid--3"><% videos.forEach(function (v) { %><%- include('../partials/video-card', { v: v }) %><% }) %></div>
+    <% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

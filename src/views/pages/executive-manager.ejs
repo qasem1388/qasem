@@ -1,0 +1,24 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: (em && em.job_title) || t('executive_manager') }) %>
+<section class="section">
+  <div class="container narrow">
+    <% if (em && em.name) { %>
+    <article class="profile card">
+      <div class="profile__photo">
+        <% if (em.photo) { %><img src="<%= em.photo %>" alt="<%= em.name %>"><% } else { %><span class="avatar avatar--lg" aria-hidden="true"><%= initials(em.name) %></span><% } %>
+      </div>
+      <div class="profile__info">
+        <h2 class="profile__name"><%= em.name %></h2>
+        <% if (em.job_title) { %><p class="profile__title"><%= em.job_title %></p><% } %>
+        <ul class="profile__contact">
+          <% if (em.show_national_id && em.national_id) { %><li><i class="fa-solid fa-id-card"></i> <%= t('national_id') %>: <span dir="ltr"><%= em.national_id %></span></li><% } %>
+          <% if (em.show_mobile && em.mobile) { %><li><i class="fa-solid fa-mobile-screen"></i> <%= t('mobile') %>: <a href="tel:<%= em.mobile %>" dir="ltr"><%= em.mobile %></a></li><% } %>
+          <% if (em.show_email && em.email) { %><li><i class="fa-solid fa-envelope"></i> <%= t('email') %>: <a href="mailto:<%= em.email %>"><%= em.email %></a></li><% } %>
+        </ul>
+      </div>
+    </article>
+    <% if (em.bio) { %><div class="content-block rich"><%- em.bio %></div><% } %>
+    <% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

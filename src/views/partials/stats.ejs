@@ -1,0 +1,11 @@
+<% if (stats && stats.length) { %>
+<div class="stats-grid">
+  <% stats.forEach(function (st) { %>
+    <div class="stat">
+      <span class="stat__icon"><i class="<%= st.icon || 'fa-solid fa-chart-simple' %>"></i></span>
+      <span class="stat__value"><%= st.prefix || '' %><span data-count="<%= Number(st.value) %>"><%= formatNumber(st.value) %></span><%= st.suffix || '' %></span>
+      <span class="stat__label"><%= st.label %></span>
+    </div>
+  <% }) %>
+</div>
+<% } %>

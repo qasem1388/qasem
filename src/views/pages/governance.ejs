@@ -1,0 +1,33 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('governance'), heroSubtitle: s.governance_intro }) %>
+<section class="section">
+  <div class="container">
+    <% if (years.length) { %>
+      <div class="year-tabs" role="tablist" aria-label="<%= t('choose_year') %>">
+        <% years.forEach(function (y) { %><a role="tab" class="year-tab<%= selected && y.id === selected.id ? ' is-active' : '' %>" aria-selected="<%= selected && y.id === selected.id %>" href="?year=<%= y.year %>#files"><%= y.year %></a><% }) %>
+      </div>
+      <div id="files" class="gov-panel">
+        <% if (selected.title || selected.description) { %><div class="gov-panel__head"><% if (selected.title) { %><h2 class="block-title"><%= selected.title %></h2><% } %><% if (selected.description) { %><p class="muted"><%= selected.description %></p><% } %></div><% } %>
+        <% if (files.length) { %>
+          <ul class="file-list file-list--cards">
+            <% files.forEach(function (f) { %>
+              <li class="file-item">
+                <span class="file-item__icon"><i class="fa-solid fa-file-pdf"></i></span>
+                <div class="file-item__info">
+                  <h3 class="file-item__name"><%= f.title %></h3>
+                  <% if (f.description) { %><p class="muted"><%= f.description %></p><% } %>
+                  <% if (f.file_date) { %><span class="meta"><i class="fa-regular fa-calendar"></i> <%= t('file_date') %>: <%= formatDate(f.file_date) %></span><% } %>
+                </div>
+                <span class="file-item__actions">
+                  <button class="btn btn--sm btn--outline" type="button" data-pdf="<%= f.file_url %>" data-title="<%= f.title %>"><i class="fa-regular fa-eye"></i> <%= t('view') %></button>
+                  <a class="btn btn--sm" href="<%= f.file_url %>" download><i class="fa-solid fa-download"></i> <%= t('download') %></a>
+                </span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+      </div>
+    <% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

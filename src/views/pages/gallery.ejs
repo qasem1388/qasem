@@ -1,0 +1,17 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('gallery') }) %>
+<section class="section">
+  <div class="container">
+    <% if (albums.length) { %>
+    <div class="grid grid--3">
+      <% albums.forEach(function (a) { %>
+        <a class="card album-card" href="/media-center/gallery/<%= encodeURIComponent(a.slug) %>">
+          <span class="card__media"><% if (a.cover_image) { %><img src="<%= a.cover_image %>" alt="" loading="lazy"><% } else { %><span class="card__placeholder"><i class="fa-regular fa-images"></i></span><% } %><span class="album-card__count"><i class="fa-regular fa-image"></i> <%= Number(a.images_count) %></span></span>
+          <span class="card__body"><strong class="card__title"><%= a.title %></strong><% if (a.album_date) { %><span class="meta"><%= formatDate(a.album_date) %></span><% } %></span>
+        </a>
+      <% }) %>
+    </div>
+    <% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

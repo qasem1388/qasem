@@ -1,0 +1,11 @@
+<article class="card video-card">
+  <div class="video-embed" data-youtube="<%= v.youtube_id %>" data-title="<%= v.title %>">
+    <img src="<%= v.thumbnail || ('https://i.ytimg.com/vi/' + v.youtube_id + '/hqdefault.jpg') %>" alt="" loading="lazy">
+    <button class="video-embed__play" type="button" aria-label="<%= t('video') %>: <%= v.title %>"><i class="fa-solid fa-play"></i></button>
+  </div>
+  <div class="card__body">
+    <% if (v.video_date) { %><div class="meta"><span><i class="fa-regular fa-calendar"></i> <%= formatDate(v.video_date) %></span></div><% } %>
+    <h3 class="card__title"><%= v.title %></h3>
+    <% if (v.description) { %><p class="card__text"><%= v.description %></p><% } %>
+  </div>
+</article>

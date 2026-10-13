@@ -1,0 +1,24 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('about_us'), heroSubtitle: s.org_tagline }) %>
+<section class="section">
+  <div class="container narrow">
+    <% if (sections.length > 2) { %>
+      <nav class="toc" aria-label="<%= t('about_us') %>">
+        <% sections.forEach(function (sec) { %><a href="#sec-<%= sec.id %>"><i class="<%= sec.icon || 'fa-solid fa-circle' %>"></i> <%= sec.title %></a><% }) %>
+      </nav>
+    <% } %>
+    <% sections.forEach(function (sec) { %>
+      <article class="content-block" id="sec-<%= sec.id %>">
+        <h2 class="block-title"><span class="block-title__icon"><i class="<%= sec.icon || 'fa-solid fa-circle-info' %>"></i></span> <%= sec.title %></h2>
+        <div class="rich"><%- sec.content || '' %></div>
+      </article>
+    <% }) %>
+    <% if (mvv.length) { %>
+      <div class="mvv-grid mvv-grid--compact">
+        <% mvv.forEach(function (m) { %><article class="mvv-card"><span class="mvv-card__icon"><i class="<%= m.icon %>"></i></span><h3 class="mvv-card__title"><%= m.title %></h3><p class="mvv-card__text"><%= m.content %></p></article><% }) %>
+      </div>
+    <% } %>
+    <% if (!sections.length && !mvv.length) { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

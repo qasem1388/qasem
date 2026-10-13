@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>لوحة التحكم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="/admin-assets/css/admin.css">
+  <script src="/vendor/tinymce/tinymce.min.js" defer></script>
+  <script src="/vendor/sortable/Sortable.min.js" defer></script>
+</head>
+<body>
+  <div class="layout" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="القائمة الجانبية">
+      <a class="sidebar__brand" href="/admin/dashboard" data-link>
+        <img id="sideLogo" alt="" hidden>
+        <div><strong id="sideName">لوحة التحكم</strong><span>نظام إدارة المحتوى</span></div>
+      </a>
+      <nav id="sideNav"></nav>
+    </aside>
+    <div class="backdrop" data-close-sidebar></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" type="button" id="menuToggle" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+        <div class="topbar__title" id="topTitle"></div>
+        <div class="topbar__actions">
+          <a class="icon-btn" href="/" target="_blank" rel="noopener" title="عرض الموقع" aria-label="عرض الموقع"><i class="fa-solid fa-globe"></i></a>
+          <div class="user-menu">
+            <button class="user-menu__btn" type="button" id="userBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="user-menu__name" id="userName"></span><span class="user-menu__avatar" id="userAvatar"></span>
+            </button>
+            <div class="dropdown" id="userDropdown">
+              <div class="small muted" style="padding:6px 10px" id="userRole"></div>
+              <a href="/admin/profile" data-link><i class="fa-solid fa-user-gear"></i> الملف الشخصي</a>
+              <a href="/" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i> عرض الموقع</a>
+              <hr>
+              <button type="button" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="content" id="view" tabindex="-1"><div class="loading"><i class="fa-solid fa-spinner fa-spin"></i></div></main>
+    </div>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script type="module" src="/admin-assets/js/app.js"></script>
+</body>
+</html>

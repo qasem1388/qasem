@@ -1,0 +1,8 @@
+<% if (pages > 1) {
+  var qs = function (p) { var parts = ['page=' + p]; if (locals.category) parts.push('category=' + encodeURIComponent(category)); if (locals.q) parts.push('q=' + encodeURIComponent(q)); return '?' + parts.join('&'); }; %>
+<nav class="pagination" aria-label="<%= t('page_x_of_y', { x: page, y: pages }) %>">
+  <% if (page > 1) { %><a class="btn btn--outline btn--sm" href="<%= qs(page - 1) %>" rel="prev"><i class="fa-solid fa-chevron-right"></i> <%= t('prev') %></a><% } %>
+  <span class="pagination__info"><%= t('page_x_of_y', { x: page, y: pages }) %></span>
+  <% if (page < pages) { %><a class="btn btn--outline btn--sm" href="<%= qs(page + 1) %>" rel="next"><%= t('next') %> <i class="fa-solid fa-chevron-left"></i></a><% } %>
+</nav>
+<% } %>

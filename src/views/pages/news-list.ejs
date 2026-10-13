@@ -1,0 +1,22 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('news') }) %>
+<section class="section">
+  <div class="container">
+    <form class="filter-bar" method="get" role="search">
+      <div class="chips">
+        <a class="chip<%= !category ? ' is-active' : '' %>" href="/media-center/news"><%= t('all') %></a>
+        <% categories.forEach(function (c) { %><a class="chip<%= category === c.slug ? ' is-active' : '' %>" href="?category=<%= encodeURIComponent(c.slug) %>"><%= c.name %></a><% }) %>
+      </div>
+      <div class="search-box">
+        <% if (category) { %><input type="hidden" name="category" value="<%= category %>"><% } %>
+        <input type="search" name="q" value="<%= q %>" placeholder="<%= t('search_placeholder') %>" aria-label="<%= t('search') %>">
+        <button class="btn btn--sm" type="submit"><i class="fa-solid fa-magnifying-glass"></i><span class="sr-only"><%= t('search') %></span></button>
+      </div>
+    </form>
+    <% if (items.length) { %>
+      <div class="grid grid--3"><% items.forEach(function (item) { %><%- include('../partials/news-card', { item: item }) %><% }) %></div>
+      <%- include('../partials/pagination') %>
+    <% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,10 @@
+<li>
+  <div class="org-node org-node--<%= node.unit_type %>">
+    <span class="org-node__type"><%= optLabel('ORG_UNIT_TYPE', node.unit_type) %></span>
+    <strong class="org-node__name"><%= node.name %></strong>
+    <% if (node.holder_name) { %><span class="org-node__holder"><i class="fa-solid fa-user"></i> <%= node.holder_name %></span><% } %>
+  </div>
+  <% if (node.children.length) { %>
+    <ul><% node.children.forEach(function (child) { %><%- include('org-node', { node: child }) %><% }) %></ul>
+  <% } %>
+</li>

@@ -1,0 +1,10 @@
+<%- include('../partials/head') %>
+<section class="section error-page">
+  <div class="container narrow center">
+    <div class="error-page__code"><%= status %></div>
+    <h1><%= status === 404 ? t('not_found') : t('server_error') %></h1>
+    <p class="muted"><%= message %></p>
+    <a class="btn" href="/"><i class="fa-solid fa-house"></i> <%= t('back_home') %></a>
+  </div>
+</section>
+<%- include('../partials/footer') %>

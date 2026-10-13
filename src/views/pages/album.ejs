@@ -1,0 +1,10 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: album.title, heroSubtitle: album.description }) %>
+<section class="section">
+  <div class="container">
+    <% if (images.length) { %>
+      <div class="photo-grid photo-grid--lg" data-gallery><% images.forEach(function (im) { %><a href="<%= im.image %>" data-caption="<%= im.caption || '' %>"><img src="<%= im.image %>" alt="<%= im.caption || album.title %>" loading="lazy"><% if (im.caption) { %><span class="photo-grid__cap"><%= im.caption %></span><% } %></a><% }) %></div>
+    <% } else { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

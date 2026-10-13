@@ -1,0 +1,15 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('org_structure') }) %>
+<section class="section">
+  <div class="container">
+    <% if ((mode === 'image' || mode === 'both') && image) { %>
+      <figure class="org-image"><a href="<%= image %>" target="_blank" rel="noopener"><img src="<%= image %>" alt="<%= t('org_structure') %>"></a></figure>
+    <% } %>
+    <% if ((mode === 'chart' || mode === 'both' || !image) && tree.length) { %>
+      <div class="org-chart-wrap" tabindex="0" aria-label="<%= t('org_structure') %>">
+        <ul class="org-chart"><% tree.forEach(function (node) { %><%- include('../partials/org-node', { node: node }) %><% }) %></ul>
+      </div>
+    <% } else if (!image) { %><p class="empty"><%= t('no_results') %></p><% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

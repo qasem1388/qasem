@@ -1,0 +1,31 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('contact_us'), heroSubtitle: s.contact_intro }) %>
+<section class="section">
+  <div class="container contact-layout">
+    <div class="contact-info">
+      <ul class="contact-cards">
+        <% if (s.phone) { %><li class="card"><i class="fa-solid fa-phone"></i><div><span class="muted"><%= t('phone') %></span><a href="tel:<%= s.phone %>" dir="ltr"><%= s.phone %></a></div></li><% } %>
+        <% if (s.mobile) { %><li class="card"><i class="fa-solid fa-mobile-screen"></i><div><span class="muted"><%= t('mobile') %></span><a href="tel:<%= s.mobile %>" dir="ltr"><%= s.mobile %></a></div></li><% } %>
+        <% if (s.email) { %><li class="card"><i class="fa-solid fa-envelope"></i><div><span class="muted"><%= t('email') %></span><a href="mailto:<%= s.email %>"><%= s.email %></a></div></li><% } %>
+        <% if (s.address) { %><li class="card"><i class="fa-solid fa-location-dot"></i><div><span class="muted"><%= t('address') %></span><span><%= s.address %></span><% if (s.map_url) { %> <a href="<%= s.map_url %>" target="_blank" rel="noopener"><%= t('map') %></a><% } %></div></li><% } %>
+        <% if (s.working_hours) { %><li class="card"><i class="fa-solid fa-clock"></i><div><span class="muted"><%= t('working_hours') %></span><span><%= s.working_hours %></span></div></li><% } %>
+      </ul>
+      <% if (s.map_embed_url) { %><iframe class="map-embed" src="<%= s.map_embed_url %>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="<%= t('map') %>" allowfullscreen></iframe><% } %>
+    </div>
+    <div>
+      <% if (success) { %><div class="alert alert--success" role="status"><i class="fa-solid fa-circle-check"></i> <%= t('contact_success') %></div><% } %>
+      <form class="card form-card" method="post" action="/contact" novalidate>
+        <%- include('../partials/form-guard') %>
+        <div class="form-grid">
+          <%- include('../partials/form-field', { name: 'name', label: 'الاسم', required: true, autocomplete: 'name' }) %>
+          <%- include('../partials/form-field', { name: 'phone', label: 'رقم الجوال', type: 'tel', inputmode: 'tel', placeholder: '05xxxxxxxx', ltr: true }) %>
+          <%- include('../partials/form-field', { name: 'email', label: 'البريد الإلكتروني', type: 'email', ltr: true }) %>
+          <%- include('../partials/form-field', { name: 'subject', label: 'الموضوع' }) %>
+          <%- include('../partials/form-field', { name: 'message', label: 'الرسالة', type: 'textarea', required: true, rows: 5, wide: true, max: 5000 }) %>
+        </div>
+        <button class="btn btn--block" type="submit"><i class="fa-solid fa-paper-plane"></i> <%= t('send') %></button>
+      </form>
+    </div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,18 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: p.title, heroSubtitle: p.summary }) %>
+<section class="section">
+  <div class="container narrow">
+    <% if (p.image) { %><img class="featured-image" src="<%= p.image %>" alt="<%= p.title %>"><% } %>
+    <ul class="facts">
+      <% if (p.category) { %><li><i class="fa-solid fa-tag"></i> <%= t('category') %>: <strong><%= p.category %></strong></li><% } %>
+      <% if (p.beneficiaries) { %><li><i class="fa-solid fa-people-group"></i> <%= t('beneficiaries') %>: <strong><%= p.beneficiaries %></strong></li><% } %>
+      <% if (p.start_date) { %><li><i class="fa-regular fa-calendar"></i> <%= t('start_date') %>: <strong><%= formatDate(p.start_date) %></strong></li><% } %>
+      <% if (p.end_date) { %><li><i class="fa-regular fa-calendar-check"></i> <%= t('end_date') %>: <strong><%= formatDate(p.end_date) %></strong></li><% } %>
+    </ul>
+    <div class="rich content-block"><%- p.content || '' %></div>
+    <% if (p.gallery.length) { %>
+      <div class="photo-grid" data-gallery><% p.gallery.forEach(function (g) { %><a href="<%= g.url %>" data-caption="<%= g.caption || '' %>"><img src="<%= g.url %>" alt="<%= g.caption || '' %>" loading="lazy"></a><% }) %></div>
+    <% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

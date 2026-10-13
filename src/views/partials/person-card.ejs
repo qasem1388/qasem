@@ -1,0 +1,10 @@
+<article class="card person-card">
+  <div class="person-card__photo">
+    <% if (person.photo) { %><img src="<%= person.photo %>" alt="<%= person.name %>" loading="lazy"><% } else { %><span class="avatar" aria-hidden="true"><%= initials(person.name) %></span><% } %>
+  </div>
+  <h3 class="person-card__name"><%= person.name %></h3>
+  <% if (person.position) { %><p class="person-card__position"><%= person.position %></p><% } %>
+  <% if (person.department) { %><p class="person-card__dept"><%= person.department %></p><% } %>
+  <% if (person.bio) { %><p class="person-card__bio"><%= person.bio %></p><% } %>
+  <% if (person.joined_at) { %><p class="meta"><i class="fa-regular fa-calendar"></i> <%= t('joined_at') %>: <%= formatDate(person.joined_at) %></p><% } %>
+</article>

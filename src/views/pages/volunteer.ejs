@@ -1,0 +1,44 @@
+<%- include('../partials/head') %>
+<%- include('../partials/page-hero', { heroTitle: t('volunteer'), heroSubtitle: s.volunteer_intro }) %>
+<section class="section">
+  <div class="container narrow">
+    <% if (success) { %>
+      <div class="alert alert--success" role="status"><i class="fa-solid fa-circle-check"></i> <%= s.volunteer_success_message %></div>
+    <% } %>
+    <form class="card form-card" method="post" action="/volunteer" novalidate>
+      <%- include('../partials/form-guard') %>
+      <p class="muted small"><%= t('required_fields') %></p>
+      <fieldset class="form-grid">
+        <legend>البيانات الشخصية</legend>
+        <%- include('../partials/form-field', { name: 'full_name', label: 'الاسم الكامل', required: true, autocomplete: 'name' }) %>
+        <%- include('../partials/form-field', { name: 'national_id', label: 'رقم الهوية / الإقامة', required: true, inputmode: 'numeric', max: 10, ltr: true, pattern: '[0-9]{10}' }) %>
+        <%- include('../partials/form-field', { name: 'mobile', label: 'رقم الجوال', required: true, type: 'tel', inputmode: 'tel', autocomplete: 'tel', placeholder: '05xxxxxxxx', ltr: true }) %>
+        <%- include('../partials/form-field', { name: 'email', label: 'البريد الإلكتروني', required: true, type: 'email', autocomplete: 'email', ltr: true }) %>
+        <%- include('../partials/form-field', { name: 'city', label: 'المدينة', required: true, autocomplete: 'address-level2' }) %>
+        <%- include('../partials/form-field', { name: 'qualification', label: 'المؤهل' }) %>
+        <%- include('../partials/form-field', { name: 'specialization', label: 'التخصص' }) %>
+      </fieldset>
+      <fieldset class="form-grid">
+        <legend>المهارات والخبرات</legend>
+        <%- include('../partials/form-field', { name: 'skills', label: 'المهارات', type: 'textarea', rows: 3, wide: true, max: 2000 }) %>
+        <%- include('../partials/form-field', { name: 'experience', label: 'الخبرات', type: 'textarea', rows: 3, wide: true }) %>
+      </fieldset>
+      <% var chosen = [].concat(values.interests || []); var chosenTimes = [].concat(values.availability || []); %>
+      <% if (areas.length) { %>
+      <fieldset class="checks">
+        <legend>المجالات التي ترغب بالتطوع فيها</legend>
+        <% areas.forEach(function (a) { %><label class="check"><input type="checkbox" name="interests" value="<%= a %>"<%= chosen.indexOf(a) > -1 ? ' checked' : '' %>> <span><%= a %></span></label><% }) %>
+      </fieldset>
+      <% } %>
+      <fieldset class="checks">
+        <legend>أوقات التفرغ</legend>
+        <% availabilityOptions.forEach(function (a) { %><label class="check"><input type="checkbox" name="availability" value="<%= a %>"<%= chosenTimes.indexOf(a) > -1 ? ' checked' : '' %>> <span><%= a %></span></label><% }) %>
+      </fieldset>
+      <div class="form-grid">
+        <%- include('../partials/form-field', { name: 'notes', label: 'ملاحظات', type: 'textarea', rows: 3, wide: true, max: 2000 }) %>
+      </div>
+      <button class="btn btn--lg btn--block" type="submit"><i class="fa-solid fa-user-plus"></i> <%= t('register_volunteer') %></button>
+    </form>
+  </div>
+</section>
+<%- include('../partials/footer') %>
