@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حديقة البومة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap">
+<style>
+/* Layout: one-screen sky-and-grass playground; owl guide on top, big tappable answers below. Single bright look on purpose. */
+:root {
+  color-scheme: light;
+  --sky: #8fd3ff;
+  --sky-deep: #4fb3f0;
+  --grass: #6cc24a;
+  --grass-deep: #3f9a2a;
+  --sun: #ffc93c;
+  --ink: #23315c;
+  --paper: #fffdf6;
+  --good: #2fb85a;
+  --bad: #ff6b6b;
+  --berry: #ff5d8f;
+  --display: "Lalezar", "Baloo Bhaijaan 2", "Tahoma", sans-serif;
+  --body: "Baloo Bhaijaan 2", "Tahoma", "Arial", sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--body);
+  color: var(--ink);
+  background: var(--sky);
+  background-image:
+    radial-gradient(circle at 88% 8%, var(--sun) 0 46px, rgba(255,201,60,.35) 47px 70px, transparent 71px),
+    linear-gradient(to bottom, var(--sky) 0%, #bfe7ff 62%, var(--grass) 62%, var(--grass-deep) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  user-select: none;
+}
+.app {
+  height: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 12px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.screen { flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+button { font-family: inherit; color: inherit; cursor: pointer; border: 0; }
+button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- Home ---------- */
+.hero { text-align: center; padding-top: 8px; }
+.owl-big { font-size: 84px; line-height: 1; display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(42px, 11vw, 68px);
+  margin: 4px 0 0;
+  color: var(--paper);
+  text-shadow: 0 4px 0 var(--sky-deep), 0 8px 18px rgba(35,49,92,.25);
+  text-wrap: balance;
+}
+.tagline { margin: 0; font-size: 20px; font-weight: 700; }
+.games {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 6px;
+}
+.game-card {
+  background: var(--paper);
+  border-radius: 28px;
+  padding: 16px 10px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  box-shadow: 0 7px 0 var(--c, var(--sky-deep));
+  transition: transform .12s;
+  border: 4px solid var(--c, var(--sky-deep));
+}
+.game-card:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--c); }
+.game-card .icon { font-size: 54px; line-height: 1.1; }
+.game-card .name { font-family: var(--display); font-size: 28px; }
+.game-card .hint { font-size: 15px; opacity: .75; font-weight: 700; }
+.voice-note {
+  margin: 0; text-align: center; font-size: 14px; font-weight: 700;
+  background: rgba(255,253,246,.85); border-radius: 14px; padding: 6px 10px;
+}
+
+/* ---------- Play ---------- */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.round-btn {
+  width: 58px; height: 58px; border-radius: 50%;
+  background: var(--paper); font-size: 30px;
+  box-shadow: 0 5px 0 var(--sky-deep);
+  flex: none;
+}
+.round-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--sky-deep); }
+.progress { display: flex; gap: 6px; font-size: 30px; }
+.progress span { filter: grayscale(1) opacity(.35); transition: filter .3s, transform .3s; }
+.progress span.on { filter: none; transform: scale(1.15); }
+
+.guide { display: flex; align-items: flex-end; gap: 10px; }
+.owl { font-size: 64px; line-height: 1; flex: none; }
+.owl.talk { animation: talk .35s ease-in-out infinite alternate; }
+.bubble {
+  flex: 1; min-width: 0;
+  background: var(--paper);
+  border-radius: 26px 26px 6px 26px;
+  padding: 12px 18px;
+  font-family: var(--display);
+  font-size: clamp(26px, 7vw, 38px);
+  line-height: 1.3;
+  box-shadow: 0 6px 0 rgba(35,49,92,.15);
+  text-wrap: balance;
+}
+.bubble small { display: block; font-family: var(--body); font-size: 18px; font-weight: 700; opacity: .7; }
+
+.stage {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 8px; min-height: 0;
+}
+.stage:empty { display: none; }
+.thing {
+  position: relative;
+  font-size: clamp(44px, 12vw, 64px);
+  background: rgba(255,253,246,.7);
+  border-radius: 22px;
+  width: 1.5em; height: 1.5em;
+  display: grid; place-items: center;
+  animation: pop-in .35s backwards;
+}
+.thing .n {
+  position: absolute; top: -8px; left: -8px;
+  background: var(--berry); color: var(--paper);
+  font-family: var(--display); font-size: 22px;
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  animation: pop-in .25s;
+}
+.thing.counted { background: var(--paper); }
+
+.options {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  gap: 14px;
+}
+.opt {
+  background: var(--paper);
+  border-radius: 28px;
+  min-height: 112px;
+  font-family: var(--display);
+  font-size: 64px; line-height: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  box-shadow: 0 8px 0 var(--grass-deep);
+  transition: transform .12s, background .2s;
+  animation: pop-in .4s backwards;
+}
+.opt:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--grass-deep); }
+.opt .sub { font-family: var(--body); font-size: 18px; font-weight: 800; opacity: .6; }
+.opt.swatch { box-shadow: 0 8px 0 rgba(35,49,92,.25); }
+.opt.swatch .blob { width: 74px; height: 74px; border-radius: 46% 54% 50% 50% / 55% 45% 55% 45%; background: var(--blob); border: 4px solid rgba(35,49,92,.15); }
+.opt.right { background: var(--good); color: var(--paper); animation: bounce .5s; }
+.opt.wrong { animation: shake .45s; background: #ffe1e1; }
+.opt:disabled { cursor: default; }
+
+/* ---------- Win ---------- */
+.win { align-items: center; justify-content: center; text-align: center; }
+.trophy { font-size: 120px; line-height: 1; animation: bob 1.6s ease-in-out infinite; }
+.win h2 { font-family: var(--display); font-weight: 400; font-size: 58px; margin: 0; color: var(--paper); text-shadow: 0 4px 0 var(--sky-deep); }
+.win p { margin: 0; font-size: 22px; font-weight: 800; }
+.win .stars { font-size: 44px; letter-spacing: 4px; }
+.win-actions { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 10px; }
+.big-btn {
+  background: var(--paper);
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-family: var(--display); font-size: 28px;
+  box-shadow: 0 6px 0 var(--grass-deep);
+}
+.big-btn.primary { background: var(--sun); box-shadow: 0 6px 0 #d99a00; }
+.big-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--grass-deep); }
+
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 10; width: 100%; height: 100%; }
+
+@keyframes bob { 50% { transform: translateY(-8px) rotate(-3deg); } }
+@keyframes talk { to { transform: scale(1.08) rotate(4deg); } }
+@keyframes pop-in { from { transform: scale(0); opacity: 0; } }
+@keyframes bounce { 30% { transform: scale(1.12); } 60% { transform: scale(.95); } }
+@keyframes shake { 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 420px) {
+  .opt { min-height: 96px; font-size: 54px; }
+  .game-card .icon { font-size: 46px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Home -->
+  <section class="screen" id="home">
+    <div class="hero">
+      <div class="owl-big" aria-hidden="true">🦉</div>
+      <h1>حديقة البومة</h1>
+      <p class="tagline">العب وتعلّم مع البومة الذكية</p>
+    </div>
+    <div class="games">
+      <button class="game-card" data-game="count" style="--c:#ff8a3d"><span class="icon">🍎</span><span class="name">عُدّ معي</span><span class="hint">الأرقام ١ – ٩</span></button>
+      <button class="game-card" data-game="color" style="--c:#b06ad9"><span class="icon">🎨</span><span class="name">الألوان</span><span class="hint">أين اللون؟</span></button>
+      <button class="game-card" data-game="animal" style="--c:#3f9a2a"><span class="icon">🦁</span><span class="name">الحيوانات</span><span class="hint">أسماء وأصوات</span></button>
+      <button class="game-card" data-game="letter" style="--c:#2d8fd6"><span class="icon">أ ب</span><span class="name">الحروف</span><span class="hint">أ مثل أرنب</span></button>
+    </div>
+    <p class="voice-note" id="voiceNote" hidden>لا يوجد صوت عربي في هذا الجهاز، ستظهر الكلمات مكتوبة مع الأصوات المرحة.</p>
+  </section>
+
+  <!-- Play -->
+  <section class="screen" id="play" hidden>
+    <div class="topbar">
+      <button class="round-btn" id="homeBtn" aria-label="القائمة">🏠</button>
+      <div class="progress" id="progress" aria-label="النجوم"></div>
+      <button class="round-btn" id="sayBtn" aria-label="أعد السؤال">🔊</button>
+    </div>
+    <div class="guide">
+      <div class="owl" id="owl" aria-hidden="true">🦉</div>
+      <div class="bubble" id="bubble" aria-live="polite"></div>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="options" id="options"></div>
+  </section>
+
+  <!-- Win -->
+  <section class="screen win" id="win" hidden>
+    <div class="trophy" aria-hidden="true">🏆</div>
+    <h2>أحسنت!</h2>
+    <div class="stars" id="winStars"></div>
+    <p id="winText"></p>
+    <div class="win-actions">
+      <button class="big-btn primary" id="againBtn">العب مرة أخرى</button>
+      <button class="big-btn" id="menuBtn">القائمة</button>
+    </div>
+  </section>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+  const ROUNDS = 5;
+  const $ = (id) => document.getElementById(id);
+
+  /* ================= Sound effects (Web Audio) ================= */
+  let ctx = null;
+  function audio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, dur, type = "sine", vol = 0.25) {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime + start;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  const sfx = {
+    pop()   { tone(660, 0, .12, "triangle", .3); tone(990, .05, .1, "sine", .2); },
+    tap(i)  { tone(440 + i * 60, 0, .18, "triangle", .3); },
+    right() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .09, .25, "triangle", .28)); },
+    wrong() { tone(260, 0, .18, "sine", .25); tone(200, .14, .25, "sine", .22); },
+    win()   { [523, 523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, i * .14, .3, "square", .12)); }
+  };
+
+  /* ================= Arabic voice (Speech Synthesis) ================= */
+  const synth = window.speechSynthesis;
+  let arVoice = null;
+  function pickVoice() {
+    if (!synth) return;
+    const vs = synth.getVoices();
+    arVoice = vs.find(v => /^ar/i.test(v.lang) && /female|zeina|laila|hoda|salma|google/i.test(v.name))
+           || vs.find(v => /^ar/i.test(v.lang)) || null;
+  }
+  if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; }
+
+  const owl = $("owl");
+  function say(text, onEnd) {
+    if (!synth || !arVoice) { onEnd && setTimeout(onEnd, 900); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = arVoice; u.lang = arVoice.lang;
+    u.rate = 0.85; u.pitch = 1.25;
+    u.onstart = () => owl.classList.add("talk");
+    u.onend = u.onerror = () => { owl.classList.remove("talk"); onEnd && onEnd(); };
+    synth.speak(u);
+  }
+
+  /* ================= Content ================= */
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const sample = (arr, n, must) => { const rest = shuffle(arr.filter(x => x !== must)).slice(0, n - 1); return shuffle([must, ...rest]); };
+
+  const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+  const arNum = (n) => String(n).replace(/\d/g, d => AR_DIGITS[d]);
+  const NUM_WORDS = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
+  const PRAISE = ["أحسنت!", "رائع!", "ممتاز!", "شاطر!", "برافو!", "عمل جميل!"];
+  const TRY = ["حاول مرة أخرى", "قريب! جرّب مرة ثانية", "لا بأس، حاول من جديد"];
+
+  const OBJECTS = [
+    { e: "🍎", pl: "التفاحات" }, { e: "⭐", pl: "النجوم" }, { e: "🐟", pl: "الأسماك" },
+    { e: "🎈", pl: "البالونات" }, { e: "🐥", pl: "الصيصان" }, { e: "🌸", pl: "الزهور" },
+    { e: "🚗", pl: "السيارات" }, { e: "🦋", pl: "الفراشات" }
+  ];
+  const COLORS = [
+    { n: "الأحمر", c: "#e53935" }, { n: "الأزرق", c: "#1e6fe0" }, { n: "الأخضر", c: "#2fae4a" },
+    { n: "الأصفر", c: "#ffd21f" }, { n: "البرتقالي", c: "#ff8a1f" }, { n: "البنفسجي", c: "#8e44c9" },
+    { n: "الوردي", c: "#ff7eb6" }, { n: "البني", c: "#8b5a2b" }, { n: "الأسود", c: "#222222" }
+  ];
+  const ANIMALS = [
+    { e: "🐱", n: "القطة", s: "مياو مياو" }, { e: "🐶", n: "الكلب", s: "هاو هاو" },
+    { e: "🐮", n: "البقرة", s: "موووو" }, { e: "🐑", n: "الخروف", s: "ماااء" },
+    { e: "🦆", n: "البطة", s: "كواك كواك" }, { e: "🦁", n: "الأسد", s: "رااااه" },
+    { e: "🐓", n: "الديك", s: "كوكوكوكووو" }, { e: "🐸", n: "الضفدع", s: "نق نق" },
+    { e: "🐘", n: "الفيل", s: "بوووو" }, { e: "🐴", n: "الحصان", s: "هيي هيي" },
+    { e: "🐝", n: "النحلة", s: "زززز" }, { e: "🐒", n: "القرد", s: "أوو أوو آآ" }
+  ];
+  const LETTERS = [
+    { l: "أ", n: "ألف", w: "أرنب", e: "🐰" }, { l: "ب", n: "باء", w: "بطة", e: "🦆" },
+    { l: "ت", n: "تاء", w: "تفاحة", e: "🍎" }, { l: "ث", n: "ثاء", w: "ثعلب", e: "🦊" },
+    { l: "ج", n: "جيم", w: "جمل", e: "🐫" }, { l: "ح", n: "حاء", w: "حصان", e: "🐴" },
+    { l: "خ", n: "خاء", w: "خروف", e: "🐑" }, { l: "د", n: "دال", w: "دب", e: "🐻" },
+    { l: "ز", n: "زاي", w: "زرافة", e: "🦒" }, { l: "س", n: "سين", w: "سمكة", e: "🐟" },
+    { l: "ش", n: "شين", w: "شمس", e: "☀️" }, { l: "ف", n: "فاء", w: "فيل", e: "🐘" },
+    { l: "ق", n: "قاف", w: "قمر", e: "🌙" }, { l: "ك", n: "كاف", w: "كلب", e: "🐶" },
+    { l: "ل", n: "لام", w: "ليمون", e: "🍋" }, { l: "م", n: "ميم", w: "موز", e: "🍌" },
+    { l: "ن", n: "نون", w: "نحلة", e: "🐝" }, { l: "و", n: "واو", w: "وردة", e: "🌹" },
+    { l: "ي", n: "ياء", w: "يد", e: "✋" }
+  ];
+
+  /* Each game builds a question: { text, sub, speech, options:[{html, value, label}], answer, cols, stage?, onRight } */
+  const GAMES = {
+    count() {
+      const obj = pick(OBJECTS);
+      const n = 1 + Math.floor(Math.random() * 9);
+      const nums = sample([1,2,3,4,5,6,7,8,9], 3, n);
+      return {
+        text: `كم عدد ${obj.pl}؟`,
+        sub: "المس كل واحدة لتعدّها",
+        speech: `كم عدد ${obj.pl}؟ المس كل واحدة لنعدّها معاً`,
+        stage: { emoji: obj.e, count: n },
+        cols: 3,
+        options: nums.map(v => ({ value: v, html: `${arNum(v)}<span class="sub">${v}</span>`, label: NUM_WORDS[v] })),
+        answer: n,
+        rightSpeech: `العدد ${NUM_WORDS[n]}`
+      };
+    },
+    color() {
+      const target = pick(COLORS);
+      const opts = sample(COLORS, 4, target);
+      return {
+        text: `أين اللون ${target.n}؟`,
+        speech: `أين اللون ${target.n}؟`,
+        cols: 2,
+        options: opts.map(c => ({ value: c.n, html: `<span class="blob" style="--blob:${c.c}"></span>`, label: `هذا ${c.n}`, cls: "swatch" })),
+        answer: target.n,
+        rightSpeech: `هذا هو اللون ${target.n}`
+      };
+    },
+    animal() {
+      const target = pick(ANIMALS);
+      const opts = sample(ANIMALS, 4, target);
+      const bySound = Math.random() < 0.5;
+      return {
+        text: bySound ? `من يقول «${target.s}»؟` : `أين ${target.n}؟`,
+        speech: bySound ? `من يقول ${target.s}؟` : `أين ${target.n}؟`,
+        cols: 2,
+        options: opts.map(a => ({ value: a.n, html: a.e, label: `هذا ${a.n}، يقول ${a.s}` })),
+        answer: target.n,
+        rightSpeech: `${target.n} يقول ${target.s}`
+      };
+    },
+    letter() {
+      const target = pick(LETTERS);
+      const opts = sample(LETTERS, 4, target);
+      return {
+        text: `أين حرف ${target.n}؟`,
+        sub: `${target.l} مثل ${target.w} ${target.e}`,
+        speech: `أين حرف ال${target.n}؟ ${target.n} مثل ${target.w}`,
+        cols: 2,
+        options: opts.map(x => ({ value: x.l, html: x.l, label: `هذا حرف ال${x.n}` })),
+        answer: target.l,
+        rightSpeech: `${target.l}، ${target.w}`,
+        rightHtml: `${target.e}<span class="sub">${target.w}</span>`
+      };
+    }
+  };
+
+  /* ================= Game flow ================= */
+  let game = null, round = 0, firstTry = 0, missed = false, q = null, locked = false;
+
+  function show(id) {
+    ["home", "play", "win"].forEach(s => $(s).hidden = s !== id);
+  }
+
+  function start(name) {
+    audio(); sfx.pop();
+    game = name; round = 0; firstTry = 0;
+    show("play");
+    nextQuestion();
+  }
+
+  function renderProgress() {
+    $("progress").innerHTML = Array.from({ length: ROUNDS }, (_, i) => `<span class="${i < round ? "on" : ""}">⭐</span>`).join("");
+  }
+
+  function nextQuestion() {
+    if (round >= ROUNDS) return finish();
+    renderProgress();
+    q = GAMES[game]();
+    missed = false; locked = false;
+    $("bubble").innerHTML = q.text + (q.sub ? `<small>${q.sub}</small>` : "");
+
+    const stage = $("stage");
+    stage.innerHTML = "";
+    if (q.stage) {
+      let counted = 0;
+      for (let i = 0; i < q.stage.count; i++) {
+        const b = document.createElement("button");
+        b.className = "thing";
+        b.style.animationDelay = (i * 0.06) + "s";
+        b.textContent = q.stage.emoji;
+        b.setAttribute("aria-label", "عُدّ");
+        b.onclick = () => {
+          if (b.classList.contains("counted")) { sfx.pop(); return; }
+          counted++;
+          b.classList.add("counted");
+          b.insertAdjacentHTML("beforeend", `<span class="n">${arNum(counted)}</span>`);
+          sfx.tap(counted);
+          say(NUM_WORDS[counted]);
+        };
+        stage.appendChild(b);
+      }
+    }
+
+    const box = $("options");
+    box.style.setProperty("--cols", q.cols);
+    box.innerHTML = "";
+    q.options.forEach((o, i) => {
+      const b = document.createElement("button");
+      b.className = "opt" + (o.cls ? " " + o.cls : "");
+      b.style.animationDelay = (0.1 + i * 0.07) + "s";
+      b.innerHTML = o.html;
+      b.setAttribute("aria-label", o.label);
+      b.onclick = () => answer(b, o);
+      box.appendChild(b);
+    });
+    setTimeout(() => say(q.speech), 250);
+  }
+
+  function answer(btn, o) {
+    if (locked) return;
+    if (o.value === q.answer) {
+      locked = true;
+      if (!missed) firstTry++;
+      btn.classList.add("right");
+      if (q.rightHtml) btn.innerHTML = q.rightHtml;
+      [...$("options").children].forEach(b => b.disabled = true);
+      sfx.right();
+      burst(btn);
+      round++;
+      renderProgress();
+      say(`${pick(PRAISE)} ${q.rightSpeech}`, () => setTimeout(nextQuestion, 500));
+    } else {
+      missed = true;
+      btn.classList.remove("wrong"); void btn.offsetWidth; btn.classList.add("wrong");
+      sfx.wrong();
+      say(`${o.label}. ${pick(TRY)}`);
+    }
+  }
+
+  function finish() {
+    show("win");
+    const stars = firstTry >= 5 ? 3 : firstTry >= 3 ? 2 : 1;
+    $("winStars").textContent = "⭐".repeat(stars);
+    $("winText").textContent = `جمعت ${arNum(ROUNDS)} نجوم! أجبت ${arNum(firstTry)} من أول محاولة.`;
+    sfx.win();
+    burst(null, 160);
+    say(stars === 3 ? "أحسنت! أنت بطل! جمعت كل النجوم" : "أحسنت! لقد أنهيت اللعبة. هيا نلعب مرة أخرى");
+  }
+
+  /* ================= Confetti ================= */
+  const cv = $("confetti"), cx = cv.getContext("2d");
+  let parts = [], raf = 0;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
+  addEventListener("resize", resize); resize();
+  function burst(el, n = 50) {
+    if (reduce) return;
+    const r = el ? el.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 3, width: 0, height: 0 };
+    const x0 = (r.left + r.width / 2) * devicePixelRatio, y0 = (r.top + r.height / 2) * devicePixelRatio;
+    const cols = ["#ff5d8f", "#ffc93c", "#2fb85a", "#4fb3f0", "#b06ad9", "#ff8a3d"];
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = (4 + Math.random() * 9) * devicePixelRatio;
+      parts.push({ x: x0, y: y0, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 6 * devicePixelRatio,
+        r: (5 + Math.random() * 6) * devicePixelRatio, c: cols[i % cols.length], life: 60 + Math.random() * 40, rot: Math.random() * 6 });
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    parts = parts.filter(p => p.life > 0);
+    for (const p of parts) {
+      p.vy += 0.35 * devicePixelRatio; p.x += p.vx; p.y += p.vy; p.vx *= 0.98; p.life--; p.rot += 0.2;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot);
+      cx.globalAlpha = Math.min(1, p.life / 30);
+      cx.fillStyle = p.c; cx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2);
+      cx.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(tick) : 0;
+  }
+
+  /* ================= Wiring ================= */
+  document.querySelectorAll(".game-card").forEach(b => b.onclick = () => start(b.dataset.game));
+  $("homeBtn").onclick = () => { synth && synth.cancel(); sfx.pop(); show("home"); };
+  $("menuBtn").onclick = () => { synth && synth.cancel(); sfx.pop(); show("home"); };
+  $("againBtn").onclick = () => start(game);
+  $("sayBtn").onclick = () => { sfx.pop(); q && say(q.speech); };
+
+  setTimeout(() => { pickVoice(); if (!arVoice) $("voiceNote").hidden = false; }, 1500);
+})();
+</script>
+</body>
+</html>
