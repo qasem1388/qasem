@@ -114,6 +114,7 @@ h1 {
   box-shadow: 0 6px 0 rgba(35,49,92,.15);
   text-wrap: balance;
 }
+.bubble.cheer { background: var(--sun); animation: bounce .5s; }
 .bubble small { display: block; font-family: var(--body); font-size: 18px; font-weight: 700; opacity: .7; }
 
 .stage {
@@ -293,15 +294,24 @@ h1 {
   if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; }
 
   const owl = $("owl");
+  // Always try to speak: even when the voice list is still empty, lang "ar-SA" lets the browser pick an Arabic voice.
+  // A fallback timer keeps the game moving if the device never fires onend.
   function say(text, onEnd) {
-    if (!synth || !arVoice) { onEnd && setTimeout(onEnd, 900); return; }
+    let done = false;
+    const finish = () => { if (done) return; done = true; owl.classList.remove("talk"); onEnd && onEnd(); };
+    if (!synth) { setTimeout(finish, 1200); return; }
+    if (!arVoice) pickVoice();
     synth.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.voice = arVoice; u.lang = arVoice.lang;
-    u.rate = 0.85; u.pitch = 1.25;
+    if (arVoice) u.voice = arVoice;
+    u.lang = arVoice ? arVoice.lang : "ar-SA";
+    u.rate = 0.85; u.pitch = 1.25; u.volume = 1;
     u.onstart = () => owl.classList.add("talk");
-    u.onend = u.onerror = () => { owl.classList.remove("talk"); onEnd && onEnd(); };
+    u.onend = u.onerror = finish;
+    owl.classList.add("talk");
     synth.speak(u);
+    if (synth.paused) synth.resume();
+    setTimeout(finish, 1500 + text.length * 110);
   }
 
   /* ================= Content ================= */
@@ -312,8 +322,10 @@ h1 {
   const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
   const arNum = (n) => String(n).replace(/\d/g, d => AR_DIGITS[d]);
   const NUM_WORDS = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
-  const PRAISE = ["أحسنت!", "رائع!", "ممتاز!", "شاطر!", "برافو!", "عمل جميل!"];
-  const TRY = ["حاول مرة أخرى", "قريب! جرّب مرة ثانية", "لا بأس، حاول من جديد"];
+  const PRAISE = ["أحسنت يا بطل!", "رائع جداً!", "ممتاز! إجابة صحيحة!", "شاطر! أنا فخورة بك!", "برافو عليك!", "عمل جميل! استمر!", "واو! أنت ذكي!"];
+  const STREAK = ["ثلاث إجابات صحيحة متتالية! أنت نجم!", "ما شاء الله! لا أحد يوقفك!", "أنت رائع! استمر هكذا!"];
+  const TRY = ["حاول مرة أخرى، أنت تستطيع!", "قريب جداً! جرّب مرة ثانية", "لا بأس، كلنا نتعلم. حاول من جديد", "فكّر قليلاً، ستجدها!"];
+  const PRAISE_ICONS = ["🌟", "🎉", "👏", "🏅", "💪", "😍"];
 
   const OBJECTS = [
     { e: "🍎", pl: "التفاحات" }, { e: "⭐", pl: "النجوم" }, { e: "🐟", pl: "الأسماك" },
@@ -405,7 +417,7 @@ h1 {
   };
 
   /* ================= Game flow ================= */
-  let game = null, round = 0, firstTry = 0, missed = false, q = null, locked = false;
+  let game = null, round = 0, firstTry = 0, missed = false, q = null, locked = false, streak = 0;
 
   function show(id) {
     ["home", "play", "win"].forEach(s => $(s).hidden = s !== id);
@@ -413,16 +425,16 @@ h1 {
 
   function start(name) {
     audio(); sfx.pop();
-    game = name; round = 0; firstTry = 0;
+    game = name; round = 0; firstTry = 0; streak = 0;
     show("play");
-    nextQuestion();
+    nextQuestion(true);
   }
 
   function renderProgress() {
     $("progress").innerHTML = Array.from({ length: ROUNDS }, (_, i) => `<span class="${i < round ? "on" : ""}">⭐</span>`).join("");
   }
 
-  function nextQuestion() {
+  function nextQuestion(fromTap) {
     if (round >= ROUNDS) return finish();
     renderProgress();
     q = GAMES[game]();
@@ -463,7 +475,14 @@ h1 {
       b.onclick = () => answer(b, o);
       box.appendChild(b);
     });
-    setTimeout(() => say(q.speech), 250);
+    // On phones, speech must start inside the tap itself, so the first question is read right away.
+    if (fromTap) say(q.speech);
+    else setTimeout(() => say(q.speech), 250);
+  }
+
+  function cheer(text) {
+    $("bubble").innerHTML = `${pick(PRAISE_ICONS)} ${text}`;
+    $("bubble").classList.remove("cheer"); void $("bubble").offsetWidth; $("bubble").classList.add("cheer");
   }
 
   function answer(btn, o) {
@@ -477,13 +496,19 @@ h1 {
       sfx.right();
       burst(btn);
       round++;
+      streak++;
       renderProgress();
-      say(`${pick(PRAISE)} ${q.rightSpeech}`, () => setTimeout(nextQuestion, 500));
+      const praise = streak > 0 && streak % 3 === 0 ? pick(STREAK) : pick(PRAISE);
+      cheer(praise);
+      say(`${praise} ${q.rightSpeech}`, () => setTimeout(() => nextQuestion(), 400));
     } else {
       missed = true;
+      streak = 0;
       btn.classList.remove("wrong"); void btn.offsetWidth; btn.classList.add("wrong");
       sfx.wrong();
-      say(`${o.label}. ${pick(TRY)}`);
+      const tryMsg = pick(TRY);
+      $("bubble").innerHTML = q.text + `<small>🤔 ${tryMsg}</small>`;
+      say(`${o.label}. ${tryMsg}. ${q.speech}`);
     }
   }
 
