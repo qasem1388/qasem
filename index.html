@@ -82,6 +82,17 @@ h1 {
 .game-card .icon { font-size: 54px; line-height: 1.1; }
 .game-card .name { font-family: var(--display); font-size: 28px; }
 .game-card .hint { font-size: 15px; opacity: .75; font-weight: 700; }
+.voice-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(255,253,246,.85); border-radius: 18px; padding: 8px 12px;
+  font-weight: 800; font-size: 16px;
+}
+.voice-row select {
+  font-family: inherit; font-size: 15px; color: var(--ink); background: var(--paper);
+  border: 2px solid var(--sky-deep); border-radius: 12px; padding: 4px 8px;
+  min-width: 0; max-width: 100%; flex: 1 1 160px;
+}
+.try-btn { background: var(--sun); border-radius: 999px; padding: 4px 14px; font-weight: 800; font-size: 16px; }
 .voice-note {
   margin: 0; text-align: center; font-size: 14px; font-weight: 700;
   background: rgba(255,253,246,.85); border-radius: 14px; padding: 6px 10px;
@@ -215,6 +226,11 @@ h1 {
       <button class="game-card" data-game="animal" style="--c:#3f9a2a"><span class="icon">🦁</span><span class="name">الحيوانات</span><span class="hint">أسماء وأصوات</span></button>
       <button class="game-card" data-game="letter" style="--c:#2d8fd6"><span class="icon">أ ب</span><span class="name">الحروف</span><span class="hint">أ مثل أرنب</span></button>
     </div>
+    <div class="voice-row" id="voiceRow" hidden>
+      <label for="voiceSelect">صوت البومة</label>
+      <select id="voiceSelect"></select>
+      <button class="try-btn" id="tryVoice">🔊 جرّب</button>
+    </div>
     <p class="voice-note" id="voiceNote" hidden>لا يوجد صوت عربي في هذا الجهاز، ستظهر الكلمات مكتوبة مع الأصوات المرحة.</p>
   </section>
 
@@ -284,14 +300,42 @@ h1 {
 
   /* ================= Arabic voice (Speech Synthesis) ================= */
   const synth = window.speechSynthesis;
-  let arVoice = null;
+  // Prefer a Saudi (ar-SA) female voice, e.g. Microsoft Zariyah in Edge. Known male voices rank last.
+  const FEMALE = /female|zariyah|laila|layla|hoda|salma|mariam|maryam|amira|amina|zeina|reem|noura|sara|fatima|salwa|rana|dalia|سلمى|زارية|ليلى/i;
+  const MALE = /\bmale\b|maged|majed|hamed|naayf|tarik|shakir|fahed|hamdan|omar|ali\b|moaz|bassel|taim|rami|زايد/i;
+  const VOICE_KEY = "owl-voice";
+  let arVoice = null, arVoices = [];
+  function scoreVoice(v) {
+    let s = 0;
+    if (/^ar[-_]SA/i.test(v.lang)) s += 50; else if (/^ar/i.test(v.lang)) s += 20;
+    if (FEMALE.test(v.name)) s += 40;
+    if (MALE.test(v.name)) s -= 60;
+    if (/natural|online|neural|premium|enhanced/i.test(v.name)) s += 10;
+    return s;
+  }
   function pickVoice() {
     if (!synth) return;
-    const vs = synth.getVoices();
-    arVoice = vs.find(v => /^ar/i.test(v.lang) && /female|zeina|laila|hoda|salma|google/i.test(v.name))
-           || vs.find(v => /^ar/i.test(v.lang)) || null;
+    arVoices = synth.getVoices().filter(v => /^ar/i.test(v.lang)).sort((a, b) => scoreVoice(b) - scoreVoice(a));
+    let saved = null;
+    try { saved = localStorage.getItem(VOICE_KEY); } catch (e) {}
+    arVoice = arVoices.find(v => v.voiceURI === saved) || arVoices[0] || null;
+    renderVoicePicker();
   }
-  if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; }
+  // A male-only device still sounds younger with a higher pitch.
+  const voicePitch = () => (arVoice && MALE.test(arVoice.name) && !FEMALE.test(arVoice.name)) ? 1.7 : 1.35;
+
+  function renderVoicePicker() {
+    const sel = $("voiceSelect"), row = $("voiceRow");
+    if (!sel) return;
+    row.hidden = arVoices.length === 0;
+    if (arVoices.length) $("voiceNote").hidden = true;
+    sel.innerHTML = arVoices.map(v => {
+      const tag = FEMALE.test(v.name) ? " 👧" : "";
+      const sa = /^ar[-_]SA/i.test(v.lang) ? " (السعودية)" : "";
+      return `<option value="${v.voiceURI.replace(/"/g, "&quot;")}">${v.name}${sa}${tag}</option>`;
+    }).join("");
+    if (arVoice) sel.value = arVoice.voiceURI;
+  }
 
   const owl = $("owl");
   // Always try to speak: even when the voice list is still empty, lang "ar-SA" lets the browser pick an Arabic voice.
@@ -305,7 +349,7 @@ h1 {
     const u = new SpeechSynthesisUtterance(text);
     if (arVoice) u.voice = arVoice;
     u.lang = arVoice ? arVoice.lang : "ar-SA";
-    u.rate = 0.85; u.pitch = 1.25; u.volume = 1;
+    u.rate = 0.9; u.pitch = voicePitch(); u.volume = 1;
     u.onstart = () => owl.classList.add("talk");
     u.onend = u.onerror = finish;
     owl.classList.add("talk");
@@ -322,9 +366,9 @@ h1 {
   const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
   const arNum = (n) => String(n).replace(/\d/g, d => AR_DIGITS[d]);
   const NUM_WORDS = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
-  const PRAISE = ["أحسنت يا بطل!", "رائع جداً!", "ممتاز! إجابة صحيحة!", "شاطر! أنا فخورة بك!", "برافو عليك!", "عمل جميل! استمر!", "واو! أنت ذكي!"];
-  const STREAK = ["ثلاث إجابات صحيحة متتالية! أنت نجم!", "ما شاء الله! لا أحد يوقفك!", "أنت رائع! استمر هكذا!"];
-  const TRY = ["حاول مرة أخرى، أنت تستطيع!", "قريب جداً! جرّب مرة ثانية", "لا بأس، كلنا نتعلم. حاول من جديد", "فكّر قليلاً، ستجدها!"];
+  const PRAISE = ["كفو عليك!", "يا حلوك! إجابة صح!", "ما شاء الله عليك!", "والله إنك شاطر!", "يا سلام! برافو!", "أحسنت يا بطل!", "واو! أنت ذكي مرة!", "شاطر! أنا فخورة فيك!"];
+  const STREAK = ["ثلاث إجابات صح ورا بعض! أنت نجم!", "ما شاء الله تبارك الله! ما أحد يوقفك!", "كفو والله! كمّل كذا!"];
+  const TRY = ["معليش، جرّب مرة ثانية، تقدر!", "قريب مرة! حاول مرة ثانية", "ولا يهمك، كلنا نتعلم. جرّب من جديد", "فكّر شوي، بتلقاها!"];
   const PRAISE_ICONS = ["🌟", "🎉", "👏", "🏅", "💪", "😍"];
 
   const OBJECTS = [
@@ -560,6 +604,14 @@ h1 {
   $("againBtn").onclick = () => start(game);
   $("sayBtn").onclick = () => { sfx.pop(); q && say(q.speech); };
 
+  $("voiceSelect").onchange = (e) => {
+    arVoice = arVoices.find(v => v.voiceURI === e.target.value) || arVoice;
+    try { localStorage.setItem(VOICE_KEY, arVoice.voiceURI); } catch (err) {}
+    say("مرحبا! أنا البومة. يلا نلعب ونتعلم سوا!");
+  };
+  $("tryVoice").onclick = () => say("مرحبا! أنا البومة. يلا نلعب ونتعلم سوا!");
+
+  if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; }
   setTimeout(() => { pickVoice(); if (!arVoice) $("voiceNote").hidden = false; }, 1500);
 })();
 </script>
