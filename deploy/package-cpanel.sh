@@ -28,8 +28,9 @@ PASS="Qs-$(node -e 'console.log(require("crypto").randomBytes(6).toString("base6
 sed -i "s/__AUTH_SECRET__/$SECRET/; s/__ADMIN_PASSWORD__/$PASS/" "$OUT/.env"
 echo "كلمة مرور لوحة التحكم: $PASS"
 
-# حذف ما لا يلزم على خوادم CloudLinux (glibc) لتصغير الحجم
-rm -rf "$OUT"/node_modules/@img/sharp-wasm32 "$OUT"/node_modules/@img/*musl* "$OUT"/node_modules/typescript \
+# حذف ما لا يلزم على خوادم glibc لتصغير الحجم.
+# لا نحذف @img/sharp-wasm32: هو البديل الذي يعمل على المعالجات القديمة (أجهزة VPS كثيرة لا تدعم x86-64-v2)
+rm -rf "$OUT"/node_modules/@img/*musl* "$OUT"/node_modules/typescript \
   "$OUT"/node_modules/.prisma/client/libquery_engine-debian-*.node
 
 # ملفان: التطبيق + محركات قاعدة البيانات (يُفك ضغطهما في نفس المجلد)
