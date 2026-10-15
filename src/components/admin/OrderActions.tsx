@@ -1,5 +1,6 @@
 "use client";
 
+import { readJson } from "./ImageInput";
 import { useState } from "react";
 
 export function OrderActions({ id, status, statuses, carrier, hasTracking, labelUrl }: { id: string; status: string; statuses: Record<string, string>; carrier: string; hasTracking: boolean; labelUrl: string }) {
@@ -11,14 +12,14 @@ export function OrderActions({ id, status, statuses, carrier, hasTracking, label
   const update = async () => {
     setLoading(true);
     const res = await fetch(`/api/admin/orders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: s, note }) });
-    if (!res.ok) alert((await res.json()).error);
+    if (!res.ok) alert((await readJson(res)).error);
     location.reload();
   };
   const ship = async () => {
     setLoading(true);
     const res = await fetch(`/api/admin/orders/${id}/ship`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company }) });
     if (!res.ok) {
-      alert((await res.json()).error);
+      alert((await readJson(res)).error);
       setLoading(false);
       return;
     }

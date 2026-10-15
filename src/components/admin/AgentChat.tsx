@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { readJson } from "./ImageInput";
 
 type Msg = { role: "user" | "assistant"; text: string; tools?: string[]; actions?: { label: string; ok: boolean; summary: string }[] };
 type Convo = { id: string; title: string; updatedAt: string };
@@ -58,7 +59,7 @@ export function AgentChat() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: id, message: text }) });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data.error);
       setId(data.conversationId);
       setMessages((m) => [...m, { role: "assistant", text: data.reply, actions: data.actions }]);

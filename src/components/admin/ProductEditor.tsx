@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { uploadImage } from "./ImageInput";
+import { readJson, shrinkImage, uploadImage } from "./ImageInput";
 
 type Variant = { id?: string; colorName: string; colorHex: string; size: string; sku: string; price: number | null; stock: number; images: string[] };
 
@@ -63,10 +63,10 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
   const generateImages = async (file: File) => {
     setStudio((s) => ({ ...s, loading: true, images: [] }));
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", await shrinkImage(file, 2000), "image.jpg");
     fd.append("name", f.name);
     const res = await fetch("/api/admin/ai/images", { method: "POST", body: fd });
-    const data = await res.json();
+    const data = (await readJson(res)) as { error?: string; images: { url: string; style: string }[]; original: string; provider: string };
     if (!res.ok) {
       alert(data.error);
       setStudio((s) => ({ ...s, loading: false }));
@@ -95,7 +95,7 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
         imageUrl: studio.original || f.images[0],
       }),
     });
-    const data = await res.json();
+    const data = await readJson(res);
     setCopyLoading(false);
     if (!res.ok) return alert(data.error);
     setF((x) => ({
@@ -118,7 +118,7 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(f),
     });
-    const data = await res.json();
+    const data = await readJson(res);
     setSaving(false);
     if (!res.ok) return setMsg({ ok: false, text: data.error });
     setMsg({ ok: true, text: "تم الحفظ ✓" });
@@ -129,7 +129,7 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
   const remove = async () => {
     if (!f.id || !confirm("حذف المنتج؟")) return;
     const res = await fetch(`/api/admin/products/${f.id}`, { method: "DELETE" });
-    const data = await res.json();
+    const data = await readJson(res);
     if (data.archived) alert("المنتج مرتبط بطلبات سابقة، تم إخفاؤه بدلاً من حذفه");
     window.location.href = "/admin/products";
   };

@@ -3,7 +3,8 @@ import sharp from "sharp";
 import { saveUpload } from "@/lib/storage";
 
 export async function POST(req: Request) {
-  const form = await req.formData();
+  const form = await req.formData().catch(() => null);
+  if (!form) return NextResponse.json({ error: "حجم الصورة كبير جداً، جرّب صورة أصغر من 10MB" }, { status: 413 });
   const file = form.get("file");
   if (!(file instanceof File) || file.size > 12 * 1024 * 1024) return NextResponse.json({ error: "ملف غير صالح (الحد 12MB)" }, { status: 400 });
   try {

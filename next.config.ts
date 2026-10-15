@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["sharp", "@prisma/client"],
   experimental: {
     serverActions: { bodySizeLimit: "15mb" },
+    // الطلبات التي تمر عبر middleware تُقطع افتراضياً عند 10MB
+    middlewareClientMaxBodySize: "20mb",
   },
   async headers() {
     return [

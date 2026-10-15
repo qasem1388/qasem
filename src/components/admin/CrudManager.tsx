@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImageInput } from "./ImageInput";
+import { ImageInput, readJson } from "./ImageInput";
 
 export type Field =
   | { key: string; label: string; type: "text" | "number" | "textarea" | "date"; placeholder?: string }
@@ -38,7 +38,7 @@ export function CrudManager({ resource, fields, columns, defaults, canCreate = t
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!res.ok) return setError((await res.json()).error);
+    if (!res.ok) return setError((await readJson(res)).error);
     setEditing(null);
     load();
   };

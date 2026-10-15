@@ -1,5 +1,6 @@
 "use client";
 
+import { readJson } from "./ImageInput";
 import { useState } from "react";
 
 export function LoginForm({ next }: { next: string }) {
@@ -12,7 +13,7 @@ export function LoginForm({ next }: { next: string }) {
     const res = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fd.get("email"), password: fd.get("password") }) });
     if (res.ok) window.location.href = next.startsWith("/admin") ? next : "/admin";
     else {
-      setError((await res.json()).error);
+      setError((await readJson(res)).error);
       setLoading(false);
     }
   };
