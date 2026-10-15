@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html { scroll-behavior: smooth; }
+body { @apply bg-white text-ink antialiased font-sans; }
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none; }
+  .btn-primary { @apply btn bg-ink text-white hover:bg-brand-800; }
+  .btn-brand { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
+  .btn-outline { @apply btn border border-neutral-300 bg-white hover:border-ink; }
+  .btn-ghost { @apply btn hover:bg-neutral-100; }
+  .input { @apply w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100; }
+  .label { @apply mb-1.5 block text-sm font-semibold text-neutral-700; }
+  .card { @apply rounded-2xl border border-neutral-200 bg-white; }
+  .section-title { @apply text-2xl font-extrabold tracking-tight md:text-3xl; }
+  .badge { @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  .prose-ar { @apply leading-8 text-neutral-700 whitespace-pre-line; }
+}

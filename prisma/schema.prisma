@@ -1,0 +1,210 @@
+// قاعدة البيانات: SQLite للتطوير. للإنتاج غيّر provider إلى "postgresql" وحدّث DATABASE_URL.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  name           String
+  description    String    @default("")
+  image          String    @default("")
+  bannerImage    String    @default("")
+  sortOrder      Int       @default(0)
+  active         Boolean   @default(true)
+  seoTitle       String    @default("")
+  seoDescription String    @default("")
+  products       Product[]
+  createdAt      DateTime  @default(now())
+}
+
+model Product {
+  id               String           @id @default(cuid())
+  slug             String           @unique
+  name             String
+  // عناوين متعددة مختلفة لكل منتج (JSON): seo, marketing, emotional, short, luxury, ad, social, question
+  titlesJson       String           @default("{}")
+  shortDescription String           @default("")
+  description      String           @default("")
+  // مصفوفة JSON لروابط الصور (حتى 6 صور احترافية + الأصلية)
+  imagesJson       String           @default("[]")
+  price            Float
+  compareAtPrice   Float?
+  cost             Float?
+  sku              String           @default("")
+  stock            Int              @default(0)
+  brand            String           @default("")
+  weightKg         Float            @default(0.5)
+  tags             String           @default("")
+  featured         Boolean          @default(false)
+  isNew            Boolean          @default(true)
+  bestSeller       Boolean          @default(false)
+  active           Boolean          @default(true)
+  seoTitle         String           @default("")
+  seoDescription   String           @default("")
+  keywords         String           @default("")
+  ratingAvg        Float            @default(0)
+  ratingCount      Int              @default(0)
+  salesCount       Int              @default(0)
+  viewCount        Int              @default(0)
+  categoryId       String?
+  category         Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants         ProductVariant[]
+  reviews          Review[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([categoryId])
+  @@index([active, featured])
+}
+
+// متغيرات المنتج (اللون + المقاس اختياري) لكل منها مخزون وسعر وصور مستقلة
+model ProductVariant {
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  colorName  String
+  colorHex   String  @default("#000000")
+  size       String  @default("")
+  sku        String  @default("")
+  price      Float?
+  stock      Int     @default(0)
+  imagesJson String  @default("[]")
+  sortOrder  Int     @default(0)
+
+  @@index([productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  city      String   @default("")
+  rating    Int
+  comment   String
+  approved  Boolean  @default(false)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId, approved])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  email     String   @default("")
+  city      String   @default("")
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  number            Int         @unique
+  customerId        String
+  customer          Customer    @relation(fields: [customerId], references: [id])
+  // pending | confirmed | processing | shipped | delivered | cancelled | refunded
+  status            String      @default("pending")
+  // moyasar | tamara | tabby | cod
+  paymentMethod     String
+  // unpaid | authorized | paid | failed | refunded
+  paymentStatus     String      @default("unpaid")
+  paymentRef        String      @default("")
+  paymentUrl        String      @default("")
+  // smsa | aramex
+  shippingCompany   String
+  trackingNumber    String      @default("")
+  labelUrl          String      @default("")
+  subtotal          Float
+  discount          Float       @default(0)
+  shippingCost      Float       @default(0)
+  codFee            Float       @default(0)
+  vat               Float       @default(0)
+  total             Float
+  couponCode        String      @default("")
+  name              String
+  phone             String
+  email             String      @default("")
+  city              String
+  district          String      @default("")
+  address           String
+  postalCode        String      @default("")
+  notes             String      @default("")
+  deliveryFrom      DateTime?
+  deliveryTo        DateTime?
+  items             OrderItem[]
+  history           String      @default("[]")
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  variantId String?
+  name      String
+  variant   String  @default("")
+  image     String  @default("")
+  price     Float
+  quantity  Int
+}
+
+model Coupon {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  // percent | fixed | free_shipping
+  type      String
+  value     Float     @default(0)
+  minOrder  Float     @default(0)
+  maxUses   Int       @default(0)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+}
+
+// السلايدرات والبنرات: hero | category | promo
+model Banner {
+  id         String   @id @default(cuid())
+  position   String   @default("hero")
+  title      String
+  subtitle   String   @default("")
+  image      String
+  link       String   @default("/")
+  buttonText String   @default("تسوق الآن")
+  sortOrder  Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+// محادثات الوكيل الذكي (تُحفظ الرسائل كاملة بالترتيب، إلحاق فقط)
+model AgentConversation {
+  id           String   @id @default(cuid())
+  title        String   @default("محادثة جديدة")
+  messagesJson String   @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
