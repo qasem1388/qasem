@@ -18,6 +18,8 @@ if ss -ltnp | grep -E ':(80|443)\s' | grep -vq nginx; then
   ss -ltnp | grep -E ':(80|443)\s'
   echo "أرسل هذه الرسالة لـ Claude قبل المتابعة."; exit 1
 fi
+# عند التحديث نوقف النسخة الحالية أولاً حتى يتحرر المنفذ
+systemctl stop qasem-store 2>/dev/null || true
 if ss -ltn | grep -q ":$PORT\s"; then echo "المنفذ $PORT مستخدم مسبقاً"; exit 1; fi
 
 say "2/7 تثبيت Node.js 22"
