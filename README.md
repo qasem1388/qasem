@@ -84,7 +84,7 @@ npm run dev               # http://localhost:3000
 ### للإنتاج
 1. غيّر `provider` في `prisma/schema.prisma` إلى `postgresql` وحدّث `DATABASE_URL`.
 2. اضبط في `.env`:
-   - `NEXT_PUBLIC_SITE_URL` إلى نطاقك.
+   - `SITE_URL` إلى نطاقك.
    - `AUTH_SECRET` إلى قيمة عشوائية طويلة.
    - `PAYMENT_TEST_MODE="false"`.
 3. أضف مفاتيح ميسر وتمارا وتابي وسمسا وأرامكس و`ANTHROPIC_API_KEY`.

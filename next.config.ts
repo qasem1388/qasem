@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // بناء مستقل يحتوي كل ما يلزم للتشغيل على الاستضافة (Namecheap / cPanel)
+  output: "standalone",
   serverExternalPackages: ["sharp", "@prisma/client"],
   experimental: {
     serverActions: { bodySizeLimit: "15mb" },

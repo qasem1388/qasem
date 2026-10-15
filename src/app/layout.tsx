@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { getSettings, siteUrl } from "@/lib/settings";
+import { getSettings, noIndex, siteUrl } from "@/lib/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: { canonical: "/" },
     openGraph: { type: "website", locale: "ar_SA", siteName: s.storeName },
     twitter: { card: "summary_large_image" },
-    robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
+    robots: noIndex() ? { index: false, follow: false } : { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
     formatDetection: { telephone: false },
   };
 }

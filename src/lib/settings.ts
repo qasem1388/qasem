@@ -52,4 +52,8 @@ export async function updateSettings(patch: Partial<StoreSettings>): Promise<Sto
   return getSettings();
 }
 
-export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+// يُقرأ وقت التشغيل (وليس وقت البناء) ليعمل نفس البناء على أي نطاق
+export const siteUrl = () => (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+
+// نطاق تجريبي: منع محركات البحث من الأرشفة
+export const noIndex = () => process.env.SITE_NOINDEX === "true";
