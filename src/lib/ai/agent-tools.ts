@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { parseJson, round2, slugify } from "../format";
 import { ORDER_STATUSES, setOrderStatus, shipOrder } from "../orders";
 import { DEFAULT_SETTINGS, getSettings, updateSettings } from "../settings";
+import { deleteProduct } from "../products";
 import { generateProductCopy } from "./titles";
 
 /**
@@ -216,6 +217,24 @@ export const TOOLS = {
         select: { id: true, name: true, price: true, compareAtPrice: true, stock: true, active: true, featured: true },
       });
       return p;
+    },
+  }),
+
+  delete_products: tool({
+    description: "حذف منتج أو أكثر بالمعرّف. المنتجات المرتبطة بطلبات سابقة تُخفى بدل حذفها. اطلب تأكيد المالك قبل الحذف ما لم يطلبه صراحةً.",
+    schema: z.object({ ids: z.array(z.string()).min(1).max(100) }),
+    run: async ({ ids }) => {
+      const results = [];
+      for (const id of ids) {
+        const p = await prisma.product.findUnique({ where: { id }, select: { name: true } });
+        if (!p) {
+          results.push({ id, result: "غير موجود" });
+          continue;
+        }
+        const { archived } = await deleteProduct(id);
+        results.push({ id, name: p.name, result: archived ? "أُخفي (له طلبات سابقة)" : "حُذف" });
+      }
+      return results;
     },
   }),
 
@@ -547,6 +566,7 @@ export const TOOL_LABELS: Record<ToolName, string> = {
   get_product: "قراءة تفاصيل منتج",
   create_product: "إنشاء منتج",
   update_product: "تعديل منتج",
+  delete_products: "حذف منتجات",
   bulk_update_prices: "تعديل أسعار جماعي",
   regenerate_product_copy: "توليد عناوين ووصف",
   manage_variant: "إدارة الألوان",

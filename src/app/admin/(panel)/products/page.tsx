@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { formatPrice, parseJson } from "@/lib/format";
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
@@ -20,7 +21,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
-            <tr>{["", "المنتج", "التصنيف", "السعر", "المخزون", "الألوان", "المبيعات", "الحالة"].map((h, i) => <th key={i} className="p-3 text-start">{h}</th>)}</tr>
+            <tr>{["", "المنتج", "التصنيف", "السعر", "المخزون", "الألوان", "المبيعات", "الحالة", ""].map((h, i) => <th key={i} className="p-3 text-start">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y">
             {products.map((p) => {
@@ -35,6 +36,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                   <td className="p-3">{p._count.variants}</td>
                   <td className="p-3">{p.salesCount}</td>
                   <td className="p-3">{p.active ? <span className="badge bg-brand-50 text-brand-700">منشور</span> : <span className="badge bg-neutral-100 text-neutral-500">مخفي</span>}</td>
+                  <td className="whitespace-nowrap p-3">
+                    <Link href={`/admin/products/${p.id}`} className="rounded-lg px-3 py-1.5 text-sm font-bold hover:bg-neutral-100">✏️ تعديل</Link>
+                    <DeleteProductButton id={p.id} name={p.name} />
+                  </td>
                 </tr>
               );
             })}

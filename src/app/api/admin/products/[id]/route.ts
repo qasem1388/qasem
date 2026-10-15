@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { deleteProduct } from "@/lib/products";
 import { productSchema } from "../schema";
 import { saveProduct } from "../save";
 
@@ -15,9 +15,6 @@ export async function PUT(req: Request, { params }: Ctx) {
 
 export async function DELETE(_req: Request, { params }: Ctx) {
   const { id } = await params;
-  const hasOrders = await prisma.orderItem.count({ where: { productId: id } });
-  // المنتجات التي لها طلبات تُخفى بدل الحذف للحفاظ على سجل الطلبات
-  if (hasOrders) await prisma.product.update({ where: { id }, data: { active: false } });
-  else await prisma.product.delete({ where: { id } });
-  return NextResponse.json({ ok: true, archived: hasOrders > 0 });
+  const { archived } = await deleteProduct(id);
+  return NextResponse.json({ ok: true, archived });
 }

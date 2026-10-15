@@ -348,7 +348,7 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
           {msg && <p className={`text-sm font-bold ${msg.ok ? "text-brand-700" : "text-red-600"}`}>{msg.text}</p>}
           <div className="ms-auto flex gap-2">
             {f.id && <a href={`/product/${encodeURIComponent(f.slug)}`} target="_blank" className="btn-outline">معاينة</a>}
-            {f.id && <button type="button" onClick={remove} className="btn-ghost text-red-600">حذف</button>}
+            {f.id && <button type="button" onClick={remove} className="btn-ghost text-red-600">🗑 حذف المنتج</button>}
             <button type="button" onClick={save} disabled={saving} className="btn-primary px-8">{saving ? "جاري الحفظ…" : "حفظ المنتج"}</button>
           </div>
         </div>
