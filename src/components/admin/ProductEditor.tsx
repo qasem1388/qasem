@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { readJson, shrinkImage, uploadImage } from "./ImageInput";
+import { composeStudioImages } from "./studio-canvas";
 
 type Variant = { id?: string; colorName: string; colorHex: string; size: string; sku: string; price: number | null; stock: number; images: string[] };
 
@@ -66,8 +67,20 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
     fd.append("file", await shrinkImage(file, 2000), "image.jpg");
     fd.append("name", f.name);
     const res = await fetch("/api/admin/ai/images", { method: "POST", body: fd });
-    const data = (await readJson(res)) as { error?: string; images: { url: string; style: string }[]; original: string; provider: string };
-    if (!res.ok) {
+    let data = (await readJson(res)) as { error?: string; useClient?: boolean; images: { url: string; style: string }[]; original: string; provider: string };
+    if (res.ok && data.useClient) {
+      // الخادم لا يدعم معالجة الصور: نولّد الصور الست هنا في المتصفح ثم نرفعها
+      try {
+        const shrunk = await shrinkImage(file, 2000);
+        const [original, composed] = await Promise.all([uploadImage(shrunk), composeStudioImages(shrunk)]);
+        const images = await Promise.all(composed.map(async (c) => ({ url: await uploadImage(c.blob), style: c.style })));
+        data = { original, images, provider: "studio" };
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "تعذّر توليد الصور");
+        setStudio((s) => ({ ...s, loading: false }));
+        return;
+      }
+    } else if (!res.ok) {
       alert(data.error);
       setStudio((s) => ({ ...s, loading: false }));
       return;

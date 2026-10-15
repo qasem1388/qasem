@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateProductImages } from "@/lib/ai/images";
+import { SharpUnavailableError, generateProductImages } from "@/lib/ai/images";
 
 export const maxDuration = 300;
 
@@ -12,6 +12,8 @@ export async function POST(req: Request) {
     const result = await generateProductImages(Buffer.from(await file.arrayBuffer()), String(form.get("name") || ""));
     return NextResponse.json(result);
   } catch (e) {
+    // الخادم لا يدعم معالجة الصور: المتصفح يولّد الصور الست بنفسه
+    if (e instanceof SharpUnavailableError) return NextResponse.json({ useClient: true });
     console.error(e);
     return NextResponse.json({ error: "تعذّر توليد الصور، تأكد أن الملف صورة صالحة" }, { status: 400 });
   }

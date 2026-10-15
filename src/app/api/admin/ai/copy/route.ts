@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { NextResponse } from "next/server";
-import sharp from "sharp";
 import { z } from "zod";
 import { claudeConfigured } from "@/lib/ai/claude";
 import { generateProductCopy } from "@/lib/ai/titles";
+import { getSharp, sniffImage } from "@/lib/sharp-loader";
 import { uploadPathFromUrl } from "@/lib/storage";
 
 export const maxDuration = 120;
@@ -23,11 +23,16 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "اكتب اسم المنتج أولاً" }, { status: 400 });
   const { imageUrl, ...input } = parsed.data;
 
-  let imageBase64: { data: string; mediaType: "image/jpeg" } | undefined;
+  let imageBase64: { data: string; mediaType: "image/jpeg" | "image/png" | "image/webp" } | undefined;
   const file = imageUrl ? uploadPathFromUrl(imageUrl) : null;
-  if (file) {
-    const jpeg = await sharp(await readFile(file)).resize(1024, 1024, { fit: "inside" }).jpeg({ quality: 85 }).toBuffer().catch(() => null);
+  const raw = file ? await readFile(file).catch(() => null) : null;
+  if (raw) {
+    const sharp = await getSharp();
+    const jpeg = sharp ? await sharp(raw).resize(1024, 1024, { fit: "inside" }).jpeg({ quality: 85 }).toBuffer().catch(() => null) : null;
+    const type = sniffImage(raw);
     if (jpeg) imageBase64 = { data: jpeg.toString("base64"), mediaType: "image/jpeg" };
+    // بدون sharp نرسل الصورة كما هي إن كان حجمها مناسباً لـ Claude
+    else if (type && raw.length < 3.5 * 1024 * 1024) imageBase64 = { data: raw.toString("base64"), mediaType: type.mime };
   }
   try {
     return NextResponse.json(await generateProductCopy({ ...input, imageBase64 }));

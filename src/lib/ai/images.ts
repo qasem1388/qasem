@@ -1,4 +1,5 @@
-import sharp from "sharp";
+import type SharpType from "sharp";
+import { getSharp } from "../sharp-loader";
 import { saveUpload } from "../storage";
 import { claudeConfigured, claudeJson } from "./claude";
 
@@ -9,6 +10,11 @@ import { claudeConfigured, claudeJson } from "./claude";
  */
 
 const SIZE = 1200;
+
+/** يُرمى عندما لا يعمل sharp على الخادم، فيتولى المتصفح توليد الصور */
+export class SharpUnavailableError extends Error {}
+
+let sharp!: typeof SharpType;
 
 export type GeneratedImage = { url: string; style: string };
 
@@ -169,6 +175,9 @@ async function openAiEdit(image: Buffer, prompt: string): Promise<Buffer> {
 }
 
 export async function generateProductImages(input: Buffer, productName = ""): Promise<{ original: string; images: GeneratedImage[]; provider: string }> {
+  const loaded = await getSharp();
+  if (!loaded) throw new SharpUnavailableError();
+  sharp = loaded;
   const normalized = await sharp(input).rotate().resize(2000, 2000, { fit: "inside", withoutEnlargement: true }).toBuffer();
   const original = await saveUpload(await sharp(normalized).jpeg({ quality: 90 }).toBuffer(), "jpg");
   const product = await prepareProduct(normalized);

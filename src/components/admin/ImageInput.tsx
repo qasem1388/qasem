@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /** تصغير الصورة في المتصفح قبل الرفع (صور الجوال قد تتجاوز 10MB) */
-export async function shrinkImage(file: File, max = 2400): Promise<Blob> {
+export async function shrinkImage(file: Blob, max = 2400): Promise<Blob> {
   try {
     const bmp = await createImageBitmap(file);
     const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
@@ -30,7 +30,7 @@ export async function readJson(res: Response): Promise<Record<string, any>> {
   }
 }
 
-export async function uploadImage(file: File, folder = "products"): Promise<string> {
+export async function uploadImage(file: Blob, folder = "products"): Promise<string> {
   const fd = new FormData();
   fd.append("file", await shrinkImage(file), "image.jpg");
   fd.append("folder", folder);
