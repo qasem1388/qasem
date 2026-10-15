@@ -13,7 +13,9 @@ export function ProductCard({ p, priority = false }: { p: ProductView; priority?
   const toggle = useCart((s) => s.toggleWishlist);
   const [mounted, setMounted] = useState(false);
   const [hoverImg, setHoverImg] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const off = discountPercent(p.price, p.compareAtPrice);
   const title = p.titles.short || p.name;

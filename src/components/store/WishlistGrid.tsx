@@ -8,7 +8,9 @@ import { ProductsByIds } from "../product/RecentlyViewed";
 export function WishlistGrid() {
   const wishlist = useCart((s) => s.wishlist);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   if (!mounted) return null;
   const empty = (
     <div className="py-20 text-center text-neutral-500">

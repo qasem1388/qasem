@@ -26,7 +26,9 @@ export function FreeShippingBar({ total, threshold }: { total: number; threshold
 export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: number }) {
   const { items, open, setOpen, setQty, remove } = useCart();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
   }, [open]);

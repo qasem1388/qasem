@@ -39,7 +39,9 @@ export function AgentChat() {
   useEffect(() => {
     loadConvos();
   }, []);
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages, loading]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   const open = async (cid: string) => {
     const d = await fetch(`/api/admin/agent/${cid}`).then((r) => r.json());

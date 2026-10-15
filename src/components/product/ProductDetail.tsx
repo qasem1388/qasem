@@ -46,7 +46,9 @@ export function ProductDetail({ p, whatsapp, delivery, freeShippingThreshold }: 
   const off = discountPercent(price, p.compareAtPrice);
   const liked = mounted && wishlist.includes(p.id);
 
-  useEffect(() => setActive(0), [color]);
+  useEffect(() => {
+    setActive(0);
+  }, [color]);
 
   const addToCart = (goCheckout = false) => {
     if (needsSize || stock <= 0) return;

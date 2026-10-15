@@ -11,7 +11,9 @@ import { PaymentBadges } from "./PaymentBadges";
 export function CartPageClient({ threshold }: { threshold: number }) {
   const { items, setQty, remove } = useCart();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   if (!mounted) return null;
   if (!items.length)
     return (

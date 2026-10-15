@@ -31,7 +31,9 @@ export function CheckoutForm({ cities, methods, shipping, freeShippingThreshold,
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const lines = items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity }));
   const linesKey = JSON.stringify(lines);
