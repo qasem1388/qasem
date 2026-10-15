@@ -10,8 +10,10 @@ export async function middleware(req: NextRequest) {
   if (ok) return NextResponse.next();
 
   if (pathname.startsWith("/api/")) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
-  const url = req.nextUrl.clone();
-  url.pathname = "/admin/login";
+  // خلف Nginx يكون عنوان الخادم الداخلي (localhost:PORT)، لذا نبني الرابط من النطاق الذي طلبه المتصفح
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+  const proto = req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "");
+  const url = new URL("/admin/login", `${proto}://${host}`);
   url.searchParams.set("next", pathname);
   return NextResponse.redirect(url);
 }

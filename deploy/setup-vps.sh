@@ -88,6 +88,8 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_read_timeout 300s;
+        proxy_redirect http://localhost:$PORT/ /;
+        proxy_redirect http://127.0.0.1:$PORT/ /;
     }
 }
 NGINX
