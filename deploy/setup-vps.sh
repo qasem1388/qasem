@@ -22,6 +22,8 @@ if ss -ltn | grep -q ":$PORT\s"; then echo "المنفذ $PORT مستخدم مس
 
 say "2/7 تثبيت Node.js 22"
 export DEBIAN_FRONTEND=noninteractive
+# يمنع نافذة "إعادة تشغيل الخدمات" المخفية التي توقف التثبيت على Ubuntu 22+
+export NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1
 apt-get update -qq
 apt-get install -y -qq curl ca-certificates gnupg nginx > /dev/null
 if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split(".")[0]')" -lt 20 ]; then
