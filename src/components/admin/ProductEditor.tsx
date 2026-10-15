@@ -285,7 +285,10 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
 
           <section className="card space-y-4 p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-extrabold">الألوان والمتغيرات ({f.variants.length})</h2>
+              <h2 className="font-extrabold">
+                الألوان والمتغيرات ({f.variants.length})
+                {f.variants.length > 0 && <span className="ms-2 text-sm font-bold text-neutral-500">مجموع الكمية: {f.variants.reduce((t, v) => t + v.stock, 0)} قطعة</span>}
+              </h2>
               <button type="button" onClick={() => set("variants", [...f.variants, { colorName: "", colorHex: "#000000", size: "", sku: "", price: null, stock: 0, images: [] }])} className="btn-outline py-2">+ إضافة لون</button>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -296,12 +299,21 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
               ))}
             </div>
             {f.variants.map((v, i) => (
-              <div key={v.id ?? i} className="grid items-end gap-2 rounded-xl bg-neutral-50 p-3 sm:grid-cols-12">
-                <div className="sm:col-span-3"><label className="label text-xs">اللون</label><input value={v.colorName} onChange={(e) => setVariant(i, { colorName: e.target.value })} className="input py-2" /></div>
+              <div key={v.id ?? i} className="relative grid items-end gap-2 rounded-xl bg-neutral-50 p-3 pt-9 sm:grid-cols-12">
+                <button type="button" onClick={() => set("variants", f.variants.filter((_, idx) => idx !== i))} className="absolute end-2 top-2 rounded-lg px-2 py-0.5 text-xs font-bold text-red-600 hover:bg-red-50">🗑 حذف اللون</button>
+                <div className="sm:col-span-2"><label className="label text-xs">اللون</label><input value={v.colorName} onChange={(e) => setVariant(i, { colorName: e.target.value })} className="input py-2" /></div>
                 <div className="sm:col-span-1"><label className="label text-xs">الكود</label><input type="color" value={v.colorHex} onChange={(e) => setVariant(i, { colorHex: e.target.value })} className="h-10 w-full rounded-lg border" /></div>
                 <div className="sm:col-span-2"><label className="label text-xs">المقاس</label><input value={v.size} onChange={(e) => setVariant(i, { size: e.target.value })} className="input py-2" placeholder="اختياري" /></div>
                 <div className="sm:col-span-2"><label className="label text-xs">السعر</label><input type="number" value={v.price ?? ""} onChange={(e) => setVariant(i, { price: e.target.value ? Number(e.target.value) : null })} className="input py-2" placeholder="نفس السعر" /></div>
-                <div className="sm:col-span-1"><label className="label text-xs">الكمية</label><input type="number" value={v.stock} onChange={(e) => setVariant(i, { stock: num(e.target.value) })} className="input py-2" /></div>
+                <div className="sm:col-span-3">
+                  <label className="label text-xs">الكمية المتوفرة</label>
+                  <div className={`flex h-10 items-center overflow-hidden rounded-lg border bg-white ${v.stock <= 0 ? "border-red-300" : ""}`}>
+                    <button type="button" onClick={() => setVariant(i, { stock: Math.max(0, v.stock - 1) })} className="h-full w-8 shrink-0 text-lg font-bold text-neutral-500 hover:bg-neutral-100" aria-label="إنقاص">−</button>
+                    <input type="number" min={0} inputMode="numeric" value={v.stock} onChange={(e) => setVariant(i, { stock: Math.max(0, Math.floor(num(e.target.value)) || 0) })} className="h-full w-full min-w-0 border-x text-center text-base font-extrabold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                    <button type="button" onClick={() => setVariant(i, { stock: v.stock + 1 })} className="h-full w-8 shrink-0 text-lg font-bold text-neutral-500 hover:bg-neutral-100" aria-label="زيادة">+</button>
+                  </div>
+                  <p className={`mt-1 text-[11px] font-bold ${v.stock <= 0 ? "text-red-600" : v.stock <= 5 ? "text-amber-600" : "text-brand-700"}`}>{v.stock <= 0 ? "نفدت الكمية" : `${v.stock} قطعة`}</p>
+                </div>
                 <div className="sm:col-span-2">
                   <label className="label text-xs">صورة اللون</label>
                   <select value={v.images[0] ?? ""} onChange={(e) => setVariant(i, { images: e.target.value ? [e.target.value] : [] })} className="input py-2 text-xs">
@@ -309,7 +321,6 @@ export function ProductEditor({ initial, categories, siteUrl }: { initial: Produ
                     {f.images.map((src, idx) => <option key={src} value={src}>صورة {idx + 1}</option>)}
                   </select>
                 </div>
-                <button type="button" onClick={() => set("variants", f.variants.filter((_, idx) => idx !== i))} className="btn-ghost py-2 text-red-600 sm:col-span-1">حذف</button>
               </div>
             ))}
           </section>
