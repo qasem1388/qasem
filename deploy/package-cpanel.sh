@@ -28,5 +28,12 @@ PASS="Qs-$(node -e 'console.log(require("crypto").randomBytes(6).toString("base6
 sed -i "s/__AUTH_SECRET__/$SECRET/; s/__ADMIN_PASSWORD__/$PASS/" "$OUT/.env"
 echo "كلمة مرور لوحة التحكم: $PASS"
 
-(cd deploy/out && zip -qr qasem-store.zip qasem-store)
-du -sh deploy/out/qasem-store.zip
+# حذف ما لا يلزم على خوادم CloudLinux (glibc) لتصغير الحجم
+rm -rf "$OUT"/node_modules/@img/sharp-wasm32 "$OUT"/node_modules/@img/*musl* "$OUT"/node_modules/typescript \
+  "$OUT"/node_modules/.prisma/client/libquery_engine-debian-*.node
+
+# ملفان: التطبيق + محركات قاعدة البيانات (يُفك ضغطهما في نفس المجلد)
+cd deploy/out
+zip -9 -qr qasem-store-1-app.zip qasem-store -x 'qasem-store/node_modules/.prisma/client/*.node'
+zip -9 -qr qasem-store-2-engines.zip qasem-store/node_modules/.prisma/client/*.node
+du -sh ./*.zip
