@@ -28,6 +28,8 @@ export const DEFAULT_SETTINGS = {
   snapPixelId: "",
   tiktokPixelId: "",
   googleAnalyticsId: "",
+  googleVerification: "",
+  bingVerification: "",
 };
 
 export type StoreSettings = typeof DEFAULT_SETTINGS;
@@ -57,3 +59,9 @@ export const siteUrl = () => (process.env.SITE_URL || process.env.NEXT_PUBLIC_SI
 
 // نطاق تجريبي: منع محركات البحث من الأرشفة
 export const noIndex = () => process.env.SITE_NOINDEX === "true";
+
+/** يقبل رمز التحقق وحده أو وسم meta كاملاً منسوخاً من Google/Bing */
+export function verificationCode(value: string) {
+  const v = value.trim();
+  return (v.match(/content\s*=\s*["']([^"']+)["']/i)?.[1] ?? v).trim();
+}

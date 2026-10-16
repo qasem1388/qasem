@@ -46,6 +46,10 @@ export default async function SettingsPage() {
             { key: "googleAnalyticsId", label: "Google Analytics (G-XXXX)", dir: "ltr" }, { key: "metaPixelId", label: "Meta Pixel ID", dir: "ltr" },
             { key: "snapPixelId", label: "Snap Pixel ID", dir: "ltr" }, { key: "tiktokPixelId", label: "TikTok Pixel ID", dir: "ltr" },
           ] },
+          { title: "محركات البحث", fields: [
+            { key: "googleVerification", label: "رمز التحقق من Google Search Console (الصق وسم meta كاملاً)", dir: "ltr" },
+            { key: "bingVerification", label: "رمز التحقق من Bing Webmaster (اختياري)", dir: "ltr" },
+          ] },
         ]}
       />
     </div>

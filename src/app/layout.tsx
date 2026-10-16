@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { getSettings, noIndex, siteUrl } from "@/lib/settings";
+import { getSettings, noIndex, siteUrl, verificationCode } from "@/lib/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
+  const google = verificationCode(s.googleVerification);
+  const bing = verificationCode(s.bingVerification);
   return {
     metadataBase: new URL(siteUrl()),
     title: { default: `${s.storeName} | ${s.tagline}`, template: `%s | ${s.storeName}` },
@@ -14,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: { card: "summary_large_image" },
     robots: noIndex() ? { index: false, follow: false } : { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
     formatDetection: { telephone: false },
+    verification: { google: google || undefined, other: bing ? { "msvalidate.01": bing } : undefined },
   };
 }
 
