@@ -5,6 +5,8 @@ const db = require('./db');
 const auth = require('./auth');
 const storageLib = require('./storage');
 const { createApp } = require('./app');
+const jobs = require('./jobs');
+const backup = require('./backup');
 
 async function main() {
   const storage = storageLib.create();
@@ -22,7 +24,7 @@ async function main() {
   let onChange = () => {};
   if (storage.uploadBackup) {
     let timer = null;
-    const backup = async () => {
+    const syncDbToDrive = async () => {
       timer = null;
       const tmp = path.join(config.dataDir, 'backup.tmp.sqlite');
       try {
@@ -33,19 +35,21 @@ async function main() {
       }
     };
     onChange = () => {
-      if (!timer) timer = setTimeout(backup, 5000);
+      if (!timer) timer = setTimeout(syncDbToDrive, 5000);
     };
     // الاستضافات السحابية توقف الخادم بإشارة SIGTERM، فنحفظ آخر التغييرات قبل الخروج
     process.once('SIGTERM', async () => {
       if (timer) {
         clearTimeout(timer);
-        await backup();
+        await syncDbToDrive();
       }
       process.exit(0);
     });
   }
 
   const app = createApp({ storage, onChange });
+  jobs.start(storage);
+  backup.start(storage);
   const server = app.listen(config.port, () => {
     console.log(`أرشيف الموظفين يعمل على http://localhost:${config.port} (التخزين: ${config.storage})`);
   });

@@ -26,12 +26,14 @@ before(async () => {
   auth.ensureAdmin();
   const storage = storageLib.create();
   await storage.init();
+  require('../server/jobs').start(storage);
   server = createApp({ storage }).listen(0);
   await new Promise((r) => server.once('listening', r));
   base = `http://127.0.0.1:${server.address().port}/api`;
 });
 
-after(() => {
+after(async () => {
+  await require('../server/jobs').stop();
   server.close();
   db.close();
   fs.rmSync(dataDir, { recursive: true, force: true });

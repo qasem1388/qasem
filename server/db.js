@@ -66,6 +66,50 @@ CREATE TABLE IF NOT EXISTS shares (
   downloads INTEGER NOT NULL DEFAULT 0
 );
 
+-- المجلدات: المجلد "الخاص" لا يراه إلا المدير والأعضاء المحددون، ويسري ذلك على كل ما بداخله
+CREATE TABLE IF NOT EXISTS folders (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  parent_id INTEGER REFERENCES folders(id),
+  restricted INTEGER NOT NULL DEFAULT 0,
+  created_by INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS folder_members (
+  folder_id INTEGER NOT NULL REFERENCES folders(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  PRIMARY KEY (folder_id, user_id)
+);
+
+-- نصوص كل ملف حسب مصدرها (محتوى، قراءة ضوئية، تفريغ صوتي) لبناء فهرس البحث
+CREATE TABLE IF NOT EXISTS file_text (
+  file_id INTEGER NOT NULL REFERENCES files(id),
+  source TEXT NOT NULL,
+  text TEXT NOT NULL,
+  PRIMARY KEY (file_id, source)
+);
+
+-- تفريغ كلام الفيديو والصوت مع التوقيت
+CREATE TABLE IF NOT EXISTS transcripts (
+  file_id INTEGER NOT NULL REFERENCES files(id),
+  version_no INTEGER NOT NULL,
+  segments TEXT NOT NULL,
+  PRIMARY KEY (file_id, version_no)
+);
+
+-- مهام تعمل في الخلفية بعد الرفع: قراءة ضوئية، تفريغ صوتي، اقتراحات ذكية، حساب البصمة
+CREATE TABLE IF NOT EXISTS jobs (
+  id INTEGER PRIMARY KEY,
+  file_id INTEGER NOT NULL REFERENCES files(id),
+  kind TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  attempts INTEGER NOT NULL DEFAULT 0,
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  finished_at TEXT
+);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS files_fts USING fts5(
   meta, content, tokenize = 'unicode61'
 );
@@ -83,9 +127,49 @@ function open() {
 }
 
 // تحديث قواعد البيانات المنشأة بإصدارات سابقة من التطبيق
+const COLUMNS = {
+  files: {
+    url: 'TEXT',
+    folder_id: 'INTEGER REFERENCES folders(id)',
+    archive_no: 'TEXT',
+    expires_on: 'TEXT',
+    remind_days: 'INTEGER NOT NULL DEFAULT 30',
+    thumb_version: 'INTEGER',
+  },
+  versions: { hash: 'TEXT' },
+};
+
 function migrate() {
-  const cols = db.prepare('PRAGMA table_info(files)').all().map((c) => c.name);
-  if (!cols.includes('url')) db.exec('ALTER TABLE files ADD COLUMN url TEXT');
+  for (const [table, cols] of Object.entries(COLUMNS)) {
+    const existing = new Set(db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name));
+    for (const [col, def] of Object.entries(cols)) {
+      if (!existing.has(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+    }
+  }
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS versions_hash ON versions(hash);
+    CREATE INDEX IF NOT EXISTS files_folder ON files(folder_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS files_archive_no ON files(archive_no);
+    CREATE INDEX IF NOT EXISTS jobs_status ON jobs(status);
+  `);
+  // نقل نصوص البحث من الإصدار السابق (كانت تُحفظ في الفهرس فقط)
+  if (!db.prepare('SELECT 1 FROM file_text LIMIT 1').get()) {
+    db.exec("INSERT OR IGNORE INTO file_text (file_id, source, text) SELECT rowid, 'content', content FROM files_fts WHERE content != ''");
+  }
+  // ملفات الإصدارات السابقة: نعطيها أرقاماً أرشيفية حسب سنة رفعها
+  const missing = db.prepare('SELECT id, created_at FROM files WHERE archive_no IS NULL ORDER BY id').all();
+  for (const f of missing) {
+    db.prepare('UPDATE files SET archive_no = ? WHERE id = ?').run(nextArchiveNo(f.created_at.slice(0, 4)), f.id);
+  }
+}
+
+// رقم أرشيفي متسلسل لكل سنة، مثل ARC-2026-0007
+function nextArchiveNo(year = String(new Date().getFullYear())) {
+  const key = `archive_seq_${year}`;
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  const n = (row ? Number(row.value) : 0) + 1;
+  db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(n));
+  return `ARC-${year}-${String(n).padStart(4, '0')}`;
 }
 
 function get() {
@@ -128,4 +212,4 @@ function snapshot(targetPath) {
   get().prepare('VACUUM INTO ?').run(targetPath);
 }
 
-module.exports = { open, get, close, getSetting, setSetting, transaction, snapshot };
+module.exports = { open, get, close, getSetting, setSetting, transaction, snapshot, nextArchiveNo };
