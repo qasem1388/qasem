@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = (sel) => document.querySelector(sel);
-const state = { user: null, files: [], category: '', editing: null, details: null };
+const state = { user: null, files: [], category: '', type: '', editing: null, details: null };
 
 // ---------- أدوات ----------
 
@@ -51,7 +51,8 @@ const run = (fn) => async (...args) => {
 function fmtSize(n) {
   if (n < 1024) return `${n} بايت`;
   if (n < 1024 ** 2) return `${(n / 1024).toFixed(0)} ك.ب`;
-  return `${(n / 1024 ** 2).toFixed(1)} م.ب`;
+  if (n < 1024 ** 3) return `${(n / 1024 ** 2).toFixed(1)} م.ب`;
+  return `${(n / 1024 ** 3).toFixed(2)} غ.ب`;
 }
 
 function fmtDate(s) {
@@ -60,17 +61,35 @@ function fmtDate(s) {
   return d.toLocaleString('ar', { dateStyle: 'medium', timeStyle: 'short', numberingSystem: 'latn' });
 }
 
-function fileType(name) {
-  const e = (name.split('.').pop() || '').toLowerCase();
-  if (e === 'pdf') return ['pdf', 'PDF'];
-  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return ['doc', 'WORD'];
-  if (['xls', 'xlsx', 'csv', 'ods'].includes(e)) return ['sheet', 'EXCEL'];
-  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'heic'].includes(e)) return ['img', 'صورة'];
-  if (['txt', 'md', 'json', 'xml'].includes(e)) return ['txt', e.toUpperCase()];
-  return ['', e.toUpperCase().slice(0, 4) || 'ملف'];
+// أنواع الملفات: [اسم النوع للتصفية، صنف الأيقونة، الامتدادات]
+const TYPES = [
+  ['فيديو', 'video', 'mp4 mov m4v avi mkv webm wmv flv mts m2ts 3gp mpg mpeg'],
+  ['صور', 'img', 'png jpg jpeg gif webp heic heif bmp tif tiff raw cr2 nef arw dng avif'],
+  ['صوت', 'audio', 'mp3 wav m4a aac ogg flac wma opus'],
+  ['تصاميم', 'design', 'psd psb ai eps svg fig sketch xd indd idml cdr afdesign afphoto'],
+  ['مونتاج', 'montage', 'prproj aep aet drp drt fcpx fcpbundle veg kdenlive mlt pproj aepx mogrt'],
+  ['مستندات', 'doc', 'doc docx odt rtf pages'],
+  ['جداول', 'sheet', 'xls xlsx csv ods numbers'],
+  ['عروض', 'slides', 'ppt pptx odp key'],
+  ['PDF', 'pdf', 'pdf'],
+  ['ملاحظات', 'note', 'txt md'],
+  ['روابط', 'link', 'url'],
+  ['مضغوطة', 'archive', 'zip rar 7z tar gz'],
+].map(([label, cls, exts]) => ({ label, cls, exts: new Set(exts.split(' ')) }));
+
+const extOf = (name) => (name.includes('.') ? name.split('.').pop().toLowerCase() : '');
+const typeOf = (f) => TYPES.find((t) => t.exts.has(extOf(f.name))) || null;
+
+const ICON_LABEL = { video: 'فيديو', img: 'صورة', audio: 'صوت', link: 'رابط', note: 'ملاحظة', montage: 'مونتاج' };
+function fileType(f) {
+  const t = typeOf(f);
+  const e = extOf(f.name).toUpperCase().slice(0, 5);
+  return [t?.cls || '', ICON_LABEL[t?.cls] || e || 'ملف'];
 }
 
-const previewable = (f) => /^(application\/pdf|image\/(png|jpe?g|gif|webp)|text\/plain)$/.test(f.mime);
+const previewable = (f) => /^(application\/pdf|image\/(png|jpe?g|gif|webp|bmp|avif)|text\/plain|video\/|audio\/)/.test(f.mime);
+const isLink = (f) => !!f.url;
+const openLink = (f) => window.open(f.url, '_blank', 'noopener');
 
 function icon(path) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -84,6 +103,7 @@ const ICONS = {
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4zM13 7l4 4"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  external: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
 };
 
 function closeOnClick(dialog) {
@@ -162,6 +182,7 @@ async function loadFiles() {
     if (seq !== searchSeq) return;
     state.files = files;
     renderCategories(categories);
+    renderTypes();
     renderFiles();
   } catch (err) {
     toast(err.message, true);
@@ -177,32 +198,44 @@ function renderCategories(categories) {
   $('#category-options').replaceChildren(...categories.map((c) => h('option', { value: c.category })));
 }
 
+function renderTypes() {
+  const present = TYPES.filter((t) => state.files.some((f) => typeOf(f) === t));
+  if (state.type && !present.some((t) => t.label === state.type)) state.type = '';
+  const chip = (label) =>
+    h('button', { class: 'chip' + (state.type === label ? ' active' : ''), onclick: () => { state.type = label; renderTypes(); renderFiles(); } }, label || 'كل الأنواع');
+  $('#types').replaceChildren(...(present.length > 1 ? [chip(''), ...present.map((t) => chip(t.label))] : []));
+}
+
 function renderFiles() {
   const list = $('#file-list');
-  if (!state.files.length) {
+  const files = state.type ? state.files.filter((f) => typeOf(f)?.label === state.type) : state.files;
+  if (!files.length) {
     const searching = $('#search').value.trim() || state.category;
     list.replaceChildren(h('div', { class: 'empty' }, searching ? 'لا توجد ملفات مطابقة للبحث' : 'لا توجد ملفات بعد. اضغط "رفع ملفات" أو اسحب الملفات إلى الصفحة.'));
     return;
   }
-  list.replaceChildren(...state.files.map((f) => {
-    const [cls, label] = fileType(f.name);
-    const open = () => (previewable(f) ? openPreview(f) : f.editable ? openEditor(f) : openDetails(f));
+  list.replaceChildren(...files.map((f) => {
+    const [cls, label] = fileType(f);
+    const open = () => (isLink(f) ? openLink(f) : previewable(f) ? openPreview(f) : f.editable ? openEditor(f) : openDetails(f));
     return h('article', { class: 'file' },
       h('div', { class: 'file-icon ' + cls }, label),
       h('div', { class: 'file-main' },
-        h('div', { class: 'file-name', onclick: open, role: 'button', tabindex: 0, onkeydown: (e) => e.key === 'Enter' && open() }, f.name),
+        h('div', { class: 'file-name', onclick: open, role: 'button', tabindex: 0, onkeydown: (e) => e.key === 'Enter' && open() },
+          isLink(f) ? f.name.replace(/\.url$/i, '') : f.name),
+        isLink(f) && h('div', { class: 'file-link' }, f.url),
         h('div', { class: 'file-meta' },
           f.category && h('span', { class: 'badge' }, f.category),
           f.version > 1 && h('span', {}, `النسخة ${f.version}`),
-          h('span', {}, fmtSize(f.size)),
+          !isLink(f) && h('span', {}, fmtSize(f.size)),
           h('span', {}, `${f.updatedBy || ''} · ${fmtDate(f.updatedAt)}`),
           f.tags && f.tags.split('، ').map((t) => h('span', { class: 'tag' }, '#' + t)),
         ),
       ),
       h('div', { class: 'file-actions' },
+        isLink(f) && h('button', { class: 'icon-btn', title: 'فتح الرابط', 'aria-label': 'فتح الرابط', onclick: () => openLink(f) }, icon(ICONS.external)),
         previewable(f) && h('button', { class: 'icon-btn', title: 'معاينة', 'aria-label': 'معاينة', onclick: () => openPreview(f) }, icon(ICONS.eye)),
         f.editable && h('button', { class: 'icon-btn', title: 'تعديل', 'aria-label': 'تعديل', onclick: () => openEditor(f) }, icon(ICONS.edit)),
-        h('a', { class: 'icon-btn', title: 'تنزيل', 'aria-label': 'تنزيل', href: `/api/files/${f.id}/download` }, icon(ICONS.download)),
+        !isLink(f) && h('a', { class: 'icon-btn', title: 'تنزيل', 'aria-label': 'تنزيل', href: `/api/files/${f.id}/download` }, icon(ICONS.download)),
         h('button', { class: 'icon-btn', title: 'التفاصيل والنسخ', 'aria-label': 'التفاصيل والنسخ', onclick: () => openDetails(f) }, icon(ICONS.info)),
       ),
     );
@@ -300,20 +333,40 @@ uploadForm.addEventListener('submit', (e) => {
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/files');
   xhr.setRequestHeader('X-Requested-With', 'archive-app');
-  xhr.upload.onprogress = (ev) => ev.lengthComputable && (progress.value = (ev.loaded / ev.total) * 100);
+  const progressText = $('#upload-progress-text');
+  progressText.hidden = false;
+  progressText.textContent = 'جارٍ الرفع...';
+  xhr.upload.onprogress = (ev) => {
+    if (!ev.lengthComputable) return;
+    progress.value = (ev.loaded / ev.total) * 100;
+    progressText.textContent = ev.loaded >= ev.total
+      ? 'اكتمل الرفع، جارٍ الحفظ...'
+      : `${Math.floor(progress.value)}٪ · ${fmtSize(ev.loaded)} من ${fmtSize(ev.total)} · لا تغلق الصفحة`;
+  };
+  uploading++;
   xhr.onloadend = () => {
+    uploading--;
     progress.hidden = true;
+    progressText.hidden = true;
     progress.value = 0;
     submit.disabled = false;
     let data = {};
     try { data = JSON.parse(xhr.responseText); } catch {}
-    if (xhr.status === 201) {
+    if (xhr.status === 0) toast('انقطع الاتصال أثناء الرفع، حاول مرة أخرى', true);
+    else if (xhr.status === 201) {
       uploadDialog.close();
       toast(`تم رفع ${data.files.length} ملف`);
       loadFiles();
-    } else toast(data.error || 'فشل الرفع', true);
+    } else if (xhr.status === 413) toast('الملف أكبر من الحد الذي يسمح به الخادم أو الاستضافة', true);
+    else if (xhr.status) toast(data.error || 'فشل الرفع', true);
   };
   xhr.send(fd);
+});
+
+// تنبيه قبل إغلاق الصفحة أثناء رفع ملف كبير
+let uploading = 0;
+window.addEventListener('beforeunload', (e) => {
+  if (uploading) e.preventDefault();
 });
 
 // السحب والإفلات على الصفحة
@@ -337,6 +390,38 @@ document.addEventListener('drop', (e) => {
   else if (uploadDialog.open) { fileInput.files = e.dataTransfer.files; listUploadNames(); }
 });
 
+// ---------- الملاحظات والروابط ----------
+
+const metaFields = () => [
+  { name: 'category', label: 'التصنيف', value: state.category, list: 'category-options' },
+  { name: 'tags', label: 'الوسوم', placeholder: 'افصل بينها بفاصلة' },
+];
+
+$('#note-btn').addEventListener('click', run(async () => {
+  const v = await promptForm('ملاحظة جديدة', [
+    { name: 'title', label: 'العنوان', required: true },
+    { name: 'content', label: 'الملاحظة', type: 'textarea', required: true },
+    ...metaFields(),
+  ], 'حفظ الملاحظة');
+  if (!v) return;
+  await api('/notes', { method: 'POST', json: v });
+  toast('تم حفظ الملاحظة');
+  loadFiles();
+}));
+
+$('#link-btn').addEventListener('click', run(async () => {
+  const v = await promptForm('إضافة رابط', [
+    { name: 'url', label: 'الرابط', required: true, dir: 'ltr', placeholder: 'https://example.com', type: 'text' },
+    { name: 'title', label: 'اسم الرابط (اختياري)' },
+    { name: 'description', label: 'وصف (اختياري)' },
+    ...metaFields(),
+  ], 'إضافة');
+  if (!v) return;
+  await api('/links', { method: 'POST', json: v });
+  toast('تمت إضافة الرابط');
+  loadFiles();
+}));
+
 // ---------- التفاصيل والنسخ ----------
 
 const detailsDialog = $('#details-dialog');
@@ -344,7 +429,7 @@ closeOnClick(detailsDialog);
 
 const ACTIONS = {
   upload: 'رفع الملف', edit: 'تعديل', new_version: 'رفع نسخة جديدة', restore: 'استرجاع نسخة',
-  download: 'تنزيل', rename: 'تعديل البيانات', delete: 'حذف', undelete: 'استرجاع من المحذوفات',
+  download: 'تنزيل', rename: 'تعديل البيانات', note: 'إضافة ملاحظة', link: 'إضافة رابط', delete: 'حذف', undelete: 'استرجاع من المحذوفات',
 };
 
 function renderActivity(box, rows, withFile = false) {
@@ -362,7 +447,8 @@ async function openDetails(f) {
   state.details = f;
   $('#details-title').textContent = f.name;
   const form = $('#meta-form');
-  for (const k of ['name', 'category', 'tags', 'description']) form.elements[k].value = f[k] || '';
+  for (const k of ['name', 'category', 'tags', 'description', 'url']) form.elements[k].value = f[k] || '';
+  form.elements.url.closest('label').hidden = !isLink(f);
   await refreshDetails();
   if (!detailsDialog.open) detailsDialog.showModal();
 }
@@ -398,6 +484,7 @@ async function reloadDetails() {
 $('#meta-form').addEventListener('submit', run(async (e) => {
   e.preventDefault();
   const json = Object.fromEntries(new FormData(e.target));
+  if (!isLink(state.details)) delete json.url;
   const { file } = await api(`/files/${state.details.id}`, { method: 'PATCH', json });
   state.details = file;
   $('#details-title').textContent = file.name;
@@ -438,6 +525,12 @@ function openPreview(f) {
   $('#preview-download').href = `/api/files/${f.id}/download`;
   const area = $('#preview-area');
   if (f.mime.startsWith('image/')) area.replaceChildren(h('img', { class: 'preview-img', src: url, alt: f.name }));
+  else if (f.mime.startsWith('video/')) {
+    const video = h('video', { class: 'preview-media', src: url, controls: true, autoplay: true, playsinline: true, preload: 'metadata' });
+    video.addEventListener('error', () => area.replaceChildren(h('p', { class: 'empty', style: 'margin:1rem' },
+      'لا يستطيع المتصفح تشغيل هذا النوع من الفيديو. نزّل الملف لمشاهدته.')));
+    area.replaceChildren(video);
+  } else if (f.mime.startsWith('audio/')) area.replaceChildren(h('audio', { class: 'preview-audio', src: url, controls: true, autoplay: true }));
   else if (f.mime === 'text/plain') {
     const pre = h('pre', { class: 'preview-text', dir: 'auto' }, 'جارٍ التحميل...');
     area.replaceChildren(pre);
@@ -615,7 +708,9 @@ function promptForm(title, fields, submitLabel = 'حفظ') {
       ? h('label', { style: 'display:flex; gap:.5rem; align-items:center' }, h('input', { type: 'checkbox', name: f.name, checked: f.value, style: 'width:auto' }), f.label)
       : f.type === 'select'
         ? h('label', {}, f.label, h('select', { name: f.name }, f.options.map(([v, l]) => h('option', { value: v, selected: v === f.value }, l))))
-        : h('label', {}, f.label, h('input', { name: f.name, type: f.type || 'text', value: f.value ?? '', required: f.required, minlength: f.minlength, placeholder: f.placeholder, autocomplete: f.autocomplete || 'off', dir: f.dir }))),
+        : f.type === 'textarea'
+          ? h('label', {}, f.label, h('textarea', { name: f.name, rows: 8, required: f.required, dir: 'auto' }))
+          : h('label', {}, f.label, h('input', { name: f.name, type: f.type || 'text', value: f.value ?? '', required: f.required, minlength: f.minlength, placeholder: f.placeholder, autocomplete: f.autocomplete || 'off', dir: f.dir, list: f.list }))),
     h('div', { class: 'actions' }, h('button', { class: 'btn', value: 'cancel', formnovalidate: true }, 'إلغاء'), h('button', { class: 'btn primary', value: 'ok' }, submitLabel)),
   );
   formDialog.showModal();

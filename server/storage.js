@@ -1,5 +1,7 @@
 // مكان حفظ محتوى الملفات: Google Drive أو قرص الخادم.
 // كل نسخة من كل ملف تُحفظ كملف مستقل، فلا تُستبدل النسخة الأصلية أبداً.
+// المصدر عند الحفظ إما Buffer (ملفات صغيرة مولّدة داخل التطبيق) أو { path } لملف مرفوع على القرص،
+// حتى لا تُحمَّل الملفات الكبيرة كالفيديو في الذاكرة.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -17,19 +19,42 @@ class LocalStorage {
 
   async init() {}
 
-  async put(buffer) {
+  async put(source) {
     const key = crypto.randomUUID();
-    await fs.promises.writeFile(path.join(this.dir, key), buffer);
+    const dest = path.join(this.dir, key);
+    if (Buffer.isBuffer(source)) await fs.promises.writeFile(dest, source);
+    else await moveFile(source.path, dest);
     return key;
   }
 
-  async get(key) {
+  // مسار الملف على القرص، ليرسله Express مباشرة مع دعم التقديم والتأخير في الفيديو
+  localPath(key) {
     if (!/^[\w-]+$/.test(key)) throw new Error('invalid storage key');
-    return fs.promises.readFile(path.join(this.dir, key));
+    return path.join(this.dir, key);
+  }
+
+  async get(key) {
+    return fs.promises.readFile(this.localPath(key));
+  }
+
+  async copy(key) {
+    const newKey = crypto.randomUUID();
+    await fs.promises.copyFile(this.localPath(key), path.join(this.dir, newKey));
+    return newKey;
   }
 
   async remove(key) {
-    await fs.promises.rm(path.join(this.dir, key), { force: true });
+    await fs.promises.rm(this.localPath(key), { force: true });
+  }
+}
+
+async function moveFile(from, to) {
+  try {
+    await fs.promises.rename(from, to);
+  } catch (err) {
+    if (err.code !== 'EXDEV') throw err;
+    await fs.promises.copyFile(from, to);
+    await fs.promises.rm(from, { force: true });
   }
 }
 
@@ -63,10 +88,11 @@ class DriveStorage {
     this.folderId = res.data.id;
   }
 
-  async put(buffer, name, mime) {
+  async put(source, name, mime) {
+    const body = Buffer.isBuffer(source) ? Readable.from(source) : fs.createReadStream(source.path);
     const res = await this.drive.files.create({
       requestBody: { name, parents: [this.folderId] },
-      media: { mimeType: mime || 'application/octet-stream', body: Readable.from(buffer) },
+      media: { mimeType: mime || 'application/octet-stream', body },
       fields: 'id',
     });
     return res.data.id;
@@ -75,6 +101,20 @@ class DriveStorage {
   async get(key) {
     const res = await this.drive.files.get({ fileId: key, alt: 'media' }, { responseType: 'arraybuffer' });
     return Buffer.from(res.data);
+  }
+
+  // يبث الملف من Drive إلى المتصفح دون تحميله كاملاً، مع تمرير Range لتشغيل الفيديو والتقديم فيه
+  async openStream(key, range) {
+    const res = await this.drive.files.get(
+      { fileId: key, alt: 'media' },
+      { responseType: 'stream', headers: range ? { Range: range } : {}, validateStatus: (s) => s < 400 },
+    );
+    return { status: res.status, headers: res.headers, stream: res.data };
+  }
+
+  async copy(key, name) {
+    const res = await this.drive.files.copy({ fileId: key, requestBody: { name, parents: [this.folderId] }, fields: 'id' });
+    return res.data.id;
   }
 
   async remove(key) {

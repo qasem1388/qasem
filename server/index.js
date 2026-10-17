@@ -46,9 +46,11 @@ async function main() {
   }
 
   const app = createApp({ storage, onChange });
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`أرشيف الموظفين يعمل على http://localhost:${config.port} (التخزين: ${config.storage})`);
   });
+  // رفع فيديو كبير على اتصال بطيء قد يستغرق ساعات، فنلغي مهلة الطلب الافتراضية (5 دقائق)
+  server.requestTimeout = 0;
 }
 
 main().catch((err) => {

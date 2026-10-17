@@ -47,6 +47,12 @@ async function loadWorkbook(buffer) {
   return wb;
 }
 
+// هل نستطيع قراءة نص هذا النوع لفهرسته في البحث؟ (الفيديو والصور والتصاميم تُبحث بالاسم والوسوم فقط)
+function canExtract(name) {
+  const e = ext(name);
+  return TEXT_EXT.has(e) || e === '.docx' || e === '.xlsx' || e === '.pdf';
+}
+
 async function extractText(buffer, name) {
   const e = ext(name);
   try {
@@ -169,4 +175,4 @@ async function fromEditable(kind, original, body) {
   throw Object.assign(new Error('نوع تعديل غير معروف'), { status: 400 });
 }
 
-module.exports = { editKind, extractText, toEditable, fromEditable, addRtl, DOCX_MIME, XLSX_MIME };
+module.exports = { editKind, canExtract, extractText, toEditable, fromEditable, addRtl, DOCX_MIME, XLSX_MIME };

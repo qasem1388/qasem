@@ -62,13 +62,24 @@
           <option value="oldest">الأقدم</option>
           <option value="name">الاسم</option>
         </select>
-        <button class="btn primary" id="upload-btn">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
-          رفع ملفات
-        </button>
+        <div class="add-buttons">
+          <button class="btn" id="note-btn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></svg>
+            ملاحظة
+          </button>
+          <button class="btn" id="link-btn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+            رابط
+          </button>
+          <button class="btn primary" id="upload-btn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+            رفع ملفات
+          </button>
+        </div>
       </div>
       <p id="voice-status" class="voice-status" hidden></p>
       <div class="chips" id="categories"></div>
+      <div class="chips types" id="types" aria-label="نوع الملف"></div>
       <div id="file-list" class="file-list"></div>
       <div id="drop-hint" class="drop-hint" hidden>أفلت الملفات هنا لرفعها</div>
     </section>
@@ -97,13 +108,14 @@
       <h2>رفع ملفات</h2>
       <label class="file-pick">
         <input type="file" name="files" multiple required>
-        <span>اختر ملفات أو اسحبها إلى الصفحة</span>
+        <span>اختر ملفات أو اسحبها إلى الصفحة: فيديو، صور، مستندات، تصاميم، مشاريع مونتاج... بأي حجم</span>
       </label>
       <ul id="upload-names" class="upload-names"></ul>
       <label>التصنيف<input name="category" list="category-options" placeholder="مثال: عقود، رواتب، شهادات"></label>
       <label>الوسوم<input name="tags" placeholder="افصل بينها بفاصلة"></label>
       <label>وصف<textarea name="description" rows="2"></textarea></label>
       <progress id="upload-progress" max="100" value="0" hidden></progress>
+      <p id="upload-progress-text" class="muted" hidden></p>
       <div class="actions">
         <button class="btn" value="cancel" formnovalidate>إلغاء</button>
         <button class="btn primary" id="upload-submit" value="ok">رفع</button>
@@ -120,6 +132,7 @@
         <label>اسم الملف<input name="name" required></label>
         <label>التصنيف<input name="category" list="category-options"></label>
         <label>الوسوم<input name="tags"></label>
+        <label class="full">الرابط<input name="url" dir="ltr"></label>
         <label class="full">وصف<textarea name="description" rows="2"></textarea></label>
         <div class="actions full">
           <button class="btn danger" type="button" id="delete-btn">حذف</button>

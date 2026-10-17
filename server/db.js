@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS files (
   category TEXT NOT NULL DEFAULT '',
   tags TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
+  url TEXT,
   mime TEXT NOT NULL,
   size INTEGER NOT NULL,
   current_version INTEGER NOT NULL DEFAULT 1,
@@ -65,7 +66,14 @@ function open() {
   db = new DatabaseSync(config.dbPath);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+  migrate();
   return db;
+}
+
+// تحديث قواعد البيانات المنشأة بإصدارات سابقة من التطبيق
+function migrate() {
+  const cols = db.prepare('PRAGMA table_info(files)').all().map((c) => c.name);
+  if (!cols.includes('url')) db.exec('ALTER TABLE files ADD COLUMN url TEXT');
 }
 
 function get() {

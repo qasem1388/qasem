@@ -7,9 +7,11 @@ module.exports = {
   port: Number(env.PORT) || 3000,
   dataDir,
   dbPath: path.join(dataDir, 'archive.sqlite'),
+  uploadTmpDir: path.join(dataDir, 'tmp'),
   production: env.NODE_ENV === 'production',
   jwtSecret: env.JWT_SECRET || null,
-  maxUploadMb: Number(env.MAX_UPLOAD_MB) || 50,
+  // 0 يعني بدون حد لحجم الملف
+  maxUploadMb: Number(env.MAX_UPLOAD_MB) || 0,
   admin: {
     username: env.ADMIN_USERNAME || 'admin',
     password: env.ADMIN_PASSWORD || null,

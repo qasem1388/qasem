@@ -1,3 +1,4 @@
+const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
@@ -19,6 +20,32 @@ function fixName(name) {
   return /[^\x00-\xff]/.test(name) || decoded.includes('�') ? name : decoded;
 }
 
+// اسم آمن لملف ينشئه التطبيق (ملاحظة أو رابط) من عنوان يكتبه المستخدم
+function safeName(title, fallback) {
+  const clean = String(title || '').replace(/[\\/:*?"<>|\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150);
+  return clean || fallback;
+}
+
+function parseUrl(raw) {
+  let text = String(raw || '').trim();
+  if (text && !/^[a-z][a-z0-9+.-]*:/i.test(text)) text = 'https://' + text;
+  try {
+    const u = new URL(text);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return u;
+  } catch {}
+  throw httpError(400, 'الرابط غير صحيح. مثال: https://example.com');
+}
+
+const parseUrlFile = (buf) => /^URL=(.+)$/m.exec(buf.toString('utf8'))?.[1].trim() || null;
+const urlFile = (url) => Buffer.from(`[InternetShortcut]\r\nURL=${url}\r\n`, 'utf8');
+const URL_MIME = 'application/internet-shortcut';
+
+// الأنواع التي تُعرض داخل التطبيق بدلاً من تنزيلها
+const INLINE_MIME = /^(application\/pdf|image\/(png|jpe?g|gif|webp|bmp|avif)|text\/plain|video\/[\w.+-]+|audio\/[\w.+-]+)$/;
+
+// لا نقرأ محتوى الملفات الضخمة للبحث، فتُبحث بالاسم والوسوم فقط
+const MAX_INDEX_BYTES = 50 * 1024 * 1024;
+
 function cleanTags(tags) {
   return String(tags || '')
     .split(/[,،]/)
@@ -30,7 +57,18 @@ function cleanTags(tags) {
 function createApp({ storage, onChange = () => {} }) {
   const app = express();
   const d = db.get();
-  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: config.maxUploadMb * 1024 * 1024 } });
+  // الملفات المرفوعة تُكتب على القرص مباشرة، فيمكن رفع فيديو بعدة غيغابايت دون استهلاك الذاكرة
+  fs.mkdirSync(config.uploadTmpDir, { recursive: true });
+  const upload = multer({
+    dest: config.uploadTmpDir,
+    limits: config.maxUploadMb > 0 ? { fileSize: config.maxUploadMb * 1024 * 1024 } : {},
+  });
+  const cleanupUploads = (req, res, next) => {
+    res.on('close', () => {
+      for (const f of [].concat(req.files || [], req.file || [])) fs.rm(f.path, { force: true }, () => {});
+    });
+    next();
+  };
 
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
@@ -57,18 +95,24 @@ function createApp({ storage, onChange = () => {} }) {
     return v;
   };
 
+  const metaText = (file) => indexText([file.name, file.category, file.tags, file.description, file.url].join(' '));
+
   const reindex = (file, text) => {
-    const meta = indexText([file.name, file.category, file.tags, file.description].join(' '));
     d.prepare('DELETE FROM files_fts WHERE rowid = ?').run(file.id);
-    d.prepare('INSERT INTO files_fts (rowid, meta, content) VALUES (?, ?, ?)').run(file.id, meta, indexText(text));
+    d.prepare('INSERT INTO files_fts (rowid, meta, content) VALUES (?, ?, ?)').run(file.id, metaText(file), indexText(text));
   };
 
   const reindexMeta = (file) => {
     const row = d.prepare('SELECT content FROM files_fts WHERE rowid = ?').get(file.id);
-    const meta = indexText([file.name, file.category, file.tags, file.description].join(' '));
     d.prepare('DELETE FROM files_fts WHERE rowid = ?').run(file.id);
-    d.prepare('INSERT INTO files_fts (rowid, meta, content) VALUES (?, ?, ?)').run(file.id, meta, row?.content || '');
+    d.prepare('INSERT INTO files_fts (rowid, meta, content) VALUES (?, ?, ?)').run(file.id, metaText(file), row?.content || '');
   };
+
+  // source: Buffer أو { path } لملف مرفوع على القرص
+  async function indexableText(source, name, size) {
+    if (!docs.canExtract(name) || size > MAX_INDEX_BYTES) return '';
+    return docs.extractText(Buffer.isBuffer(source) ? source : await fs.promises.readFile(source.path), name);
+  }
 
   const serializeFile = (f) => ({
     id: f.id,
@@ -76,6 +120,7 @@ function createApp({ storage, onChange = () => {} }) {
     category: f.category,
     tags: f.tags,
     description: f.description,
+    url: f.url || null,
     mime: f.mime,
     size: f.size,
     version: f.current_version,
@@ -90,21 +135,50 @@ function createApp({ storage, onChange = () => {} }) {
   const FILE_SELECT = `SELECT f.*, cu.display_name AS created_by_name, uu.display_name AS updated_by_name
     FROM files f LEFT JOIN users cu ON cu.id = f.created_by LEFT JOIN users uu ON uu.id = f.updated_by`;
 
-  // إضافة نسخة جديدة دون المساس بالنسخ السابقة
-  async function addVersion(file, buffer, mime, note, user) {
-    const no = file.current_version + 1;
-    const key = await storage.put(buffer, `${file.id}-v${no}-${file.name}`, mime);
-    const text = await docs.extractText(buffer, file.name);
-    db.transaction(() => {
+  // تسجيل نسخة جديدة دون المساس بالنسخ السابقة
+  function recordVersion(file, key, size, mime, note, user, text) {
+    return db.transaction(() => {
+      const no = d.prepare('SELECT current_version FROM files WHERE id = ?').get(file.id).current_version + 1;
       d.prepare('INSERT INTO versions (file_id, version_no, storage_key, size, mime, note, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
-        file.id, no, key, buffer.length, mime, note, user.id,
+        file.id, no, key, size, mime, note, user.id,
       );
-      d.prepare("UPDATE files SET current_version = ?, size = ?, mime = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?").run(
-        no, buffer.length, mime, user.id, file.id,
+      d.prepare("UPDATE files SET current_version = ?, size = ?, mime = ?, url = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?").run(
+        no, size, mime, file.url ?? null, user.id, file.id,
       );
       reindex(file, text);
+      return no;
     });
-    return no;
+  }
+
+  async function addVersion(file, source, size, mime, note, user) {
+    const text = await indexableText(source, file.name, size);
+    const key = await storage.put(source, `${file.id}-v${file.current_version + 1}-${file.name}`, mime);
+    return recordVersion(file, key, size, mime, note, user, text);
+  }
+
+  async function createFile({ name, source, size, mime, url = null, body, user, action }) {
+    const text = await indexableText(source, name, size);
+    const key = await storage.put(source, `v1-${name}`, mime);
+    const id = db.transaction(() => {
+      const file = {
+        name,
+        url,
+        category: String(body.category || '').trim(),
+        tags: cleanTags(body.tags),
+        description: String(body.description || '').trim(),
+      };
+      const r = d.prepare('INSERT INTO files (name, category, tags, description, url, mime, size, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+        name, file.category, file.tags, file.description, url, mime, size, user.id, user.id,
+      );
+      file.id = Number(r.lastInsertRowid);
+      d.prepare("INSERT INTO versions (file_id, version_no, storage_key, size, mime, note, created_by) VALUES (?, 1, ?, ?, ?, 'النسخة الأصلية', ?)").run(
+        file.id, key, size, mime, user.id,
+      );
+      reindex(file, text);
+      log(user.id, file.id, action, name);
+      return file.id;
+    });
+    return serializeFile(d.prepare(`${FILE_SELECT} WHERE f.id = ?`).get(id));
   }
 
   const api = express.Router();
@@ -164,30 +238,63 @@ function createApp({ storage, onChange = () => {} }) {
 
   api.post(
     '/files',
-    upload.array('files', 20),
+    cleanupUploads,
+    upload.array('files', 100),
     wrap(async (req, res) => {
       if (!req.files?.length) throw httpError(400, 'لم يتم اختيار أي ملف');
       const created = [];
       for (const up of req.files) {
-        const name = fixName(up.originalname).slice(0, 200);
-        const mime = up.mimetype || 'application/octet-stream';
-        const key = await storage.put(up.buffer, `v1-${name}`, mime);
-        const text = await docs.extractText(up.buffer, name);
-        const id = db.transaction(() => {
-          const r = d.prepare('INSERT INTO files (name, category, tags, description, mime, size, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
-            name, String(req.body.category || '').trim(), cleanTags(req.body.tags), String(req.body.description || '').trim(), mime, up.size, req.user.id, req.user.id,
-          );
-          const fid = Number(r.lastInsertRowid);
-          d.prepare("INSERT INTO versions (file_id, version_no, storage_key, size, mime, note, created_by) VALUES (?, 1, ?, ?, ?, 'النسخة الأصلية', ?)").run(
-            fid, key, up.size, mime, req.user.id,
-          );
-          reindex({ id: fid, name, category: req.body.category, tags: req.body.tags, description: req.body.description }, text);
-          log(req.user.id, fid, 'upload', name);
-          return fid;
-        });
-        created.push(serializeFile(d.prepare(`${FILE_SELECT} WHERE f.id = ?`).get(id)));
+        created.push(await createFile({
+          name: fixName(up.originalname).slice(0, 200),
+          source: { path: up.path },
+          size: up.size,
+          mime: up.mimetype || 'application/octet-stream',
+          body: req.body,
+          user: req.user,
+          action: 'upload',
+        }));
       }
       res.status(201).json({ files: created });
+    }),
+  );
+
+  // ملاحظة مكتوبة داخل التطبيق، تُحفظ كملف نصي يمكن تعديله والبحث في محتواه
+  api.post(
+    '/notes',
+    wrap(async (req, res) => {
+      const b = req.body || {};
+      const content = Buffer.from(String(b.content ?? ''), 'utf8');
+      const file = await createFile({
+        name: safeName(b.title, 'ملاحظة') + '.txt',
+        source: content,
+        size: content.length,
+        mime: 'text/plain',
+        body: b,
+        user: req.user,
+        action: 'note',
+      });
+      res.status(201).json({ file });
+    }),
+  );
+
+  // رابط موقع: يُحفظ كملف اختصار .url يفتح الموقع عند تنزيله على ويندوز
+  api.post(
+    '/links',
+    wrap(async (req, res) => {
+      const b = req.body || {};
+      const url = parseUrl(b.url).href;
+      const content = urlFile(url);
+      const file = await createFile({
+        name: safeName(b.title, new URL(url).hostname) + '.url',
+        source: content,
+        size: content.length,
+        mime: URL_MIME,
+        url,
+        body: b,
+        user: req.user,
+        action: 'link',
+      });
+      res.status(201).json({ file });
     }),
   );
 
@@ -196,7 +303,7 @@ function createApp({ storage, onChange = () => {} }) {
     res.json({ file: serializeFile(d.prepare(`${FILE_SELECT} WHERE f.id = ?`).get(Number(req.params.id))) });
   });
 
-  api.patch('/files/:id', (req, res) => {
+  api.patch('/files/:id', async (req, res) => {
     const f = fileRow(req.params.id);
     const b = req.body || {};
     const next = {
@@ -205,6 +312,7 @@ function createApp({ storage, onChange = () => {} }) {
       category: b.category != null ? String(b.category).trim() : f.category,
       tags: b.tags != null ? cleanTags(b.tags) : f.tags,
       description: b.description != null ? String(b.description).trim() : f.description,
+      url: f.url && b.url != null ? parseUrl(b.url).href : f.url,
     };
     if (path.extname(next.name).toLowerCase() !== path.extname(f.name).toLowerCase()) {
       next.name += path.extname(f.name);
@@ -216,6 +324,10 @@ function createApp({ storage, onChange = () => {} }) {
       reindexMeta(next);
       log(req.user.id, f.id, 'rename', next.name);
     });
+    if (next.url !== f.url) {
+      const content = urlFile(next.url);
+      await addVersion(next, content, content.length, URL_MIME, 'تغيير الرابط', req.user);
+    }
     res.json({ file: serializeFile(d.prepare(`${FILE_SELECT} WHERE f.id = ?`).get(f.id)) });
   });
 
@@ -232,16 +344,26 @@ function createApp({ storage, onChange = () => {} }) {
       const f = fileRow(req.params.id);
       const no = Number(req.query.v) || f.current_version;
       const v = versionRow(f.id, no);
-      const buffer = await storage.get(v.storage_key);
       const ext = path.extname(f.name);
       const name = no === f.current_version ? f.name : `${path.basename(f.name, ext)} (نسخة ${no})${ext}`;
-      const inline = req.query.inline === '1' && /^(application\/pdf|image\/(png|jpe?g|gif|webp)|text\/plain)$/.test(v.mime);
-      if (!inline) log(req.user.id, f.id, 'download', `نسخة ${no}`);
+      const inline = req.query.inline === '1' && INLINE_MIME.test(v.mime);
+      // طلبات Range تأتي من مشغّل الفيديو أو من استكمال تنزيل متوقف، فلا نسجلها كتنزيل جديد
+      if (!inline && !req.get('range')) log(req.user.id, f.id, 'download', `نسخة ${no}`);
       res.set('Content-Type', inline ? v.mime : 'application/octet-stream');
       res.set('Content-Disposition', contentDisposition(name, { type: inline ? 'inline' : 'attachment' }));
-      res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox");
+      res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox");
       res.set('Cache-Control', 'private, no-store');
-      res.send(buffer);
+
+      if (storage.localPath) {
+        return res.sendFile(storage.localPath(v.storage_key), { cacheControl: false, lastModified: false });
+      }
+      const { status, headers, stream } = await storage.openStream(v.storage_key, req.get('range'));
+      const header = (k) => (typeof headers.get === 'function' ? headers.get(k) : headers[k]);
+      res.status(status === 206 ? 206 : 200);
+      res.set('Accept-Ranges', 'bytes');
+      for (const k of ['content-length', 'content-range']) if (header(k)) res.set(k, header(k));
+      stream.on('error', (err) => res.destroy(err));
+      stream.pipe(res);
     }),
   );
 
@@ -258,11 +380,13 @@ function createApp({ storage, onChange = () => {} }) {
 
   api.post(
     '/files/:id/versions',
+    cleanupUploads,
     upload.single('file'),
     wrap(async (req, res) => {
       const f = fileRow(req.params.id);
       if (!req.file) throw httpError(400, 'لم يتم اختيار ملف');
-      const no = await addVersion(f, req.file.buffer, req.file.mimetype || f.mime, String(req.body.note || 'رفع نسخة جديدة'), req.user);
+      const up = req.file;
+      const no = await addVersion(f, { path: up.path }, up.size, up.mimetype || f.mime, String(req.body.note || 'رفع نسخة جديدة'), req.user);
       log(req.user.id, f.id, 'new_version', `نسخة ${no}`);
       res.status(201).json({ version: no });
     }),
@@ -273,8 +397,11 @@ function createApp({ storage, onChange = () => {} }) {
     wrap(async (req, res) => {
       const f = fileRow(req.params.id);
       const from = versionRow(f.id, Number(req.body?.version));
-      const buffer = await storage.get(from.storage_key);
-      const no = await addVersion(f, buffer, from.mime, `استرجاع النسخة ${from.version_no}`, req.user);
+      // نسخ داخل التخزين نفسه، فلا يمر الملف الكبير عبر الخادم
+      const key = await storage.copy(from.storage_key, `${f.id}-v${f.current_version + 1}-${f.name}`);
+      const text = docs.canExtract(f.name) && from.size <= MAX_INDEX_BYTES ? await docs.extractText(await storage.get(from.storage_key), f.name) : '';
+      if (f.url) f.url = parseUrlFile(await storage.get(from.storage_key)) || f.url;
+      const no = recordVersion(f, key, from.size, from.mime, `استرجاع النسخة ${from.version_no}`, req.user, text);
       log(req.user.id, f.id, 'restore', `من نسخة ${from.version_no} إلى ${no}`);
       res.json({ version: no });
     }),
@@ -302,7 +429,7 @@ function createApp({ storage, onChange = () => {} }) {
       const current = await storage.get(versionRow(f.id, f.current_version).storage_key);
       const buffer = await docs.fromEditable(kind, current, req.body);
       const mime = kind === 'docx' ? docs.DOCX_MIME : kind === 'sheet' ? docs.XLSX_MIME : f.mime;
-      const no = await addVersion(f, buffer, mime, String(req.body.note || 'تعديل داخل التطبيق').slice(0, 300), req.user);
+      const no = await addVersion(f, buffer, buffer.length, mime, String(req.body.note || 'تعديل داخل التطبيق').slice(0, 300), req.user);
       log(req.user.id, f.id, 'edit', `نسخة ${no}`);
       res.json({ version: no });
     }),
@@ -383,7 +510,7 @@ function createApp({ storage, onChange = () => {} }) {
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
-      const msg = err.code === 'LIMIT_FILE_SIZE' ? `حجم الملف أكبر من ${config.maxUploadMb} ميغابايت` : 'خطأ في رفع الملف';
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? `حجم الملف أكبر من ${config.maxUploadMb} ميغابايت` : `خطأ في رفع الملف (${err.code})`;
       return res.status(400).json({ error: msg });
     }
     const status = err.status || 500;

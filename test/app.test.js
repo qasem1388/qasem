@@ -51,6 +51,7 @@ function client() {
     if (set) cookie = set.split(';')[0];
     return res;
   };
+  call.raw = (p, extra) => fetch(base + p, { headers: { cookie, ...extra } });
   call.json = async (p, opts) => {
     const res = await call(p, opts);
     return { status: res.status, body: await res.json() };
@@ -215,4 +216,74 @@ test('deleted files leave the list and an admin can restore them', async () => {
   assert.ok(trash.body.files.some((f) => f.id === id));
   await c.json(`/admin/trash/${id}/restore`, { method: 'POST' });
   assert.equal((await c(`/files/${id}`)).status, 200);
+});
+
+test('large files upload without a size limit and stream back with Range support', async () => {
+  const c = client();
+  await c.login('admin', 'admin-pass-123');
+  const big = Buffer.alloc(80 * 1024 * 1024, 7); // أكبر من حد 50 ميغابايت في الإصدار السابق
+  big.write('START', 0);
+  const form = new FormData();
+  form.append('files', new Blob([big], { type: 'video/mp4' }), 'مقطع الحفل.mp4');
+  const up = await c.json('/files', { method: 'POST', form });
+  assert.equal(up.status, 201);
+  const id = up.body.files[0].id;
+  assert.equal(up.body.files[0].size, big.length);
+
+  const anon = await fetch(`${base}/files/${id}/download?inline=1`);
+  assert.equal(anon.status, 401, 'downloads require a session');
+
+  const ranged = await c.raw(`/files/${id}/download?inline=1`, { Range: 'bytes=0-4' });
+  assert.equal(ranged.status, 206);
+  assert.equal(ranged.headers.get('content-type'), 'video/mp4');
+  assert.equal(await ranged.text(), 'START');
+
+  const restore = await c.json(`/files/${id}/restore`, { method: 'POST', json: { version: 1 } });
+  assert.equal(restore.body.version, 2);
+  const tmpLeft = fs.readdirSync(path.join(dataDir, 'tmp'));
+  assert.deepEqual(tmpLeft, [], 'temporary upload files are cleaned up');
+});
+
+
+test('notes are created as searchable, editable text files', async () => {
+  const c = client();
+  await c.login('admin', 'admin-pass-123');
+  const { status, body } = await c.json('/notes', {
+    method: 'POST',
+    json: { title: 'اجتماع/الإدارة', content: 'تقرر تجديد عقد المورد', category: 'ملاحظات' },
+  });
+  assert.equal(status, 201);
+  assert.equal(body.file.name, 'اجتماع الإدارة.txt');
+  assert.equal(body.file.editable, 'text');
+  const found = await c.json('/files?q=' + encodeURIComponent('المورد'));
+  assert.ok(found.body.files.some((f) => f.id === body.file.id));
+});
+
+test('links are saved with their address and can be searched and changed', async () => {
+  const c = client();
+  await c.login('admin', 'admin-pass-123');
+  const bad = await c.json('/links', { method: 'POST', json: { url: 'javascript:alert(1)' } });
+  assert.equal(bad.status, 400);
+
+  const { status, body } = await c.json('/links', { method: 'POST', json: { url: 'moe.gov.sa/ar', title: 'وزارة التعليم' } });
+  assert.equal(status, 201);
+  assert.equal(body.file.url, 'https://moe.gov.sa/ar');
+  assert.equal(body.file.name, 'وزارة التعليم.url');
+  const dl = await (await c(`/files/${body.file.id}/download`)).text();
+  assert.match(dl, /URL=https:\/\/moe\.gov\.sa\/ar/);
+
+  for (const q of ['التعليم', 'moe']) {
+    const found = await c.json('/files?q=' + encodeURIComponent(q));
+    assert.ok(found.body.files.some((f) => f.id === body.file.id), `search "${q}" finds the link`);
+  }
+
+  const changed = await c.json(`/files/${body.file.id}`, { method: 'PATCH', json: { url: 'https://moe.gov.sa/en' } });
+  assert.equal(changed.status, 200);
+  const { body: after } = await c.json(`/files/${body.file.id}`);
+  assert.equal(after.file.url, 'https://moe.gov.sa/en');
+  assert.equal(after.file.version, 2);
+
+  await c.json(`/files/${body.file.id}/restore`, { method: 'POST', json: { version: 1 } });
+  const { body: restored } = await c.json(`/files/${body.file.id}`);
+  assert.equal(restored.file.url, 'https://moe.gov.sa/ar', 'restoring an old version restores its address');
 });
