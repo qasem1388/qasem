@@ -103,6 +103,7 @@ const ICONS = {
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4zM13 7l4 4"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>',
   external: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
 };
 
@@ -236,6 +237,7 @@ function renderFiles() {
         previewable(f) && h('button', { class: 'icon-btn', title: 'معاينة', 'aria-label': 'معاينة', onclick: () => openPreview(f) }, icon(ICONS.eye)),
         f.editable && h('button', { class: 'icon-btn', title: 'تعديل', 'aria-label': 'تعديل', onclick: () => openEditor(f) }, icon(ICONS.edit)),
         !isLink(f) && h('a', { class: 'icon-btn', title: 'تنزيل', 'aria-label': 'تنزيل', href: `/api/files/${f.id}/download` }, icon(ICONS.download)),
+        h('button', { class: 'icon-btn', title: 'مشاركة', 'aria-label': 'مشاركة', onclick: () => openShare(f) }, icon(ICONS.share)),
         h('button', { class: 'icon-btn', title: 'التفاصيل والنسخ', 'aria-label': 'التفاصيل والنسخ', onclick: () => openDetails(f) }, icon(ICONS.info)),
       ),
     );
@@ -422,6 +424,141 @@ $('#link-btn').addEventListener('click', run(async () => {
   loadFiles();
 }));
 
+// ---------- المشاركة (واتساب) ----------
+
+const shareDialog = $('#share-dialog');
+closeOnClick(shareDialog);
+// إرسال الملف نفسه يتطلب تحميله على الجهاز أولاً، فنحدّه بحجم معقول للجوال
+const MAX_DIRECT_SHARE = 200 * 1024 * 1024;
+const whatsappUrl = (text) => 'https://wa.me/?text=' + encodeURIComponent(text);
+const SHARE_DAYS = [[1, 'يوم واحد'], [7, 'أسبوع'], [30, 'شهر'], [0, 'بدون انتهاء']];
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('تم نسخ الرابط');
+  } catch {
+    prompt('انسخ الرابط:', text);
+  }
+}
+
+function canShareFiles() {
+  try {
+    return !!navigator.canShare?.({ files: [new File([''], 'x.txt', { type: 'text/plain' })] });
+  } catch {
+    return false;
+  }
+}
+
+function openShare(f) {
+  $('#share-title').textContent = 'مشاركة: ' + (isLink(f) ? f.name.replace(/\.url$/i, '') : f.name);
+  const body = $('#share-body');
+  if (isLink(f)) {
+    const text = `${f.name.replace(/\.url$/i, '')}\n${f.url}`;
+    body.replaceChildren(h('section', { class: 'share-section' },
+      h('p', { class: 'share-url' }, f.url),
+      h('div', { class: 'share-row' },
+        h('a', { class: 'btn whatsapp', href: whatsappUrl(text), target: '_blank', rel: 'noopener' }, 'إرسال عبر واتساب'),
+        h('button', { class: 'btn', onclick: () => copyText(f.url) }, 'نسخ الرابط'),
+      ),
+    ));
+  } else {
+    body.replaceChildren(directShareSection(f), linkShareSection(f));
+  }
+  shareDialog.showModal();
+}
+
+// الطريقة الأولى: إرسال الملف نفسه عبر قائمة المشاركة في الجوال (واتساب وغيره)
+function directShareSection(f) {
+  const section = h('section', { class: 'share-section' }, h('h3', {}, 'إرسال الملف نفسه'));
+  if (!canShareFiles()) {
+    section.append(h('p', {}, 'هذه الطريقة متاحة من الجوال. من الكمبيوتر استخدم "إرسال رابط تنزيل" بالأسفل.'));
+    return section;
+  }
+  if (f.size > MAX_DIRECT_SHARE) {
+    section.append(h('p', {}, `الملف كبير (${fmtSize(f.size)})، فالأفضل إرسال رابط تنزيل بدلاً منه.`));
+    return section;
+  }
+  const status = h('p', {}, 'يُرسل الملف كاملاً، فيستطيع المستلم فتحه مباشرة في واتساب.');
+  const btn = h('button', { class: 'btn whatsapp' }, 'تجهيز الملف للإرسال');
+  let ready = null;
+  // المتصفح يسمح بفتح قائمة المشاركة فقط بعد ضغطة مباشرة، لذلك نجهّز الملف أولاً ثم يضغط المستخدم "إرسال الآن"
+  btn.addEventListener('click', run(async () => {
+    if (ready) {
+      try {
+        await navigator.share({ files: [ready], title: f.name });
+      } catch (err) {
+        if (err.name !== 'AbortError') throw new Error('تعذر فتح قائمة المشاركة');
+      }
+      return;
+    }
+    btn.disabled = true;
+    status.textContent = 'جارٍ تجهيز الملف...';
+    try {
+      const res = await fetch(`/api/files/${f.id}/download`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('تعذر تحميل الملف');
+      ready = new File([await res.blob()], f.name, { type: f.mime || 'application/octet-stream' });
+      if (!navigator.canShare({ files: [ready] })) throw new Error('هذا النوع من الملفات لا يمكن مشاركته من المتصفح، استخدم رابط التنزيل');
+      btn.textContent = 'إرسال الآن';
+      status.textContent = 'الملف جاهز. اضغط "إرسال الآن" ثم اختر واتساب.';
+    } catch (err) {
+      ready = null;
+      status.textContent = '';
+      throw err;
+    } finally {
+      btn.disabled = false;
+    }
+  }));
+  section.append(status, h('div', { class: 'share-row' }, btn));
+  return section;
+}
+
+// الطريقة الثانية: رابط تنزيل آمن يُرسل عبر واتساب، يصلح للملفات الكبيرة ولأشخاص من خارج الشركة
+function linkShareSection(f) {
+  const days = h('select', { 'aria-label': 'مدة صلاحية الرابط' }, SHARE_DAYS.map(([v, l]) => h('option', { value: v, selected: v === 7 }, l)));
+  const result = h('div', { class: 'share-row' });
+  const list = h('div', { class: 'share-list' });
+
+  const showLink = (share) => {
+    const text = `${f.name}\n${share.url}`;
+    result.replaceChildren(
+      h('a', { class: 'btn whatsapp', href: whatsappUrl(text), target: '_blank', rel: 'noopener' }, 'إرسال عبر واتساب'),
+      h('button', { class: 'btn', onclick: () => copyText(share.url) }, 'نسخ الرابط'),
+      h('input', { class: 'share-url', value: share.url, readonly: true, onclick: (e) => e.target.select(), 'aria-label': 'رابط المشاركة' }),
+    );
+  };
+
+  const loadList = run(async () => {
+    const { shares } = await api(`/files/${f.id}/shares`);
+    list.replaceChildren(...(shares.length ? [h('strong', {}, 'روابط فعالة لهذا الملف')] : []), ...shares.map((s) => h('div', {},
+      h('span', {}, `${s.createdBy || ''} · ${s.expiresAt ? 'ينتهي ' + fmtDate(s.expiresAt) : 'بدون انتهاء'} · ${s.downloads} تنزيل`),
+      h('button', { class: 'btn small', onclick: () => copyText(s.url) }, 'نسخ'),
+      h('button', { class: 'btn small danger', onclick: run(async () => {
+        if (!confirm('إيقاف هذا الرابط؟ لن يستطيع أحد التنزيل منه بعد الآن.')) return;
+        await api(`/shares/${s.id}`, { method: 'DELETE' });
+        toast('تم إيقاف الرابط');
+        result.replaceChildren();
+        loadList();
+      }) }, 'إيقاف'),
+    )));
+  });
+
+  const create = h('button', { class: 'btn primary', onclick: run(async () => {
+    const { share } = await api(`/files/${f.id}/shares`, { method: 'POST', json: { days: Number(days.value) } });
+    showLink(share);
+    loadList();
+  }) }, 'إنشاء رابط');
+
+  loadList();
+  return h('section', { class: 'share-section' },
+    h('h3', {}, 'إرسال رابط تنزيل'),
+    h('p', {}, 'يستطيع أي شخص يملك الرابط تنزيل الملف دون حساب، حتى تنتهي مدته أو توقفه.'),
+    h('div', { class: 'share-row' }, h('label', { style: 'display:flex; gap:.4rem; align-items:center' }, 'المدة:', days), create),
+    result,
+    list,
+  );
+}
+
 // ---------- التفاصيل والنسخ ----------
 
 const detailsDialog = $('#details-dialog');
@@ -429,7 +566,8 @@ closeOnClick(detailsDialog);
 
 const ACTIONS = {
   upload: 'رفع الملف', edit: 'تعديل', new_version: 'رفع نسخة جديدة', restore: 'استرجاع نسخة',
-  download: 'تنزيل', rename: 'تعديل البيانات', note: 'إضافة ملاحظة', link: 'إضافة رابط', delete: 'حذف', undelete: 'استرجاع من المحذوفات',
+  download: 'تنزيل', rename: 'تعديل البيانات', note: 'إضافة ملاحظة', link: 'إضافة رابط',
+  share: 'إنشاء رابط مشاركة', unshare: 'إيقاف رابط مشاركة', share_download: 'تنزيل عبر رابط مشاركة', delete: 'حذف', undelete: 'استرجاع من المحذوفات',
 };
 
 function renderActivity(box, rows, withFile = false) {

@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const express = require('express');
 const multer = require('multer');
 const cookieParser = require('cookie-parser');
@@ -9,6 +10,7 @@ const db = require('./db');
 const auth = require('./auth');
 const docs = require('./documents');
 const { indexText, ftsQuery } = require('./arabic');
+const { sharePage, expiredPage } = require('./share-page');
 
 function httpError(status, message) {
   return Object.assign(new Error(message), { status });
@@ -42,6 +44,8 @@ const URL_MIME = 'application/internet-shortcut';
 
 // الأنواع التي تُعرض داخل التطبيق بدلاً من تنزيلها
 const INLINE_MIME = /^(application\/pdf|image\/(png|jpe?g|gif|webp|bmp|avif)|text\/plain|video\/[\w.+-]+|audio\/[\w.+-]+)$/;
+
+const SHARE_DAYS = new Set([1, 7, 30, 0]); // 0 = بدون انتهاء
 
 // لا نقرأ محتوى الملفات الضخمة للبحث، فتُبحث بالاسم والوسوم فقط
 const MAX_INDEX_BYTES = 50 * 1024 * 1024;
@@ -180,6 +184,38 @@ function createApp({ storage, onChange = () => {} }) {
     });
     return serializeFile(d.prepare(`${FILE_SELECT} WHERE f.id = ?`).get(id));
   }
+
+  // طلبات Range تأتي من مشغّل الفيديو أو من استكمال تنزيل متوقف، فلا نحسبها تنزيلاً جديداً
+  const isNewDownload = (req, inline) => !inline && !req.get('range');
+
+  async function sendStored(req, res, v, name, inline) {
+    res.set('Content-Type', inline ? v.mime : 'application/octet-stream');
+    res.set('Content-Disposition', contentDisposition(name, { type: inline ? 'inline' : 'attachment' }));
+    res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox");
+    res.set('Cache-Control', 'private, no-store');
+
+    if (storage.localPath) {
+      return res.sendFile(storage.localPath(v.storage_key), { cacheControl: false, lastModified: false });
+    }
+    const { status, headers, stream } = await storage.openStream(v.storage_key, req.get('range'));
+    const header = (k) => (typeof headers.get === 'function' ? headers.get(k) : headers[k]);
+    res.status(status === 206 ? 206 : 200);
+    res.set('Accept-Ranges', 'bytes');
+    for (const k of ['content-length', 'content-range']) if (header(k)) res.set(k, header(k));
+    stream.on('error', (err) => res.destroy(err));
+    stream.pipe(res);
+  }
+
+  const publicBase = (req) => config.publicUrl || `${req.protocol}://${req.get('host')}`;
+
+  const serializeShare = (req, s) => ({
+    id: s.id,
+    url: `${publicBase(req)}/s/${s.token}`,
+    createdAt: s.created_at,
+    createdBy: s.by,
+    expiresAt: s.expires_at,
+    downloads: s.downloads,
+  });
 
   const api = express.Router();
   const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -347,23 +383,8 @@ function createApp({ storage, onChange = () => {} }) {
       const ext = path.extname(f.name);
       const name = no === f.current_version ? f.name : `${path.basename(f.name, ext)} (نسخة ${no})${ext}`;
       const inline = req.query.inline === '1' && INLINE_MIME.test(v.mime);
-      // طلبات Range تأتي من مشغّل الفيديو أو من استكمال تنزيل متوقف، فلا نسجلها كتنزيل جديد
-      if (!inline && !req.get('range')) log(req.user.id, f.id, 'download', `نسخة ${no}`);
-      res.set('Content-Type', inline ? v.mime : 'application/octet-stream');
-      res.set('Content-Disposition', contentDisposition(name, { type: inline ? 'inline' : 'attachment' }));
-      res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox");
-      res.set('Cache-Control', 'private, no-store');
-
-      if (storage.localPath) {
-        return res.sendFile(storage.localPath(v.storage_key), { cacheControl: false, lastModified: false });
-      }
-      const { status, headers, stream } = await storage.openStream(v.storage_key, req.get('range'));
-      const header = (k) => (typeof headers.get === 'function' ? headers.get(k) : headers[k]);
-      res.status(status === 206 ? 206 : 200);
-      res.set('Accept-Ranges', 'bytes');
-      for (const k of ['content-length', 'content-range']) if (header(k)) res.set(k, header(k));
-      stream.on('error', (err) => res.destroy(err));
-      stream.pipe(res);
+      if (isNewDownload(req, inline)) log(req.user.id, f.id, 'download', `نسخة ${no}`);
+      await sendStored(req, res, v, name, inline);
     }),
   );
 
@@ -435,6 +456,38 @@ function createApp({ storage, onChange = () => {} }) {
     }),
   );
 
+  // ---------- المشاركة ----------
+
+  api.post('/files/:id/shares', (req, res) => {
+    const f = fileRow(req.params.id);
+    const days = Number(req.body?.days ?? 7);
+    if (!SHARE_DAYS.has(days)) throw httpError(400, 'مدة الرابط غير صحيحة');
+    const token = crypto.randomBytes(18).toString('base64url');
+    const r = d
+      .prepare(`INSERT INTO shares (token, file_id, created_by, expires_at) VALUES (?, ?, ?, ${days ? "datetime('now', ?)" : 'NULL'})`)
+      .run(...[token, f.id, req.user.id, ...(days ? [`+${days} days`] : [])]);
+    log(req.user.id, f.id, 'share', days ? `رابط لمدة ${days} يوم` : 'رابط بدون انتهاء');
+    const share = d.prepare('SELECT * FROM shares WHERE id = ?').get(r.lastInsertRowid);
+    res.status(201).json({ share: serializeShare(req, { ...share, by: req.user.display_name }) });
+  });
+
+  api.get('/files/:id/shares', (req, res) => {
+    const f = fileRow(req.params.id);
+    const rows = d
+      .prepare(`SELECT s.*, u.display_name AS by FROM shares s LEFT JOIN users u ON u.id = s.created_by
+        WHERE s.file_id = ? AND s.revoked_at IS NULL AND (s.expires_at IS NULL OR s.expires_at > datetime('now')) ORDER BY s.id DESC`)
+      .all(f.id);
+    res.json({ shares: rows.map((s) => serializeShare(req, s)) });
+  });
+
+  api.delete('/shares/:id', (req, res) => {
+    const s = d.prepare('SELECT * FROM shares WHERE id = ? AND revoked_at IS NULL').get(Number(req.params.id));
+    if (!s) throw httpError(404, 'الرابط غير موجود');
+    d.prepare("UPDATE shares SET revoked_at = datetime('now') WHERE id = ?").run(s.id);
+    log(req.user.id, s.file_id, 'unshare');
+    res.json({ ok: true });
+  });
+
   api.get('/files/:id/activity', (req, res) => {
     const f = fileRow(req.params.id);
     const rows = d
@@ -502,10 +555,44 @@ function createApp({ storage, onChange = () => {} }) {
 
   app.use('/api', api);
 
+  // ---------- صفحات المشاركة العامة (بدون تسجيل دخول) ----------
+
+  const activeShare = (token) =>
+    d.prepare(`SELECT s.id AS share_id, s.expires_at, f.* FROM shares s JOIN files f ON f.id = s.file_id
+      WHERE s.token = ? AND s.revoked_at IS NULL AND f.deleted_at IS NULL
+      AND (s.expires_at IS NULL OR s.expires_at > datetime('now'))`).get(String(token));
+
+  const shareHeaders = (res) => {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    res.set('Referrer-Policy', 'no-referrer');
+  };
+
+  app.get('/s/:token', (req, res) => {
+    shareHeaders(res);
+    const f = activeShare(req.params.token);
+    res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'");
+    res.set('Cache-Control', 'no-store');
+    if (!f) return res.status(404).type('html').send(expiredPage());
+    res.type('html').send(sharePage({ file: f, token: req.params.token, expiresAt: f.expires_at }));
+  });
+
+  app.get('/s/:token/download', async (req, res) => {
+    shareHeaders(res);
+    const f = activeShare(req.params.token);
+    if (!f) return res.status(404).type('html').send(expiredPage());
+    const v = versionRow(f.id, f.current_version);
+    const inline = req.query.inline === '1' && INLINE_MIME.test(v.mime);
+    if (isNewDownload(req, inline)) {
+      d.prepare('UPDATE shares SET downloads = downloads + 1 WHERE id = ?').run(f.share_id);
+      log(null, f.id, 'share_download');
+    }
+    await sendStored(req, res, v, f.name, inline);
+  });
+
   const pub = path.join(__dirname, '..', 'public');
   app.get('/vendor/purify.min.js', (req, res) => res.sendFile(require.resolve('dompurify/dist/purify.min.js')));
   app.use(express.static(pub, { index: 'index.html', setHeaders: (res, p) => p.endsWith('sw.js') && res.set('Cache-Control', 'no-cache') }));
-  app.get(/^\/(?!api\/).*/, (req, res) => res.sendFile(path.join(pub, 'index.html')));
+  app.get(/^\/(?!api\/|s\/).*/, (req, res) => res.sendFile(path.join(pub, 'index.html')));
 
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {

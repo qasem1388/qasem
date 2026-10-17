@@ -54,6 +54,18 @@ CREATE TABLE IF NOT EXISTS activity (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- روابط مشاركة عامة: من يملك الرابط يستطيع تنزيل الملف دون حساب، حتى تاريخ الانتهاء أو الإيقاف
+CREATE TABLE IF NOT EXISTS shares (
+  id INTEGER PRIMARY KEY,
+  token TEXT NOT NULL UNIQUE,
+  file_id INTEGER NOT NULL REFERENCES files(id),
+  created_by INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT,
+  revoked_at TEXT,
+  downloads INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS files_fts USING fts5(
   meta, content, tokenize = 'unicode61'
 );

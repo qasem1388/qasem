@@ -287,3 +287,49 @@ test('links are saved with their address and can be searched and changed', async
   const { body: restored } = await c.json(`/files/${body.file.id}`);
   assert.equal(restored.file.url, 'https://moe.gov.sa/ar', 'restoring an old version restores its address');
 });
+
+test('share links let anyone download until they expire or are revoked', async () => {
+  const c = client();
+  await c.login('admin', 'admin-pass-123');
+  const root = base.replace(/\/api$/, '');
+  const { body } = await c.json('/files', { method: 'POST', form: fileForm('عرض <سعر>.txt', 'محتوى العرض') });
+  const id = body.files[0].id;
+
+  assert.equal((await c.json(`/files/${id}/shares`, { method: 'POST', json: { days: 3 } })).status, 400, 'only offered durations');
+  const created = await c.json(`/files/${id}/shares`, { method: 'POST', json: { days: 7 } });
+  assert.equal(created.status, 201);
+  const { url, id: shareId } = created.body.share;
+  assert.match(url, /\/s\/[\w-]{24}$/);
+  const token = url.split('/s/')[1];
+
+  // صفحة المشاركة تعمل بدون تسجيل دخول، والاسم فيها محمي من حقن HTML
+  const page = await fetch(`${root}/s/${token}`);
+  assert.equal(page.status, 200);
+  const html = await page.text();
+  assert.match(html, /og:title" content="عرض &lt;سعر&gt;.txt"/);
+  assert.ok(!html.includes('<سعر>'));
+  assert.equal(page.headers.get('x-robots-tag'), 'noindex, nofollow');
+
+  const dl = await fetch(`${root}/s/${token}/download`);
+  assert.equal(await dl.text(), 'محتوى العرض');
+  assert.equal(created.body.share.downloads, 0);
+  const { body: list } = await c.json(`/files/${id}/shares`);
+  assert.equal(list.shares[0].downloads, 1);
+
+  assert.equal((await fetch(`${root}/s/wrong-token/download`)).status, 404);
+
+  await c.json(`/shares/${shareId}`, { method: 'DELETE' });
+  assert.equal((await fetch(`${root}/s/${token}`)).status, 404, 'revoked link stops working');
+  assert.equal((await fetch(`${root}/s/${token}/download`)).status, 404);
+
+  const second = await c.json(`/files/${id}/shares`, { method: 'POST', json: { days: 1 } });
+  const token2 = second.body.share.url.split('/s/')[1];
+  db.get().prepare("UPDATE shares SET expires_at = datetime('now', '-1 minute') WHERE token = ?").run(token2);
+  assert.equal((await fetch(`${root}/s/${token2}/download`)).status, 404, 'expired link stops working');
+
+  const forever = await c.json(`/files/${id}/shares`, { method: 'POST', json: { days: 0 } });
+  assert.equal(forever.body.share.expiresAt, null);
+  await c.json(`/files/${id}`, { method: 'DELETE' });
+  const token3 = forever.body.share.url.split('/s/')[1];
+  assert.equal((await fetch(`${root}/s/${token3}`)).status, 404, 'deleting the file disables its links');
+});

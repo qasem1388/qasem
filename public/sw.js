@@ -1,5 +1,5 @@
 // يحفظ واجهة التطبيق لتفتح بسرعة وحتى بدون إنترنت. بيانات الملفات تُطلب دائماً من الخادم.
-const CACHE = 'archive-shell-v2';
+const CACHE = 'archive-shell-v3';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/vendor/purify.min.js', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
@@ -14,7 +14,7 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
+  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/s/')) return;
   // الشبكة أولاً حتى تصل التحديثات فوراً، والنسخة المحفوظة عند انقطاع الاتصال
   e.respondWith(
     fetch(e.request)

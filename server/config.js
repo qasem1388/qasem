@@ -9,6 +9,8 @@ module.exports = {
   dbPath: path.join(dataDir, 'archive.sqlite'),
   uploadTmpDir: path.join(dataDir, 'tmp'),
   production: env.NODE_ENV === 'production',
+  // عنوان التطبيق على الإنترنت (مثل https://archive.example.com) لبناء روابط المشاركة. يُستنتج من الطلب إن لم يُحدَّد
+  publicUrl: (env.PUBLIC_URL || '').replace(/\/+$/, '') || null,
   jwtSecret: env.JWT_SECRET || null,
   // 0 يعني بدون حد لحجم الملف
   maxUploadMb: Number(env.MAX_UPLOAD_MB) || 0,

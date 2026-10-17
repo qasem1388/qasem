@@ -206,6 +206,18 @@ progress { width: 100%; accent-color: var(--primary); }
 .versions li { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; }
 .versions li.current { border-color: var(--primary); background: var(--primary-soft); }
 .versions .v-info { flex: 1; min-width: 180px; font-size: 0.88rem; }
+.share-body { display: grid; gap: 1rem; }
+.share-section { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; display: grid; gap: 0.6rem; }
+.share-section h3 { margin: 0; font-size: 0.95rem; }
+.share-section p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.share-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.share-row select { width: auto; }
+.btn.whatsapp { background: #1fa855; border-color: #1fa855; color: #fff; }
+.btn.whatsapp:hover { filter: brightness(1.08); background: #1fa855; }
+.share-url { direction: ltr; text-align: left; font-size: 0.85rem; }
+.share-list { display: grid; gap: 0.4rem; font-size: 0.85rem; }
+.share-list div { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 0.4rem; }
+.share-list span { flex: 1; color: var(--muted); }
 .activity { display: grid; gap: 0.2rem; font-size: 0.87rem; max-height: 340px; overflow: auto; }
 .activity div { display: flex; gap: 0.6rem; padding: 0.3rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .activity time { color: var(--muted); min-width: 9.5rem; }
