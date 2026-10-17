@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>أرشيف الموظفين</title>
+  <meta name="description" content="أرشيف ملفات مشترك للموظفين مع البحث بالصوت والكتابة">
+  <meta name="theme-color" content="#0f5c4d">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="الأرشيف">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/vendor/purify.min.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="offline" class="banner" hidden>أنت غير متصل بالإنترنت. ستعمل الملفات عند عودة الاتصال.</div>
+
+  <!-- تسجيل الدخول -->
+  <main id="login-view" class="login" hidden>
+    <form id="login-form" class="card login-card">
+      <img src="/icons/icon.svg" alt="" width="64" height="64">
+      <h1>أرشيف الموظفين</h1>
+      <label>اسم المستخدم<input name="username" autocomplete="username" required autofocus></label>
+      <label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required></label>
+      <p class="error" id="login-error" role="alert"></p>
+      <button class="btn primary" type="submit">دخول</button>
+    </form>
+  </main>
+
+  <!-- التطبيق -->
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <div class="brand"><img src="/icons/icon.svg" alt="" width="32" height="32"><span>أرشيف الموظفين</span></div>
+      <nav class="tabs" id="tabs">
+        <button data-view="files" class="active">الملفات</button>
+        <button data-view="admin" id="admin-tab" hidden>الإدارة</button>
+      </nav>
+      <div class="user-menu">
+        <button class="btn ghost" id="user-btn" aria-haspopup="menu"></button>
+        <div class="menu" id="user-menu" role="menu" hidden>
+          <button role="menuitem" id="change-pw-btn">تغيير كلمة المرور</button>
+          <button role="menuitem" id="install-btn" hidden>تثبيت التطبيق</button>
+          <button role="menuitem" id="logout-btn">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+
+    <section id="files-view" class="view">
+      <div class="search-row">
+        <div class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="ابحث باسم الملف أو محتواه أو الوسوم..." aria-label="بحث">
+          <button id="mic-btn" class="mic" type="button" title="بحث بالصوت" aria-label="بحث بالصوت">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+        </div>
+        <select id="sort" aria-label="الترتيب">
+          <option value="">الأحدث</option>
+          <option value="oldest">الأقدم</option>
+          <option value="name">الاسم</option>
+        </select>
+        <button class="btn primary" id="upload-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+          رفع ملفات
+        </button>
+      </div>
+      <p id="voice-status" class="voice-status" hidden></p>
+      <div class="chips" id="categories"></div>
+      <div id="file-list" class="file-list"></div>
+      <div id="drop-hint" class="drop-hint" hidden>أفلت الملفات هنا لرفعها</div>
+    </section>
+
+    <section id="admin-view" class="view" hidden>
+      <div class="admin-grid">
+        <div class="card">
+          <div class="card-head"><h2>الموظفون</h2><button class="btn" id="add-user-btn">إضافة موظف</button></div>
+          <table class="table" id="users-table"></table>
+        </div>
+        <div class="card">
+          <h2>المحذوفات</h2>
+          <div id="trash-list"></div>
+        </div>
+        <div class="card wide">
+          <h2>سجل النشاط</h2>
+          <div id="activity-list" class="activity"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- رفع ملفات -->
+  <dialog id="upload-dialog">
+    <form method="dialog" id="upload-form" class="dialog-body">
+      <h2>رفع ملفات</h2>
+      <label class="file-pick">
+        <input type="file" name="files" multiple required>
+        <span>اختر ملفات أو اسحبها إلى الصفحة</span>
+      </label>
+      <ul id="upload-names" class="upload-names"></ul>
+      <label>التصنيف<input name="category" list="category-options" placeholder="مثال: عقود، رواتب، شهادات"></label>
+      <label>الوسوم<input name="tags" placeholder="افصل بينها بفاصلة"></label>
+      <label>وصف<textarea name="description" rows="2"></textarea></label>
+      <progress id="upload-progress" max="100" value="0" hidden></progress>
+      <div class="actions">
+        <button class="btn" value="cancel" formnovalidate>إلغاء</button>
+        <button class="btn primary" id="upload-submit" value="ok">رفع</button>
+      </div>
+    </form>
+  </dialog>
+  <datalist id="category-options"></datalist>
+
+  <!-- تفاصيل الملف -->
+  <dialog id="details-dialog" class="wide">
+    <div class="dialog-body">
+      <div class="card-head"><h2 id="details-title"></h2><button class="icon-btn close" data-close aria-label="إغلاق">×</button></div>
+      <form id="meta-form" class="meta-form">
+        <label>اسم الملف<input name="name" required></label>
+        <label>التصنيف<input name="category" list="category-options"></label>
+        <label>الوسوم<input name="tags"></label>
+        <label class="full">وصف<textarea name="description" rows="2"></textarea></label>
+        <div class="actions full">
+          <button class="btn danger" type="button" id="delete-btn">حذف</button>
+          <span class="spacer"></span>
+          <button class="btn" type="submit">حفظ البيانات</button>
+        </div>
+      </form>
+      <h3>النسخ <small class="muted">النسخة الأصلية محفوظة دائماً ولا تُستبدل</small></h3>
+      <div class="actions">
+        <label class="btn">رفع نسخة جديدة<input type="file" id="new-version-input" hidden></label>
+      </div>
+      <ul id="versions" class="versions"></ul>
+      <h3>السجل</h3>
+      <div id="file-activity" class="activity"></div>
+    </div>
+  </dialog>
+
+  <!-- المحرر -->
+  <dialog id="editor-dialog" class="full">
+    <div class="editor">
+      <div class="editor-head">
+        <h2 id="editor-title"></h2>
+        <span class="muted" id="editor-hint">التعديل يُحفظ كنسخة جديدة، والأصل يبقى كما هو</span>
+        <span class="spacer"></span>
+        <input id="editor-note" placeholder="ملاحظة عن التعديل (اختياري)" aria-label="ملاحظة عن التعديل">
+        <button class="btn" data-close>إلغاء</button>
+        <button class="btn primary" id="editor-save">حفظ كنسخة جديدة</button>
+      </div>
+      <div class="toolbar" id="doc-toolbar" hidden>
+        <button data-cmd="bold" title="عريض"><b>ع</b></button>
+        <button data-cmd="italic" title="مائل"><i>م</i></button>
+        <button data-cmd="underline" title="تسطير"><u>ت</u></button>
+        <select data-cmd="formatBlock" title="نوع الفقرة">
+          <option value="p">فقرة</option>
+          <option value="h1">عنوان 1</option>
+          <option value="h2">عنوان 2</option>
+          <option value="h3">عنوان 3</option>
+        </select>
+        <button data-cmd="insertUnorderedList" title="قائمة نقطية">• قائمة</button>
+        <button data-cmd="insertOrderedList" title="قائمة مرقمة">1. قائمة</button>
+        <button data-cmd="justifyRight" title="محاذاة لليمين">يمين</button>
+        <button data-cmd="justifyCenter" title="توسيط">وسط</button>
+        <button data-cmd="justifyLeft" title="محاذاة لليسار">يسار</button>
+        <button data-cmd="undo" title="تراجع">↶</button>
+        <button data-cmd="redo" title="إعادة">↷</button>
+      </div>
+      <div class="sheet-tabs" id="sheet-tabs" hidden></div>
+      <div class="editor-area" id="editor-area"></div>
+    </div>
+  </dialog>
+
+  <!-- معاينة -->
+  <dialog id="preview-dialog" class="full">
+    <div class="editor">
+      <div class="editor-head">
+        <h2 id="preview-title"></h2>
+        <span class="spacer"></span>
+        <a class="btn" id="preview-download">تنزيل</a>
+        <button class="btn" data-close>إغلاق</button>
+      </div>
+      <div class="editor-area" id="preview-area"></div>
+    </div>
+  </dialog>
+
+  <!-- موظف / كلمة مرور -->
+  <dialog id="form-dialog">
+    <form method="dialog" id="generic-form" class="dialog-body"></form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
