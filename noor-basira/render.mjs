@@ -7,7 +7,7 @@
 // يمكن تمرير بيانات التواصل:  WHATSAPP=05.. SNAP=@.. TIKTOK=@.. node render.mjs
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -51,7 +51,13 @@ async function video(key) {
   const total = await page.evaluate(() => window.__total);
   const frames = Math.round(total * FPS);
   const file = path.join(out, `noor-basira-${key === 'h' ? '1920x1080' : '1080x1920'}.mp4`);
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
+  // التعليق الصوتي (audio/voiceover.mp3) يُدمج تلقائيًا إن وُجد، مع توحيد مستوى الصوت
+  const audio = path.join(dir, 'audio', 'voiceover.mp3');
+  const audioArgs = existsSync(audio)
+    ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-af', `loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st=${total - 1.2}:d=1.2`,
+       '-c:a', 'aac', '-b:a', '192k', '-ac', '2', '-ar', '48000']
+    : [];
+  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...audioArgs,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', file],
     { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let i = 0; i < frames; i++) {
