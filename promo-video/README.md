@@ -20,3 +20,24 @@ ffmpeg -y -i build/video.mp4 -i build/music.wav -c:v copy -c:a aac -b:a 192k -sh
 ```
 للمعاينة الحية افتح `animation.html` عبر خادم محلي (مثلاً `npx http-server`).
 النصوص والتوقيتات قابلة للتعديل داخل `animation.html`.
+
+---
+
+# فيديو موشن جرافيك — 30 ثانية
+
+الفيديو النهائي: `output/motion.mp4` (‏30 ثانية، 1080×1920، مع موسيقى هادئة ونبض خفيف).
+
+| الوقت | المشهد |
+|---|---|
+| 0 – 3.3 ث | «الفخامة — تبدأ من التفاصيل» مع خط ذهبي |
+| 3.3 – 9.4 ث | 01 الساعة: تتجمّع الساعة وتدور عقاربها، ثم لقطة مقرّبة من الصورة الحقيقية + المميزات |
+| 9.4 – 15 ث | 02 القلم: يدخل القلم ويكتب توقيعاً من اليمين لليسار، ثم لقطة القلم الحقيقية |
+| 15 – 21 ث | 03 المسبحة: تظهر الحبات واحدة تلو الأخرى في دائرة، ثم لقطة المسبحة |
+| 21 – 25 ث | «طقم متكامل — ثلاث قطع، هدية واحدة» |
+| 25 – 30 ث | صورة البوكس كاملة + «الهدية التي تليق بك» + زر «اطلبها الآن» |
+
+```bash
+NODE_PATH=$(npm root -g) node render.js build/motion_video.mp4 --page motion.html --dur 30
+python3 music.py build/motion_music.wav 30 5.1,10.9,16.2,19.1,24.0,26.8 --pulse
+ffmpeg -y -i build/motion_video.mp4 -i build/motion_music.wav -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart output/motion.mp4
+```

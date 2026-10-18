@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Gift Set Motion</title>
+<style>
+  html,body{margin:0;background:#000;}
+  canvas{display:block;width:540px;height:960px;margin:0 auto;}
+  #ui{position:fixed;left:8px;top:8px;color:#fff;font:14px sans-serif;direction:ltr}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="ui"></div>
+<script src="props.js"></script>
+<script>
+// =====================================================================
+//  موشن جرافيك لطقم الهدية: ساعة + قلم + مسبحة — 30 ثانية، 1080x1920، 30fps
+//  renderAt(t) ترسم الإطار عند الثانية t بشكل حتمي (للتصدير إطاراً إطاراً).
+// =====================================================================
+const W = 1080, H = 1920, DUR = 30;
+const cv = document.getElementById('c');
+let ctx = cv.getContext('2d');
+
+const CREAM = '#f6e7d8', MUTED = '#c9a58c', BG_IN = '#2e1f17', BG_OUT = '#0e0907';
+const backOut = k => { const c = 1.70158; k -= 1; return 1 + (c + 1) * k * k * k + c * k * k; };
+const pop = (t, a, b) => backOut(clamp((t - a) / (b - a)));
+
+const boxImg = new Image();
+boxImg.src = 'assets/box.png';
+const fontB = new FontFace('TajawalB', 'url(assets/Tajawal-Bold.ttf)');
+const fontM = new FontFace('TajawalM', 'url(assets/Tajawal-Medium.ttf)');
+
+// regions of the product photo (source pixels in assets/box.png)
+const CROP = {
+  watch: { x: 565, y: 815, w: 300, h: 300 },
+  pen: { x: 690, y: 1005, w: 560, h: 300 },
+  beads: { x: 540, y: 840, w: 520, h: 520 },
+};
+
+// scene boundaries; a circular wipe runs over each one
+const CUTS = [3.3, 9.4, 15.0, 21.0, 25.0];
+const WIPE = 0.9;
+
+// ---------- building blocks ----------
+const particles = (() => { const r = rng(21); return Array.from({ length: 40 }, () => ({ x: r() * W, y: r() * H, s: 1.5 + r() * 3.5, v: 15 + r() * 40, p: r() * 6 })); })();
+
+function background(t) {
+  const g = ctx.createRadialGradient(540, 900, 50, 540, 960, 1250);
+  g.addColorStop(0, BG_IN); g.addColorStop(1, BG_OUT);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(540, 960);
+  for (const [r, dash, sp, a] of [[430, [4, 14], .08, .22], [540, [60, 30], -.05, .12], [660, [2, 22], .03, .18]]) {
+    ctx.rotate(t * sp); ctx.setLineDash(dash);
+    ctx.strokeStyle = `rgba(211,154,120,${a})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore(); ctx.setLineDash([]);
+  for (const p of particles) {
+    const y = (p.y - t * p.v + H * 4) % H;
+    ctx.fillStyle = `rgba(241,198,170,${.25 + .25 * Math.sin(t * 2 + p.p)})`;
+    ctx.beginPath(); ctx.arc(p.x + Math.sin(t * .5 + p.p) * 10, y, p.s, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+// text that slides up from behind a mask line, then fades out
+function reveal(text, x, y, size, t, tIn, tOut, opt = {}) {
+  const k = prog(t, tIn, tIn + .6), out = prog(t, tOut - .4, tOut);
+  if (k <= 0 || out >= 1) return;
+  ctx.save();
+  ctx.font = `${size}px ${opt.font || 'TajawalB'}`; ctx.textAlign = opt.align || 'center'; ctx.direction = 'rtl';
+  ctx.beginPath(); ctx.rect(0, y - size * 1.1, W, size * 1.45); ctx.clip();
+  ctx.globalAlpha = 1 - out;
+  ctx.fillStyle = opt.color || CREAM;
+  ctx.fillText(text, x, y + (1 - k) * size * 1.3 - out * size * .4);
+  ctx.restore();
+}
+
+function goldLine(cx, y, w, t, tIn, tOut) {
+  const k = prog(t, tIn, tIn + .7) * (1 - prog(t, tOut - .4, tOut));
+  if (k <= 0) return;
+  const g = ctx.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
+  g.addColorStop(0, 'rgba(211,154,120,0)'); g.addColorStop(.5, RG_L); g.addColorStop(1, 'rgba(211,154,120,0)');
+  ctx.fillStyle = g; ctx.fillRect(cx - w * k / 2, y, w * k, 3);
+}
+
+function label(num, t, tIn, tOut) {
+  const k = prog(t, tIn, tIn + .5) * (1 - prog(t, tOut - .4, tOut));
+  if (k <= 0) return;
+  ctx.save(); ctx.globalAlpha = k;
+  ctx.font = '40px TajawalB'; ctx.textAlign = 'center'; ctx.fillStyle = RG;
+  ctx.fillText(num, 540, 170);
+  ctx.fillRect(540 - 40 * k, 192, 80 * k, 3);
+  ctx.restore();
+}
+
+function chip(text, y, t, tIn, tOut) {
+  const k = prog(t, tIn, tIn + .55), out = prog(t, tOut - .4, tOut);
+  if (k <= 0 || out >= 1) return;
+  ctx.save();
+  ctx.font = '42px TajawalM'; ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  const w = ctx.measureText(text).width + 110;
+  ctx.globalAlpha = k * (1 - out);
+  ctx.translate(540 + (1 - k) * 260, y);
+  ctx.fillStyle = 'rgba(211,154,120,0.12)'; ctx.strokeStyle = RG; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(-w / 2, -42, w, 84, 42); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = RG_L; ctx.beginPath(); ctx.arc(w / 2 - 40, 0, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = CREAM; ctx.fillText(text, -12, 14);
+  ctx.restore();
+}
+
+function ringFrame(cx, cy, r, t, a = 1) {
+  ctx.save(); ctx.globalAlpha = a;
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+  g.addColorStop(0, RG_L); g.addColorStop(.5, RG_D); g.addColorStop(1, RG_L);
+  ctx.strokeStyle = g; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.translate(cx, cy); ctx.rotate(t * .4); ctx.setLineDash([3, 16]);
+  ctx.strokeStyle = RG; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, r + 30, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+
+// circular close-up taken from the product photo
+function photoCircle(crop, cx, cy, r, zoom, a, t) {
+  if (a <= 0 || r <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.shadowColor = 'rgba(211,154,120,0.45)'; ctx.shadowBlur = 60;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0; ctx.clip();
+  const s = crop.w / zoom;
+  ctx.drawImage(boxImg, crop.x - s / 2, crop.y - s / 2, s, s, cx - r, cy - r, 2 * r, 2 * r);
+  ctx.restore();
+  ringFrame(cx, cy, r, t, a);
+}
+
+function photoRect(crop, cx, cy, w, h, zoom, a) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.shadowColor = 'rgba(211,154,120,0.45)'; ctx.shadowBlur = 60;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 40); ctx.fill();
+  ctx.shadowBlur = 0; ctx.clip();
+  const sw = crop.w / zoom, sh = sw * h / w;
+  ctx.drawImage(boxImg, crop.x - sw / 2, crop.y - sh / 2, sw, sh, cx - w / 2, cy - h / 2, w, h);
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = RG; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 40); ctx.stroke(); ctx.restore();
+}
+
+// ---------- scenes ----------
+function sIntro(t) {
+  goldLine(540, 960, 760, t, .2, 3.3);
+  reveal('الفخامة', 540, 900, 170, t, .8, 3.4);
+  reveal('تبدأ من التفاصيل', 540, 1090, 70, t, 1.4, 3.4, { font: 'TajawalM', color: MUTED });
+  const k = bump(t, 1.8, 3.0);
+  star(780, 760, 40 * k, k); star(300, 1140, 24 * k, k * .8);
+}
+
+function sWatch(t) {
+  label('01', t, 3.8, 9.4);
+  reveal('الساعة', 540, 360, 130, t, 4.0, 9.4);
+  // vector watch assembles, then hands up close on the real photo
+  const k = pop(t, 3.9, 4.8), out = prog(t, 7.0, 7.6);
+  if (k > 0 && out < 1) {
+    ctx.save(); ctx.globalAlpha = 1 - out;
+    const sc = 4.2 * k * (1 + .03 * Math.sin(t * 2));
+    drawWatch(540, 930, (1 - k) * -1.2 + .05 * Math.sin(t), sc, lerp(30, 66, prog(t, 4.3, 5.1)), (1 - prog(t, 4.2, 5.6)) * -6);
+    ctx.restore();
+    const s = bump(t, 5.4, 6.3); star(660, 790, 50 * s, s); star(430, 1050, 26 * s, s);
+  }
+  const pk = pop(t, 7.0, 7.8);
+  photoCircle(CROP.watch, 540, 930, 300 * pk, 1 + .08 * prog(t, 7, 9.4), clamp(pk), t);
+  chip('تصميم رياضي أنيق', 1390, t, 5.2, 9.4);
+  chip('لمسة ذهبية وردية', 1510, t, 5.5, 9.4);
+  chip('سوار معدني فاخر', 1630, t, 5.8, 9.4);
+}
+
+// handwriting path (right → left, like Arabic script)
+function signature(u) {
+  const x = lerp(840, 240, u);
+  const y = 1240 + 46 * Math.sin(u * Math.PI * 5) - 70 * Math.sin(u * Math.PI) + 26 * Math.sin(u * Math.PI * 13) * (u > .55 && u < .8 ? 1 : 0);
+  return P(x, y);
+}
+
+function sPen(t) {
+  label('02', t, 9.9, 15.0);
+  reveal('القلم', 540, 360, 130, t, 10.0, 15.0);
+  reveal('يرافق توقيعك', 540, 450, 56, t, 10.3, 15.0, { font: 'TajawalM', color: MUTED });
+  const write = prog(t, 10.9, 12.7), out = prog(t, 12.9, 13.4);
+  // ink stroke
+  if (write > 0 && out < 1) {
+    ctx.save(); ctx.globalAlpha = 1 - out;
+    ctx.strokeStyle = RG_L; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(241,198,170,0.6)'; ctx.shadowBlur = 16;
+    ctx.beginPath();
+    for (let i = 0; i <= 160 * write; i++) { const p = signature(i / 160); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }
+    ctx.stroke(); ctx.restore();
+  }
+  // pen flies in, then its tip follows the signature
+  const fly = prog(t, 10.2, 10.9), s = 3.4, a = 2.2;
+  const tip0 = signature(0), tip = write > 0 ? signature(write) : P(lerp(1400, tip0.x, fly), lerp(500, tip0.y, fly));
+  if (fly > 0 && out < 1) {
+    ctx.save(); ctx.globalAlpha = 1 - out;
+    if (fly < 1) {          // speed lines
+      ctx.strokeStyle = 'rgba(241,198,170,0.35)'; ctx.lineWidth = 3;
+      for (let i = 0; i < 5; i++) { const o = (i - 2) * 26; ctx.beginPath(); ctx.moveTo(tip.x + 200 + o, tip.y - 200 - o * .5); ctx.lineTo(tip.x + 520 + o, tip.y - 470 - o * .5); ctx.stroke(); }
+    }
+    drawPen(tip.x - Math.cos(a) * 76 * s, tip.y - Math.sin(a) * 76 * s, a + .04 * Math.sin(t * 9) * write, s);
+    ctx.restore();
+  }
+  const pk = pop(t, 13.0, 13.8);
+  if (pk > 0) photoRect(CROP.pen, 540, 1000, 920 * pk, 520 * pk, 1 + .06 * prog(t, 13, 15), clamp(pk));
+  chip('تفاصيل ذهبية وردية', 1500, t, 13.6, 15.0);
+}
+
+function sBeads(t) {
+  label('03', t, 15.5, 21.0);
+  reveal('المسبحة', 540, 360, 130, t, 15.6, 21.0);
+  const N = 33, R = 300, C = P(540, 1000), out = prog(t, 18.9, 19.4), rot = (t - 15) * .25;
+  if (out < 1) {
+    ctx.save(); ctx.globalAlpha = 1 - out;
+    for (let i = 0; i < N; i++) {
+      const k = pop(t, 15.8 + i * .045, 16.2 + i * .045);
+      if (k <= 0) continue;
+      const an = Math.PI / 2 + rot + i * 2 * Math.PI / N;
+      const x = C.x + Math.cos(an) * R, y = C.y + Math.sin(an) * R;
+      const mid = an + Math.PI / N;
+      ctx.fillStyle = RG; ctx.beginPath(); ctx.arc(C.x + Math.cos(mid) * R, C.y + Math.sin(mid) * R, 6 * clamp(k), 0, Math.PI * 2); ctx.fill();
+      bead(x, y, 21 * k);
+    }
+    const ik = prog(t, 17.4, 17.9);
+    if (ik > 0) {
+      ctx.save(); ctx.globalAlpha = (1 - out) * ik;
+      ctx.translate(C.x, C.y + R); ctx.scale(2.6, 2.6); drawImame(0, 0, Math.PI / 2 + .1 * Math.sin(t * 2)); ctx.restore();
+    }
+    ctx.restore();
+    reveal('سكينة بين يديك', 540, 1020, 64, t, 17.2, 19.2, { font: 'TajawalM' });
+  }
+  const pk = pop(t, 19.0, 19.8);
+  photoCircle(CROP.beads, 540, 1000, 330 * pk, 1 + .08 * prog(t, 19, 21), clamp(pk), t);
+  chip('خرز متناسق بلمسة ذهبية', 1560, t, 19.5, 21.0);
+}
+
+function sSet(t) {
+  reveal('طقم متكامل', 540, 400, 120, t, 21.4, 25.0);
+  const items = [CROP.watch, CROP.pen, CROP.beads];
+  const merge = prog(t, 23.6, 24.4);
+  items.forEach((c, i) => {
+    const k = pop(t, 21.6 + i * .25, 22.3 + i * .25);
+    const x = lerp([850, 540, 230][i], 540, merge), r = 112 * clamp(k) * (1 - merge * .4);
+    const crop = c === CROP.pen ? { x: 700, y: 1000, w: 320, h: 320 } : c;
+    photoCircle(crop, x, 900, r, 1, clamp(k) * (1 - merge), t);
+  });
+  for (const [x, a] of [[695, 22.5], [385, 22.7]]) {
+    const k = prog(t, a, a + .3) * (1 - merge);
+    if (k <= 0) continue;
+    ctx.save(); ctx.globalAlpha = k; ctx.fillStyle = RG_L;
+    ctx.fillRect(x - 18, 897, 36, 6); ctx.fillRect(x - 3, 882, 6, 36); ctx.restore();
+  }
+  const s = bump(t, 24.0, 24.9); star(540, 900, 90 * s, s);
+  reveal('ثلاث قطع', 540, 1250, 96, t, 22.8, 25.0);
+  reveal('هدية واحدة', 540, 1370, 96, t, 23.1, 25.0, { color: RG_L });
+  goldLine(540, 1430, 420, t, 23.4, 25.0);
+}
+
+function sFinal(t) {
+  // product card rises with a mask
+  const k = prog(t, 25.3, 26.3), cw = 860, ch = cw * boxImg.height / boxImg.width * .86, cy = 990;
+  if (k > 0) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(211,154,120,0.5)'; ctx.shadowBlur = 80;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.roundRect(540 - cw / 2, cy + ch / 2 - ch * k, cw, ch * k, 44); ctx.fill();
+    ctx.shadowBlur = 0; ctx.clip();
+    const z = 1.08 - .08 * prog(t, 25.3, 30), iw = cw * .98 * z, ih = iw * boxImg.height / boxImg.width;
+    ctx.drawImage(boxImg, 540 - iw / 2, cy - ih / 2 + 20, iw, ih);
+    ctx.restore();
+  }
+  reveal('الهدية التي تليق بك', 540, 260, 92, t, 25.8, 31);
+  // call to action with a shine sweep
+  const b = pop(t, 26.8, 27.5);
+  if (b > 0) {
+    ctx.save(); ctx.translate(540, 1745); const pulse = 1 + .03 * Math.sin((t - 27) * 4); ctx.scale(b * pulse, b * pulse);
+    const g = ctx.createLinearGradient(-250, 0, 250, 0);
+    g.addColorStop(0, RG_D); g.addColorStop(.5, RG_L); g.addColorStop(1, RG_D);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(-250, -62, 500, 124, 62); ctx.fill(); ctx.clip();
+    const sx = lerp(-400, 400, ((t - 27.4) % 1.6) / 1.6);
+    const sg = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,0.55)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sg; ctx.fillRect(-250, -62, 500, 124);
+    ctx.fillStyle = '#2a1810'; ctx.font = '62px TajawalB'; ctx.textAlign = 'center'; ctx.direction = 'rtl';
+    ctx.fillText('اطلبها الآن', 0, 20);
+    ctx.restore();
+  }
+  const s = bump(t, 26.3, 27.3); star(860, 560, 46 * s, s); star(230, 1350, 30 * s, s * .8);
+}
+
+const SCENES = [sIntro, sWatch, sPen, sBeads, sSet, sFinal];
+
+// ---------- compositor ----------
+function renderAt(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  background(t);
+  let idx = CUTS.findIndex(c => t < c + WIPE / 2);
+  if (idx < 0) idx = CUTS.length;
+  const cut = CUTS[idx], prev = CUTS[idx - 1];
+  if (cut !== undefined && t > cut) {
+    // first half of a wipe: rose-gold disk grows over the outgoing scene
+    SCENES[idx](t);
+    const k = ease(clamp((t - cut) / (WIPE / 2)));
+    ctx.fillStyle = RG; ctx.beginPath(); ctx.arc(540, 960, 1150 * k, 0, Math.PI * 2); ctx.fill();
+  } else if (prev !== undefined && t < prev + WIPE) {
+    // second half: incoming scene opens from the centre inside a ring of rose-gold
+    const k = ease(clamp((t - prev - WIPE / 2) / (WIPE / 2)));
+    ctx.fillStyle = RG; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.beginPath(); ctx.arc(540, 960, 1150 * k, 0, Math.PI * 2); ctx.clip();
+    background(t); SCENES[idx](t); ctx.restore();
+  } else {
+    SCENES[idx](t);
+  }
+  // vignette + final fade
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const f = prog(t, 29.3, 30);
+  if (f > 0) { ctx.fillStyle = `rgba(14,9,7,${f})`; ctx.fillRect(0, 0, W, H); }
+}
+
+window.ready = (async () => {
+  document.fonts.add(await fontB.load()); document.fonts.add(await fontM.load());
+  await boxImg.decode();
+})();
+window.renderAt = renderAt;
+
+window.ready.then(() => {
+  const q = new URLSearchParams(location.search);
+  if (q.has('render')) return;
+  if (q.has('t')) { renderAt(+q.get('t')); return; }
+  const t0 = performance.now();
+  const loop = () => { const t = ((performance.now() - t0) / 1000) % DUR; renderAt(t); document.getElementById('ui').textContent = t.toFixed(2) + 's'; requestAnimationFrame(loop); };
+  loop();
+});
+</script>
+</body>
+</html>
