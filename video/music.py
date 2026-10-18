@@ -1,5 +1,10 @@
-"""Synthesizes the 30s soundtrack (beat + SFX) synced to index.html timeline -> build/music.wav"""
-import numpy as np, wave
+"""Synthesizes the 30s soundtrack synced to index.html timeline.
+  python3 music.py            -> build/music.wav (beat + SFX)
+  python3 music.py --sfx-only -> build/sfx.wav   (motion SFX only, no music)"""
+import numpy as np, wave, sys
+
+MUSIC = "--sfx-only" not in sys.argv
+OUT = "build/music.wav" if MUSIC else "build/sfx.wav"
 
 SR = 44100
 DUR = 30.0
@@ -113,7 +118,7 @@ add(ding(), 1.75, 1.0)
 for k in range(8):  # coin sparkles
     add(pop_sfx(1400 + 200 * k), 2.15 + k * .05, .5, pan=(-1) ** k * .5)
 add(pop_sfx(700), 2.25, 1.0)
-for b in range(3):  # quick beat under payoff
+for b in range(3 if MUSIC else 0):  # quick beat under payoff
     tt = 1.65 + b * BEAT
     add(kick(), tt, .9); add(hat(), tt + BEAT / 2, 1.0)
 add(whoosh(.5), 2.85, .9)
@@ -122,7 +127,7 @@ add(whoosh(.5), 2.85, .9)
 start = 3.2
 bar = 0
 t0 = start
-while t0 < 29.5:
+while MUSIC and t0 < 29.5:
     root, chord = prog[bar % 4]
     add(pad(chord, 2.0), t0, 1.0)
     for b in range(4):
@@ -153,14 +158,33 @@ for k in range(21):  # typing link
     add(click(), 26.4 + k * 1.2 / 21, .5)
 add(ding(), 28.4, .8)
 # outro sustain chord
-add(pad([220, 261.6, 329.6, 440], 1.6), 28.4, 1.4)
+if MUSIC:
+    add(pad([220, 261.6, 329.6, 440], 1.6), 28.4, 1.4)
+
+# extra motion SFX
+add(whoosh(.6), 3.3, 1.0, pan=-.4)            # scooter drives in
+add(pop_sfx(500), 3.25, .9)                   # logo mark pops
+add(whoosh(.4), 3.85, .5); add(whoosh(.4), 4.05, .4)  # name + tagline slide up
+add(whoosh(.5, up=False), 5.85, .7)           # logo lifts away
+add(whoosh(.7), 5.9, .7)                      # phone slides up
+add(click(), 8.6, 1.2); add(pop_sfx(1200), 8.62, .5)  # tap "order now"
+for k in range(30):                           # orders counter ticking (ease-out spacing)
+    p = k / 29
+    add(click(), 11.0 + 2.4 * (1 - (1 - p) ** .5) * 1.0, .35 + .3 * (1 - p))
+add(ding(), 11.5, .4)                         # 0 SAR commission
+for k in range(16):                           # price slider ticks 10 -> 25
+    add(click(), 14.9 + 1.3 * k / 15, .6)
+add(pop_sfx(1100), 16.25, .7)
+add(whoosh(.5), 18.35, .8, pan=.6); add(whoosh(.5), 18.5, .8, pan=-.6)  # tablet + laptop slide in
+add(whoosh(.6, up=False), 24.95, .6)          # phone drops out
+add(click(), 28.3, 1.0)                       # CTA button lands
 
 mix = np.stack([L, R], 1)
 fade = np.ones(N); fn = int(.6 * SR); fade[-fn:] = np.linspace(1, 0, fn)
 mix *= fade[:, None]
 mix = np.tanh(mix * 1.1)
 mix /= np.max(np.abs(mix)) / .9
-with wave.open('build/music.wav', 'wb') as w:
+with wave.open(OUT, 'wb') as w:
     w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
     w.writeframes((mix * 32767).astype(np.int16).tobytes())
 print('ok')
