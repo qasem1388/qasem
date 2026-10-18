@@ -1,0 +1,5 @@
+data/auth.php
+data/*.tmp
+uploads/*
+!uploads/.htaccess
+!uploads/.gitkeep

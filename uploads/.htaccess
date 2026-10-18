@@ -1,0 +1,5 @@
+Options -Indexes
+# منع تشغيل أي سكربت داخل مجلد الصور
+<FilesMatch "\.(php\d?|phtml|phar|pl|py|cgi|sh)$">
+  Require all denied
+</FilesMatch>

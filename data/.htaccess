@@ -1,0 +1,5 @@
+Options -Indexes
+# كلمة مرور اللوحة محفوظة هنا ولا يجب الوصول إليها من المتصفح
+<FilesMatch "^(auth\.php|.*\.tmp)$">
+  Require all denied
+</FilesMatch>

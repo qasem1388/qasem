@@ -369,10 +369,8 @@ footer nav a:hover{color:#fff}
 // رقم الواتساب (السعودية)
 const WA = "966596125002";
 
-// ===== أعمالك =====
-// type: site أو app | sale: true للبيع | platform: replit أو claude أو claude-code أو chatgpt
-// price: رقم بالريال أو null لمشروع عميل | url: رابط المعاينة | img: صورة (اختياري)
-const projects = [];
+// الأعمال تُضاف من لوحة التحكم (admin/) وتُحفظ في data/projects.json
+let projects = [];
 
 const waLink = msg => `https://wa.me/${WA}?text=${encodeURIComponent(msg || "مرحبًا قاسم، أرغب في الاستفسار عن خدماتك")}`;
 document.querySelectorAll("[data-wa]").forEach(a => a.href = waLink(a.dataset.msg));
@@ -380,15 +378,17 @@ document.querySelectorAll("[data-wa]").forEach(a => a.href = waLink(a.dataset.ms
 const PLATFORMS = {replit:"Replit", claude:"Claude", "claude-code":"Claude Code", chatgpt:"ChatGPT"};
 const THEMES = [["#D97757","#E9A487","#FBE9E0"],["#141413","#3D3C38","#141413"],["#F4E3DA","#FAF9F5","#D97757"]];
 
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
 const tagHtml = p => [
   p.sale ? '<span class="tag sale">للبيع</span>' : '<span class="tag">مشروع عميل</span>',
-  `<span class="tag ${p.platform}">${PLATFORMS[p.platform] || p.platform}</span>`,
+  `<span class="tag ${esc(p.platform)}">${esc(PLATFORMS[p.platform] || p.platform)}</span>`,
   `<span class="tag">${p.type === "site" ? "موقع" : "تطبيق"}</span>`
 ].join("");
 
-const thumbHtml = p => p.img
-  ? `<img src="${p.img}" alt="${p.title}" loading="lazy">`
-  : `<div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="x" style="background:${p.theme[2]}"></div><div class="y"><i></i><i></i></div></div>`;
+const thumbHtml = (p, t) => p.img
+  ? `<img src="${esc(p.img)}" alt="${esc(p.title)}" loading="lazy">`
+  : `<div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="x" style="background:${t[2]}"></div><div class="y"><i></i><i></i></div></div>`;
 
 function render(filter) {
   const list = projects.filter(p => filter === "all" || p.type === filter || p.platform === filter || (filter === "sale" && p.sale));
@@ -397,22 +397,31 @@ function render(filter) {
     box.innerHTML = '<div class="empty"><b>الأعمال قادمة قريبًا</b>يتم تجهيز المشاريع حاليًا — تواصل معي على الواتساب لمعاينة أعمالي</div>';
     return;
   }
-  box.innerHTML = list.map((p, i) => (p.theme = p.theme || THEMES[i % THEMES.length], p)).map(p => `
+  box.innerHTML = list.map(p => {
+    const t = THEMES[projects.indexOf(p) % THEMES.length];
+    return `
     <article class="proj">
-      <div class="thumb" style="background:linear-gradient(135deg,${p.theme[0]},${p.theme[1]})">${thumbHtml(p)}</div>
+      <div class="thumb" style="background:linear-gradient(135deg,${t[0]},${t[1]})">${thumbHtml(p, t)}</div>
       <div class="pb">
         <div class="tags">${tagHtml(p)}</div>
-        <h3>${p.title}</h3><p>${p.desc}</p>
+        <h3>${esc(p.title)}</h3><p>${esc(p.desc)}</p>
         <div class="pf">
-          ${p.price ? `<div class="price">${p.price} <small>ريال</small></div>` : '<div class="price" style="font-size:17px">تصميم مخصص</div>'}
-          ${p.sale
-            ? `<a class="lnk" href="${waLink("مرحبًا قاسم، أرغب في شراء: " + p.title)}" target="_blank" rel="noopener">اطلب الآن ←</a>`
-            : `<a class="lnk" href="${p.url}" target="_blank" rel="noopener">معاينة ←</a>`}
+          ${p.price ? `<div class="price">${esc(p.price)} <small>ريال</small></div>` : `<div class="price" style="font-size:17px">${p.sale ? "السعر عند الطلب" : "تصميم مخصص"}</div>`}
+          <div style="display:flex;gap:14px">
+            ${/^https?:\/\//i.test(p.url || "") ? `<a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">معاينة</a>` : ""}
+            ${p.sale ? `<a class="lnk" href="${waLink("مرحبًا قاسم، أرغب في شراء: " + p.title)}" target="_blank" rel="noopener">اطلب الآن ←</a>` : ""}
+          </div>
         </div>
       </div>
-    </article>`).join("");
+    </article>`;
+  }).join("");
 }
 render("all");
+
+fetch("data/projects.json?" + Date.now())
+  .then(r => r.ok ? r.json() : [])
+  .then(d => { if (Array.isArray(d)) { projects = d; render(document.querySelector("#tabs .on").dataset.f); } })
+  .catch(() => {});
 
 document.getElementById("tabs").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
