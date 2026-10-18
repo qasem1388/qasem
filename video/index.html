@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Mandoobi Promo</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root {
+    --bg1: #0a1330;
+    --bg2: #13245c;
+    --green: #22c55e;
+    --green2: #16a34a;
+    --yellow: #ffc93c;
+    --red: #ef4444;
+    --white: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg1); }
+  body { font-family: 'Cairo', 'Tajawal', sans-serif; color: var(--white); }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: radial-gradient(120% 80% at 50% 20%, var(--bg2) 0%, var(--bg1) 60%, #060b1e 100%); }
+  .abs { position: absolute; }
+  .center-x { left: 50%; }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; }
+  .line { position: absolute; height: 6px; border-radius: 6px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35)); }
+  .h-xl { font-weight: 900; font-size: 190px; line-height: 1.05; text-align: center; letter-spacing: -2px; }
+  .h-l { font-weight: 900; font-size: 120px; line-height: 1.1; text-align: center; }
+  .h-m { font-weight: 800; font-size: 78px; line-height: 1.2; text-align: center; }
+  .h-s { font-weight: 700; font-size: 52px; line-height: 1.3; text-align: center; color: #cbd5e1; }
+  .txt { position: absolute; left: 0; width: 1080px; padding: 0 70px; }
+  .green { color: var(--green); }
+  .yellow { color: var(--yellow); }
+  .red { color: var(--red); }
+  .glow { text-shadow: 0 0 40px rgba(34,197,94,.55); }
+
+  /* receipt in hook */
+  #receipt { left: 190px; top: 1080px; width: 700px; height: 360px; background: #fff; color: var(--ink);
+    border-radius: 36px; padding: 40px 56px; box-shadow: 0 40px 80px rgba(0,0,0,.45); }
+  #receipt .row { display: flex; justify-content: space-between; font-size: 44px; font-weight: 700; margin-bottom: 18px; }
+  #receipt .row.cut { color: var(--red); font-weight: 900; font-size: 54px; }
+  #stamp { left: 330px; top: 1010px; width: 420px; height: 420px; }
+  .coin { position: absolute; width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff3b0, var(--yellow) 45%, #d99a00 100%);
+    border: 8px solid #e6a800; color: #8a5a00; font-weight: 900; font-size: 46px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,.35); }
+  #zeroBadge { left: 290px; top: 1060px; width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #4ade80, var(--green2)); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; box-shadow: 0 0 0 22px rgba(34,197,94,.25), 0 30px 80px rgba(0,0,0,.5); }
+  #zeroBadge b { font-size: 210px; font-weight: 900; line-height: 1; }
+  #zeroBadge span { font-size: 66px; font-weight: 800; margin-top: -10px; }
+
+  /* logo */
+  #logoMark { left: 340px; top: 560px; width: 400px; height: 400px; border-radius: 110px;
+    background: linear-gradient(145deg, var(--green), var(--green2)); box-shadow: 0 40px 90px rgba(34,197,94,.45);
+    display: flex; align-items: center; justify-content: center; }
+  #scooter { width: 300px; height: 300px; }
+
+  /* phone */
+  #phone { left: 260px; top: 640px; width: 560px; height: 1120px; border-radius: 78px; background: #0b0f1a;
+    padding: 22px; box-shadow: 0 0 0 4px #2b3550, 0 50px 120px rgba(0,0,0,.6); opacity: 0; transform-origin: 50% 0; }
+  #screen { position: relative; width: 100%; height: 100%; border-radius: 58px; background: #f1f5f9; overflow: hidden; color: var(--ink); }
+  #notch { position: absolute; left: 50%; top: 18px; width: 170px; height: 40px; margin-left: -85px; border-radius: 22px; background: #0b0f1a; z-index: 5; }
+  .ui { position: absolute; inset: 0; padding: 90px 34px 34px; opacity: 0; }
+  .card { background: #fff; border-radius: 30px; padding: 26px; box-shadow: 0 8px 24px rgba(15,23,42,.08); margin-bottom: 22px; }
+  .avatar { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 14px;
+    background: linear-gradient(145deg, var(--yellow), #ff9f1c); display: flex; align-items: center; justify-content: center;
+    font-size: 80px; font-weight: 900; color: #fff; border: 7px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,.15); }
+  .uname { text-align: center; font-size: 40px; font-weight: 900; }
+  .stars { text-align: center; font-size: 36px; color: #f59e0b; letter-spacing: 4px; }
+  .chip { display: inline-block; padding: 8px 22px; border-radius: 40px; font-size: 28px; font-weight: 800; }
+  .chip.on { background: #dcfce7; color: var(--green2); }
+  .btn { background: var(--green); color: #fff; text-align: center; font-size: 38px; font-weight: 900; padding: 24px; border-radius: 28px;
+    box-shadow: 0 14px 30px rgba(34,197,94,.4); }
+  .srow { display: flex; justify-content: space-between; align-items: center; font-size: 32px; font-weight: 700; }
+  .big-num { font-size: 120px; font-weight: 900; text-align: center; line-height: 1.1; }
+  .label { font-size: 30px; font-weight: 700; color: var(--muted); text-align: center; }
+  .track { position: relative; height: 18px; border-radius: 10px; background: #e2e8f0; margin: 40px 10px 20px; }
+  .fill { position: absolute; right: 0; top: 0; bottom: 0; border-radius: 10px; background: var(--green); }
+  .knob { position: absolute; top: -21px; width: 60px; height: 60px; margin-right: -30px; border-radius: 50%; background: #fff;
+    border: 8px solid var(--green); box-shadow: 0 6px 16px rgba(0,0,0,.2); }
+  .toggle { width: 96px; height: 54px; border-radius: 30px; background: #cbd5e1; position: relative; flex: none; }
+  .toggle i { position: absolute; top: 6px; right: 6px; width: 42px; height: 42px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.2); }
+  .pm { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 26px; padding: 22px 26px; margin-bottom: 18px;
+    box-shadow: 0 6px 18px rgba(15,23,42,.07); font-size: 31px; font-weight: 800; white-space: nowrap; }
+  .pm .ic { width: 70px; height: 70px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; color: #fff; margin-left: 20px; flex: none; }
+  .pm .nm { display: flex; align-items: center; }
+
+  /* feature header */
+  #fhead { left: 0; top: 190px; width: 1080px; height: 430px; }
+  .fh { position: absolute; inset: 0; opacity: 0; }
+  .fnum { position: absolute; left: 50%; top: 0; width: 110px; height: 110px; margin-left: -55px; border-radius: 34px; background: var(--yellow);
+    color: var(--ink); font-size: 64px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+  .ftitle { position: absolute; top: 130px; left: 0; width: 1080px; padding: 0 60px; font-size: 92px; font-weight: 900; text-align: center; line-height: 1.15; }
+  .fsub { position: absolute; top: 330px; left: 0; width: 1080px; font-size: 54px; font-weight: 800; text-align: center; color: var(--green); }
+
+  /* devices */
+  .device { position: absolute; background: #0b0f1a; box-shadow: 0 0 0 4px #2b3550, 0 30px 80px rgba(0,0,0,.5); opacity: 0; }
+  .device .scr { position: absolute; background: #f1f5f9; overflow: hidden; }
+  .mini { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--ink); }
+  .mini .av { border-radius: 50%; background: linear-gradient(145deg, var(--yellow), #ff9f1c); }
+  .mini .bar { background: #cbd5e1; border-radius: 10px; margin-top: 12px; }
+  .mini .bt { background: var(--green); border-radius: 14px; margin-top: 18px; }
+  #platforms { top: 1560px; font-size: 54px; font-weight: 800; color: #cbd5e1; }
+
+  /* CTA */
+  #linkPill { left: 70px; top: 900px; width: 940px; height: 150px; border-radius: 80px; background: #fff; color: var(--ink);
+    display: flex; align-items: center; padding: 0 40px; box-shadow: 0 30px 80px rgba(0,0,0,.45); direction: ltr; }
+  #linkPill .lk { width: 76px; height: 76px; border-radius: 50%; background: var(--green); flex: none; display: flex; align-items: center; justify-content: center; }
+  #linkText { font-family: 'Cairo', sans-serif; font-size: 56px; font-weight: 800; margin-left: 26px; white-space: nowrap; }
+  #caret { display: inline-block; width: 5px; height: 60px; background: var(--green); vertical-align: middle; margin-left: 4px; }
+  .share { position: absolute; top: 1130px; width: 150px; height: 150px; border-radius: 44px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: #fff; box-shadow: 0 20px 40px rgba(0,0,0,.4); }
+  .share svg { width: 70px; height: 70px; margin-bottom: 6px; }
+  #ctaBtn { left: 190px; top: 1380px; width: 700px; height: 150px; border-radius: 80px; background: var(--yellow); color: var(--ink);
+    font-size: 70px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 60px rgba(255,201,60,.45); }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #progress { position: absolute; left: 0; top: 0; height: 10px; background: var(--green); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- background -->
+  <div id="bg">
+    <div class="blob" id="b1" style="width:700px;height:700px;background:#2563eb;"></div>
+    <div class="blob" id="b2" style="width:600px;height:600px;background:#16a34a;"></div>
+    <div class="blob" id="b3" style="width:500px;height:500px;background:#7c3aed;"></div>
+    <div id="lines"></div>
+  </div>
+
+  <!-- SCENE 1A: hook — commission pain -->
+  <div class="scene" id="s1a">
+    <div class="txt h-m" id="s1aTop" style="top:330px;">تعبت من</div>
+    <div class="txt h-xl red" id="s1aBig" style="top:440px;">العمولات؟</div>
+    <div class="abs" id="receipt">
+      <div class="row"><span>قيمة التوصيل</span><span>٢٠ ر.س</span></div>
+      <div class="row cut"><span>عمولة التطبيق</span><span>-٢٥٪</span></div>
+      <div class="row" style="color:#94a3b8;"><span>يوصلك</span><span>١٥ ر.س</span></div>
+    </div>
+    <svg class="abs" id="stamp" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#ef4444" stroke-width="7"/>
+      <line x1="22" y1="22" x2="78" y2="78" stroke="#ef4444" stroke-width="9" stroke-linecap="round"/>
+      <line x1="78" y1="22" x2="22" y2="78" stroke="#ef4444" stroke-width="9" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- SCENE 1B: hook — payoff -->
+  <div class="scene" id="s1b">
+    <div class="txt h-m" id="s1bTop" style="top:330px;">خلّ أرباحك</div>
+    <div class="txt h-xl green glow" id="s1bBig" style="top:440px;">كلها لك!</div>
+    <div id="coins"></div>
+    <div class="abs" id="zeroBadge"><b>٠٪</b><span>عمولة</span></div>
+  </div>
+
+  <!-- SCENE 2: logo -->
+  <div class="scene" id="s2">
+    <div class="abs" id="logoMark">
+      <svg id="scooter" viewBox="0 0 120 120" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="18" y="30" width="34" height="30" rx="5" fill="#fff" stroke="none" opacity=".95"/>
+        <path d="M28 38 h14" stroke="#16a34a" stroke-width="5"/>
+        <path d="M30 78 h40 l12 -34 h12"/>
+        <path d="M20 66 h34 l8 12"/>
+        <circle cx="28" cy="88" r="11"/>
+        <circle cx="92" cy="88" r="11"/>
+        <path d="M82 44 l10 44"/>
+      </svg>
+    </div>
+    <div class="txt h-l" id="logoName" style="top:1010px;">مندوبي</div>
+    <div class="txt h-s" id="logoTag" style="top:1160px;">تطبيقك الخاص لتوصيل الطلبات</div>
+  </div>
+
+  <!-- feature headers -->
+  <div class="abs" id="fhead">
+    <div class="fh" id="fh1"><div class="fnum">١</div><div class="ftitle">صفحة خاصة<br><span class="yellow">لكل مندوب</span></div></div>
+    <div class="fh" id="fh2"><div class="fnum">٢</div><div class="ftitle">اشتراك شهري <span class="yellow">ثابت</span></div><div class="fsub" style="top:250px;">بدون عمولة على عدد الطلبات</div></div>
+    <div class="fh" id="fh3"><div class="fnum">٣</div><div class="ftitle">أنت تحدد<br><span class="yellow">تسعيرة التوصيل</span></div></div>
+    <div class="fh" id="fh4"><div class="fnum">٤</div><div class="ftitle">متوافق مع<br><span class="yellow">جميع الأجهزة</span></div></div>
+    <div class="fh" id="fh5"><div class="fnum">٥</div><div class="ftitle">ضع طرق الدفع<br><span class="yellow">الخاصة بك</span></div></div>
+  </div>
+
+  <!-- devices for feature 4 -->
+  <div class="device" id="tablet" style="left:40px;top:860px;width:400px;height:540px;border-radius:40px;">
+    <div class="scr" style="inset:18px;border-radius:26px;"><div class="mini">
+      <div class="av" style="width:110px;height:110px;"></div><div class="bar" style="width:200px;height:22px;"></div>
+      <div class="bar" style="width:140px;height:16px;"></div><div class="bt" style="width:230px;height:54px;"></div></div></div>
+  </div>
+  <div class="device" id="laptop" style="left:560px;top:900px;width:480px;height:310px;border-radius:24px 24px 6px 6px;">
+    <div class="scr" style="inset:14px;border-radius:12px;"><div class="mini">
+      <div class="av" style="width:80px;height:80px;"></div><div class="bar" style="width:170px;height:18px;"></div>
+      <div class="bt" style="width:180px;height:40px;"></div></div></div>
+  </div>
+  <div class="device" id="laptopBase" style="left:510px;top:1210px;width:580px;height:30px;border-radius:0 0 30px 30px;background:#2b3550;"></div>
+  <div class="txt" id="platforms" style="text-align:center;opacity:0;">آيفون • أندرويد • تابلت • كمبيوتر</div>
+
+  <!-- phone -->
+  <div class="abs" id="phone">
+    <div id="screen">
+      <div id="notch"></div>
+
+      <!-- UI 1: profile page -->
+      <div class="ui" id="ui1">
+        <div class="avatar" id="u1av">ف</div>
+        <div class="uname" id="u1name">أبو فهد للتوصيل</div>
+        <div class="stars" id="u1stars">★★★★★ <span style="color:#0f172a;font-weight:900;">٤٫٩</span></div>
+        <div style="text-align:center;margin:14px 0 26px;" id="u1chip"><span class="chip on">● متاح الآن</span></div>
+        <div class="card" id="u1card">
+          <div class="srow"><span>📍 الرياض</span><span style="color:#64748b;">+٣٠٠ طلب</span></div>
+        </div>
+        <div class="card" id="u1card2">
+          <div class="srow"><span>⏱ متوسط التوصيل</span><span style="color:#16a34a;">٢٥ د</span></div>
+        </div>
+        <div class="btn" id="u1btn">اطلب توصيل الآن</div>
+      </div>
+
+      <!-- UI 2: subscription -->
+      <div class="ui" id="ui2">
+        <div class="card" style="text-align:center;" id="u2plan">
+          <div class="label">باقتك</div>
+          <div style="font-size:44px;font-weight:900;white-space:nowrap;">الاشتراك الشهري</div>
+          <div class="chip on" style="margin-top:10px;">✓ مفعّل</div>
+        </div>
+        <div class="card" id="u2orders">
+          <div class="label">طلبات هذا الشهر</div>
+          <div class="big-num" id="u2count">٠</div>
+        </div>
+        <div class="card" id="u2comm">
+          <div class="label">العمولة المخصومة</div>
+          <div class="big-num" style="color:#16a34a;" id="u2zero">٠ ر.س</div>
+        </div>
+      </div>
+
+      <!-- UI 3: pricing -->
+      <div class="ui" id="ui3">
+        <div class="label" style="margin-top:10px;">سعر التوصيل</div>
+        <div class="big-num" id="u3price">١٠ <span style="font-size:56px;">ر.س</span></div>
+        <div class="track"><div class="fill" id="u3fill"></div><div class="knob" id="u3knob"></div></div>
+        <div class="srow" style="font-size:24px;color:#94a3b8;padding:0 6px;"><span>٥</span><span>٥٠</span></div>
+        <div style="height:30px;"></div>
+        <div class="card" id="u3r1"><div class="srow"><span>داخل الحي</span><span style="color:#16a34a;">١٥ ر.س</span></div></div>
+        <div class="card" id="u3r2"><div class="srow"><span>خارج الحي</span><span style="color:#16a34a;">٢٥ ر.س</span></div></div>
+        <div class="card" id="u3r3"><div class="srow"><span>طلب مستعجل</span><span style="color:#16a34a;">٣٥ ر.س</span></div></div>
+      </div>
+
+      <!-- UI 4: mini profile for device scene -->
+      <div class="ui" id="ui4">
+        <div class="avatar">ف</div>
+        <div class="uname">أبو فهد للتوصيل</div>
+        <div class="stars">★★★★★</div>
+        <div style="height:40px;"></div>
+        <div class="card" style="height:90px;"></div>
+        <div class="card" style="height:90px;"></div>
+        <div class="btn">اطلب توصيل الآن</div>
+      </div>
+
+      <!-- UI 5: payments -->
+      <div class="ui" id="ui5">
+        <div style="font-size:40px;font-weight:900;margin:0 6px 24px;">طرق الدفع</div>
+        <div class="pm" id="pm0"><div class="nm"><div class="ic" style="background:#1e3a8a;">م</div>مدى</div><div class="toggle"><i></i></div></div>
+        <div class="pm" id="pm1"><div class="nm"><div class="ic" style="background:#111;"></div>Apple Pay</div><div class="toggle"><i></i></div></div>
+        <div class="pm" id="pm2"><div class="nm"><div class="ic" style="background:#4f008c;">stc</div>STC Pay</div><div class="toggle"><i></i></div></div>
+        <div class="pm" id="pm3"><div class="nm"><div class="ic" style="background:#0e7490;">🏦</div>تحويل بنكي</div><div class="toggle"><i></i></div></div>
+        <div class="pm" id="pm4"><div class="nm"><div class="ic" style="background:#16a34a;">💵</div>الدفع كاش</div><div class="toggle"><i></i></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- tap finger -->
+  <svg class="abs" id="tap" viewBox="0 0 100 100" style="width:150px;height:150px;opacity:0;">
+    <circle cx="50" cy="50" r="40" fill="rgba(34,197,94,.35)" stroke="#16a34a" stroke-width="3"/>
+    <circle cx="50" cy="50" r="22" fill="#fff"/>
+  </svg>
+
+  <!-- SCENE CTA -->
+  <div class="scene" id="s7">
+    <div class="txt h-l" id="ctaTitle" style="top:300px;">انشر رابط</div>
+    <div class="txt h-xl yellow" id="ctaTitle2" style="top:440px;">صفحتك</div>
+    <div class="txt h-s" id="ctaSub" style="top:690px;">وخلّ عملاءك يطلبون منك مباشرة</div>
+    <div class="abs" id="linkPill">
+      <div class="lk"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div>
+      <div id="linkText"><span id="linkChars"></span><span id="caret"></span></div>
+    </div>
+    <div class="share" id="sh0" style="left:115px;background:#25d366;">
+      <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>واتساب</div>
+    <div class="share" id="sh1" style="left:335px;background:#fffc00;color:#111;">
+      <svg viewBox="0 0 24 24" fill="#111"><circle cx="12" cy="10" r="7"/><path d="M4 20c3-1 5-3 8-3s5 2 8 3"/></svg>سناب</div>
+    <div class="share" id="sh2" style="left:555px;background:#111;">
+      <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3l9 16H3z"/></svg>تيك توك</div>
+    <div class="share" id="sh3" style="left:775px;background:#e1306c;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="4"/></svg>انستقرام</div>
+    <div class="abs" id="ctaBtn">حمّل التطبيق الحين</div>
+  </div>
+
+  <div id="flash"></div>
+  <div id="progress"></div>
+</div>
+
+<script>
+const W = 1080, H = 1920, DUR = 30;
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+const easeInCubic = (p) => p * p * p;
+const easeInOut = (p) => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const easeOutBack = (p) => { const c1 = 2.2, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+const easeOutElastic = (p) => p === 0 ? 0 : p === 1 ? 1 : Math.pow(2, -10 * p) * Math.sin((p * 10 - .75) * (2 * Math.PI / 3)) + 1;
+const AR = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+
+function set(el, { x = 0, y = 0, s = 1, r = 0, o = 1, sx, sy, blur = 0 }) {
+  if (typeof el === 'string') el = $(el);
+  const scale = (sx !== undefined || sy !== undefined) ? `scale(${sx ?? s}, ${sy ?? s})` : `scale(${s})`;
+  el.style.transform = `translate(${x}px, ${y}px) ${scale} rotate(${r}deg)`;
+  el.style.opacity = o;
+  el.style.filter = blur ? `blur(${blur}px)` : '';
+}
+
+// pop-in helper: returns {s, o, y} for element entering at t0
+function pop(t, t0, d = .45, from = 0) {
+  const p = seg(t, t0, t0 + d);
+  return { s: lerp(from, 1, easeOutBack(p)), o: clamp(p * 3), y: 0 };
+}
+function slideUp(t, t0, d = .5, dist = 80) {
+  const p = easeOutCubic(seg(t, t0, t0 + d));
+  return { y: lerp(dist, 0, p), o: p };
+}
+// scene window: fade/scale in at a, out at b
+function win(t, a, b, fin = .3, fout = .3) {
+  if (t < a || t > b) return 0;
+  return Math.min(seg(t, a, a + fin), 1 - seg(t, b - fout, b));
+}
+
+// deterministic random
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+// build background speed lines
+const LINES = [];
+const linesEl = $('lines');
+for (let i = 0; i < 14; i++) {
+  const d = document.createElement('div');
+  d.className = 'line';
+  const w = 200 + rnd() * 400;
+  d.style.width = w + 'px';
+  d.style.top = (rnd() * H) + 'px';
+  linesEl.appendChild(d);
+  LINES.push({ el: d, w, speed: 500 + rnd() * 900, off: rnd() * (W + 800), op: .15 + rnd() * .35 });
+}
+
+// coins
+const COINS = [];
+const coinsEl = $('coins');
+for (let i = 0; i < 18; i++) {
+  const d = document.createElement('div');
+  d.className = 'coin';
+  d.textContent = 'ر.س';
+  d.style.fontSize = '34px';
+  coinsEl.appendChild(d);
+  const ang = -Math.PI / 2 + (rnd() - .5) * 2.4;
+  const sp = 1500 + rnd() * 1300;
+  COINS.push({ el: d, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, rot: (rnd() - .5) * 900, delay: rnd() * .25, sc: .6 + rnd() * .6 });
+}
+
+const LINK = 'mandoobi.app/abufahad';
+
+// timeline (seconds)
+const T = {
+  hookA: [0, 1.65],
+  hookB: [1.65, 3.2],
+  logo: [3.2, 6.2],
+  f1: [6.2, 10.2],
+  f2: [10.2, 14.2],
+  f3: [14.2, 18.2],
+  f4: [18.2, 21.8],
+  f5: [21.8, 25.4],
+  cta: [25.4, 30],
+};
+
+function render(t) {
+  // ---------- background ----------
+  set('b1', { x: 600 + Math.sin(t * .7) * 200 - 350, y: 200 + Math.cos(t * .5) * 160 - 350 });
+  set('b2', { x: 200 + Math.cos(t * .6) * 220 - 300, y: 1400 + Math.sin(t * .8) * 200 - 300, o: .45 });
+  set('b3', { x: 900 + Math.sin(t * .9 + 1) * 160 - 250, y: 900 + Math.cos(t * .4) * 260 - 250, o: .35 });
+  for (const L of LINES) {
+    const x = W + 400 - ((L.off + t * L.speed) % (W + 800 + L.w));
+    set(L.el, { x, o: L.op });
+  }
+
+  // global camera shake on impacts
+  const impacts = [0.05, 0.95, 1.7, 2.35, 3.25, 25.45];
+  let shake = 0;
+  for (const i of impacts) { const d = t - i; if (d >= 0 && d < .3) shake = Math.max(shake, (1 - d / .3)); }
+  const sx = Math.sin(t * 95) * 18 * shake, sy = Math.cos(t * 83) * 18 * shake;
+  $('stage').style.transform = `translate(${sx}px, ${sy}px)`;
+
+  // white flash on transitions
+  const flashes = [1.65, 3.2, 25.4];
+  let fl = 0;
+  for (const f of flashes) { const d = t - f; if (d >= 0 && d < .25) fl = Math.max(fl, .7 * (1 - d / .25)); }
+  $('flash').style.opacity = fl;
+
+  $('progress').style.width = (t / DUR * W) + 'px';
+
+  // ---------- SCENE 1A: pain ----------
+  {
+    const [a, b] = T.hookA;
+    const o = win(t, a, b, .01, .12);
+    $('s1a').style.opacity = o;
+    if (o > 0) {
+      const p1 = seg(t, 0, .35);
+      set('s1aTop', { s: lerp(2.5, 1, easeOutCubic(p1)), o: clamp(p1 * 2) });
+      const p2 = seg(t, .12, .5);
+      set('s1aBig', { s: lerp(3, 1, easeOutBack(p2)), o: clamp(p2 * 2), r: lerp(-8, 0, easeOutCubic(p2)) });
+      const pr = slideUp(t, .45, .4, 300);
+      set('receipt', { y: pr.y, o: pr.o, r: -3 });
+      const ps = seg(t, .9, 1.15);
+      set('stamp', { s: lerp(2.6, 1, easeOutCubic(ps)), o: ps > 0 ? 1 : 0, r: -12 });
+    }
+  }
+
+  // ---------- SCENE 1B: payoff ----------
+  {
+    const [a, b] = T.hookB;
+    const o = win(t, a, b, .05, .2);
+    $('s1b').style.opacity = o;
+    if (o > 0) {
+      const lt = t - a;
+      const p1 = seg(lt, 0, .3);
+      set('s1bTop', { y: lerp(-80, 0, easeOutCubic(p1)), o: p1 });
+      const p2 = seg(lt, .08, .5);
+      set('s1bBig', { s: lerp(0, 1, easeOutElastic(p2)), o: clamp(p2 * 3) });
+      const pz = seg(lt, .55, 1.05);
+      set('zeroBadge', { s: lerp(0, 1, easeOutBack(pz)) * (1 + Math.sin(lt * 8) * .02 * pz), r: lerp(-200, 0, easeOutCubic(pz)), o: clamp(pz * 3) });
+      for (const c of COINS) {
+        const ct = lt - .5 - c.delay;
+        if (ct < 0) { c.el.style.opacity = 0; continue; }
+        const x = 485 + c.vx * ct;
+        const y = 1250 + c.vy * ct + .5 * 3600 * ct * ct;
+        set(c.el, { x, y, r: c.rot * ct, s: c.sc, o: 1 });
+      }
+    }
+  }
+
+  // ---------- SCENE 2: logo ----------
+  {
+    const [a, b] = T.logo;
+    const o = win(t, a, b, .05, .35);
+    $('s2').style.opacity = o;
+    if (o > 0) {
+      const lt = t - a;
+      const pm = seg(lt, 0, .6);
+      const bob = Math.sin(lt * 6) * 6;
+      set('logoMark', { s: lerp(0, 1, easeOutBack(pm)), r: lerp(-90, 0, easeOutCubic(pm)), y: bob });
+      const psc = seg(lt, .25, .9);
+      set('scooter', { x: lerp(-400, 0, easeOutCubic(psc)), o: psc });
+      const pn = slideUp(lt, .55, .5, 120);
+      set('logoName', pn);
+      const ptg = slideUp(lt, .8, .5, 80);
+      set('logoTag', ptg);
+      // exit: everything lifts up
+      const pe = easeInCubic(seg(t, b - .35, b));
+      if (pe > 0) {
+        set('logoMark', { s: 1 - pe * .4, y: -pe * 300 });
+        set('logoName', { y: -pe * 300, o: 1 - pe });
+        set('logoTag', { y: -pe * 300, o: 1 - pe });
+      }
+    }
+  }
+
+  // ---------- feature headers ----------
+  const feats = ['f1', 'f2', 'f3', 'f4', 'f5'];
+  feats.forEach((k, i) => {
+    const [a, b] = T[k];
+    const el = $('fh' + (i + 1));
+    const o = win(t, a, b, .3, .25);
+    if (o <= 0) { el.style.opacity = 0; return; }
+    const lt = t - a;
+    const pin = seg(lt, 0, .45);
+    const pout = seg(t, b - .25, b);
+    set(el, { y: lerp(-60, 0, easeOutCubic(pin)) - pout * 60, o });
+    const num = el.querySelector('.fnum');
+    const pn = seg(lt, 0, .45);
+    set(num, { s: lerp(0, 1, easeOutBack(pn)), r: lerp(-180, 0, easeOutCubic(pn)) });
+    const sub = el.querySelector('.fsub');
+    if (sub) { const ps = slideUp(lt, .35, .4, 40); set(sub, ps); }
+  });
+
+  // ---------- phone ----------
+  {
+    const a = T.f1[0], b = T.f5[1];
+    if (t < a - .1 || t > b + .1) {
+      $('phone').style.opacity = 0;
+    } else {
+      const pin = easeOutCubic(seg(t, a - .1, a + .5));
+      const pout = easeInCubic(seg(t, b - .4, b));
+      let x = 0, y = lerp(900, 0, pin) + pout * 1100, s = 1, r = lerp(12, 0, pin);
+      // feature 4: phone shrinks to the middle, devices flank
+      const [f4a, f4b] = T.f4;
+      const p4 = easeInOut(seg(t, f4a, f4a + .5)) * (1 - easeInOut(seg(t, f4b - .45, f4b)));
+      s = lerp(.92, .6, p4);
+      y += lerp(0, 200, p4);
+      const float = Math.sin(t * 2.2) * 8;
+      set('phone', { x, y: y + float, s, r, o: 1 });
+    }
+
+    // screens
+    const screens = [['ui1', T.f1], ['ui2', T.f2], ['ui3', T.f3], ['ui4', T.f4], ['ui5', T.f5]];
+    for (const [id, [sa, sb]] of screens) {
+      const o = win(t, sa, sb, .25, .2);
+      const pin = seg(t, sa, sa + .3);
+      set(id, { o, x: lerp(-120, 0, easeOutCubic(pin)) });
+    }
+
+    // UI 1 details
+    {
+      const lt = t - T.f1[0];
+      set('u1av', pop(lt, .35));
+      set('u1name', slideUp(lt, .55, .35, 40));
+      set('u1stars', slideUp(lt, .7, .35, 40));
+      set('u1chip', pop(lt, .85, .4));
+      set('u1card', slideUp(lt, 1.0, .35, 60));
+      set('u1card2', slideUp(lt, 1.15, .35, 60));
+      const pb = pop(lt, 1.35, .45);
+      const pulse = lt > 2.4 && lt < 2.8 ? 1 - Math.sin(seg(lt, 2.4, 2.8) * Math.PI) * .06 : 1;
+      set('u1btn', { s: pb.s * pulse, o: pb.o });
+    }
+    // UI 2 details
+    {
+      const lt = t - T.f2[0];
+      set('u2plan', slideUp(lt, .3, .4, 60));
+      set('u2orders', slideUp(lt, .5, .4, 60));
+      set('u2comm', slideUp(lt, .7, .4, 60));
+      const pc = easeOutCubic(seg(lt, .8, 3.2));
+      $('u2count').textContent = AR(Math.round(pc * 248));
+      const zp = lt > 1.2 ? 1 + Math.sin(lt * 7) * .04 : 1;
+      set('u2zero', { s: zp });
+    }
+    // UI 3 details
+    {
+      const lt = t - T.f3[0];
+      const pp = easeInOut(seg(lt, .7, 2.0));
+      const val = Math.round(lerp(10, 25, pp));
+      $('u3price').innerHTML = AR(val) + ' <span style="font-size:56px;">ر.س</span>';
+      const frac = (val - 5) / 45;
+      $('u3fill').style.width = (frac * 100) + '%';
+      $('u3knob').style.right = (frac * 100) + '%';
+      set('u3r1', slideUp(lt, 1.9, .35, 50));
+      set('u3r2', slideUp(lt, 2.1, .35, 50));
+      set('u3r3', slideUp(lt, 2.3, .35, 50));
+    }
+    // UI 5 details
+    {
+      const lt = t - T.f5[0];
+      for (let i = 0; i < 5; i++) {
+        const row = $('pm' + i);
+        set(row, slideUp(lt, .25 + i * .12, .35, 50));
+        const on = seg(lt, 1.0 + i * .38, 1.2 + i * .38);
+        const tg = row.querySelector('.toggle');
+        tg.style.background = on > .5 ? '#22c55e' : '#cbd5e1';
+        tg.querySelector('i').style.transform = `translateX(${-42 * easeOutCubic(on)}px)`;
+      }
+    }
+
+    // tap finger: order button (f1), price slider (f3), payment toggles (f5)
+    {
+      let target = null, to = 0, ts = 1;
+      const l1 = t - T.f1[0];
+      if (l1 > 2.1 && l1 < 3.1) { target = $('u1btn'); to = win(l1, 2.1, 3.1, .15, .2); ts = l1 > 2.4 && l1 < 2.7 ? .8 : 1; }
+      const l3 = t - T.f3[0];
+      if (l3 > .4 && l3 < 2.4) { target = $('u3knob'); to = win(l3, .4, 2.4, .2, .3); ts = .85; }
+      const l5 = t - T.f5[0];
+      if (l5 > .8 && l5 < 3.3) {
+        const k = clamp(Math.floor((l5 - .9) / .38), 0, 4);
+        target = $('pm' + k).querySelector('.toggle'); to = win(l5, .8, 3.3, .15, .25);
+        const ph = ((l5 - .9) % .38) / .38; ts = ph > .2 && ph < .55 ? .78 : 1;
+      }
+      if (target && to > 0) {
+        const r = target.getBoundingClientRect(), sr = $('stage').getBoundingClientRect();
+        set('tap', { x: r.left - sr.left + r.width / 2 - 75 + 20, y: r.top - sr.top + r.height / 2 - 75 + 25, s: ts, o: to });
+      } else $('tap').style.opacity = 0;
+    }
+  }
+
+  // ---------- feature 4 devices ----------
+  {
+    const [a, b] = T.f4;
+    const o = win(t, a + .2, b, .35, .3);
+    const pin = easeOutBack(seg(t, a + .2, a + .7));
+    set('tablet', { o, x: lerp(-300, 0, easeOutCubic(seg(t, a + .2, a + .7))), r: lerp(-10, -4, pin) });
+    set('laptop', { o, x: lerp(300, 0, easeOutCubic(seg(t, a + .35, a + .85))), r: 3 });
+    set('laptopBase', { o, x: lerp(300, 0, easeOutCubic(seg(t, a + .35, a + .85))), r: 3 });
+    const pp = slideUp(t - a, .9, .4, 40);
+    set('platforms', { y: pp.y, o: Math.min(pp.o, o) });
+  }
+
+  // ---------- CTA ----------
+  {
+    const [a, b] = T.cta;
+    const o = win(t, a, b + 1, .05, .01);
+    $('s7').style.opacity = o;
+    if (o > 0) {
+      const lt = t - a;
+      const p1 = seg(lt, 0, .35);
+      set('ctaTitle', { s: lerp(2.2, 1, easeOutCubic(p1)), o: p1 });
+      const p2 = seg(lt, .15, .6);
+      set('ctaTitle2', { s: lerp(0, 1, easeOutElastic(p2)), o: clamp(p2 * 3) });
+      set('ctaSub', slideUp(lt, .55, .4, 40));
+      const pl = pop(lt, .7, .5);
+      set('linkPill', { s: pl.s, o: pl.o });
+      const n = Math.floor(clamp((lt - 1.0) / 1.2) * LINK.length);
+      $('linkChars').textContent = LINK.slice(0, n);
+      $('caret').style.opacity = (Math.floor(lt * 3) % 2 === 0 || n < LINK.length) ? 1 : 0;
+      for (let i = 0; i < 4; i++) {
+        const ps = pop(lt, 2.2 + i * .12, .45);
+        const bob = lt > 3 ? Math.sin(lt * 4 + i) * 8 : 0;
+        set('sh' + i, { s: ps.s, o: ps.o, y: bob });
+      }
+      const pb = pop(lt, 2.9, .5);
+      const pulse = lt > 3.5 ? 1 + Math.sin((lt - 3.5) * 7) * .045 : 1;
+      set('ctaBtn', { s: pb.s * pulse, o: pb.o });
+    }
+  }
+}
+
+window.render = render;
+window.DUR = DUR;
+// live preview when opened in a browser normally
+if (!window.__CAPTURE__) {
+  const start = performance.now();
+  const loop = () => { render(((performance.now() - start) / 1000) % DUR); requestAnimationFrame(loop); };
+  document.fonts.ready.then(loop);
+}
+</script>
+</body>
+</html>
