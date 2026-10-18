@@ -61,24 +61,29 @@ def lerp(a, b, x):
 
 PRODUCT = None  # (rgba PIL image at 2x, head cx, cy, r) — loaded once per process
 UPS = 2.0
+REF_R = 142.0  # head radius (source px) the scene layouts were designed for; any photo is normalised to it
 
 
 def load_product():
     global PRODUCT
     if PRODUCT is None:
-        cache = os.path.join(ROOT, "build", "product_cutout.png")
         src = os.path.join(ROOT, CFG["product_image"])
-        if not os.path.exists(cache) or os.path.getmtime(cache) < os.path.getmtime(src):
+        name = os.path.splitext(os.path.basename(src))[0]
+        cache = os.path.join(ROOT, "build", f"cutout_{name}.png")
+        if not os.path.exists(cache) or os.path.getmtime(cache) < max(
+                os.path.getmtime(src), os.path.getmtime(os.path.join(ROOT, "src", "cutout.py"))):
             os.makedirs(os.path.dirname(cache), exist_ok=True)
             cutout(src).save(cache)
         im = Image.open(cache).convert("RGBA")
         cx, cy, r = find_head(im)
         # Pre-upscale once with Lanczos + light sharpening; the per-frame warps then
         # start from a cleaner source than plain bicubic on the original pixels.
-        big = im.resize((int(im.width * UPS), int(im.height * UPS)), Image.LANCZOS)
+        # resample so the watch head always has the same on-screen size, whatever the photo framing
+        k = UPS * REF_R / r
+        big = im.resize((int(im.width * k), int(im.height * k)), Image.LANCZOS)
         rgb = big.convert("RGB").filter(ImageFilter.UnsharpMask(radius=2, percent=60, threshold=2))
         big = Image.merge("RGBA", (*rgb.split(), big.getchannel("A")))
-        PRODUCT = (big, cx * UPS, cy * UPS, r * UPS)
+        PRODUCT = (big, cx * k, cy * k, r * k)
     return PRODUCT
 
 

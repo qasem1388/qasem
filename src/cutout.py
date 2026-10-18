@@ -35,10 +35,21 @@ def cutout(path, white_thresh=236):
     # Soft edge: in a thin band around the background, alpha follows "distance from white".
     band = ndimage.binary_dilation(bg, iterations=3) & ~bg
     alpha = np.where(bg, 0.0, 1.0)
-    soft = np.clip((255.0 - mn) / (255.0 - 200.0), 0, 1)
+    soft = np.clip((255.0 - mn) / (255.0 - 120.0), 0, 1)
     alpha = np.where(band, np.minimum(alpha, soft), alpha)
+    alpha = ndimage.minimum_filter(alpha, 3)  # choke 1px so no light studio fringe survives
     alpha = ndimage.gaussian_filter(alpha, 0.6)
     alpha[bg & ~ndimage.binary_dilation(~bg, iterations=1)] = 0
+
+    # Drop anything that is not part of the watch itself (hang tags, strings, price labels):
+    # outside the case rows keep only a corridor around the strap axis.
+    fg = alpha > 0.5
+    axis, half, y0, y1 = _axis_and_head(fg)
+    xs = np.arange(w)[None, :]
+    corridor = np.abs(xs - axis) <= half * 1.18
+    rows = np.zeros((h, 1), bool)
+    rows[y0:y1 + 1] = True
+    alpha = np.where(corridor | rows, alpha, 0)
 
     # Remove the white matte from semi-transparent edge pixels.
     a = np.clip(alpha, 1e-3, 1)[..., None]
@@ -48,19 +59,36 @@ def cutout(path, white_thresh=236):
     return Image.fromarray(out, "RGBA")
 
 
-def _head_rows(a):
-    widths = a.sum(axis=1)
-    strap = np.bincount(widths[widths > 0]).argmax()  # most common row width = strap
-    rows = np.where(widths > strap * 1.2)[0]
-    # keep the largest contiguous run (the case)
-    runs = np.split(rows, np.where(np.diff(rows) > 3)[0] + 1)
-    run = max(runs, key=len)
-    return run[0], run[-1]
+def _axis_runs(a):
+    """Per row, the width of the opaque run that crosses the watch axis (ignores tags beside it)."""
+    cols = np.where(a.any(axis=0))[0]
+    rows = np.where(a.any(axis=1))[0]
+    axis = int(np.median([np.where(a[y])[0].mean() for y in rows]))
+    run = np.zeros(a.shape[0], int)
+    for y in rows:
+        r = a[y]
+        if not r[axis]:
+            continue
+        l = axis - np.argmin(r[axis::-1]) + 1 if not r[:axis + 1].all() else 0
+        rr = axis + np.argmin(r[axis:]) if not r[axis:].all() else a.shape[1]
+        run[y] = rr - l
+    return axis, run
+
+
+def _axis_and_head(a):
+    """Return (axis x, strap half-width, case top row, case bottom row)."""
+    axis, run = _axis_runs(a)
+    strap0 = np.median(run[run > 0])
+    big = np.where(run > strap0 * 1.2)[0]
+    blocks = np.split(big, np.where(np.diff(big) > 3)[0] + 1)
+    case = max(blocks, key=len)
+    strap = np.median(run[(run > 0) & (run <= strap0 * 1.2)])
+    return axis, strap / 2, int(case[0]), int(case[-1])
 
 
 def find_head_mask(fg):
     """Bounding box of the watch head as a boolean mask (padded)."""
-    y0, y1 = _head_rows(fg)
+    _, _, y0, y1 = _axis_and_head(fg)
     pad = (y1 - y0) // 4
     m = np.zeros_like(fg)
     m[max(0, y0 - pad):y1 + pad, :] = True
@@ -68,17 +96,15 @@ def find_head_mask(fg):
 
 
 def find_head(rgba):
-    """Return (cx, cy, radius) of the watch head = widest band of opaque rows."""
+    """Return (cx, cy, radius) of the watch head (case centre on the strap axis)."""
     a = np.asarray(rgba)[..., 3] > 128
-    y0, y1 = _head_rows(a)
-    # strap rows are symmetric around the watch axis (the crown is not)
-    widths = a.sum(axis=1)
-    strap = np.bincount(widths[widths > 0]).argmax()
-    centers = [np.where(a[y])[0].mean() for y in np.where(np.abs(widths - strap) <= 2)[0]]
-    cx = float(np.median(centers))
+    axis, _, y0, y1 = _axis_and_head(a)
     cy = (y0 + y1) / 2
-    r = (y1 - y0) / 2
-    return cx, float(cy), float(r)
+    # A round case overlaps the lugs, so its height is under-measured; use the left half-width
+    # at the widest row instead (the crown sits on the right and is excluded).
+    widest = y0 + int(np.argmax(a[y0:y1 + 1].sum(axis=1)))
+    r = axis - np.where(a[widest])[0][0]
+    return float(axis), float(cy), float(r)
 
 
 if __name__ == "__main__":
