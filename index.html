@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>قاسم للتطوير الرقمي | مواقع وتطبيقات</title>
+<meta name="description" content="قاسم محمد الشريف – مطور مواقع وتطبيقات. تطبيقات ومواقع جاهزة للبيع وتصميم مشاريع مخصصة.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#D97757;--brand-d:#C2603F;--brand-l:#F4E3DA;--ink:#141413;--muted:#5E5D59;--bg:#FAF9F5;--card:#fff;--line:#E8E6DC;--wa:#25D366}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:Tajawal,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img,svg{display:block}
+.wrap{width:min(1200px,100% - 32px);margin-inline:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--brand);color:#fff;border-radius:12px;padding:13px 24px;font-weight:700;font-size:17px;border:2px solid transparent;transition:.2s;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--brand-d);transform:translateY(-2px)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:#fff}
+.btn.wa{background:var(--wa)}
+.btn.wa:hover{background:#1EBE5A}
+.btn svg{width:22px;height:22px;flex:none}
+
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:76px;gap:16px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo img{width:48px;height:48px}
+.logo .t1{font-weight:900;font-size:21px;line-height:1.1}
+.logo .t1 span{color:var(--brand)}
+.logo .t2{font-size:12px;color:var(--muted);letter-spacing:1.5px;font-weight:700}
+nav.main{display:flex;gap:30px;font-weight:500;font-size:17px}
+nav.main a:hover{color:var(--brand)}
+.menu-btn{display:none;background:none;border:0;cursor:pointer;padding:8px}
+.menu-btn span{display:block;width:26px;height:3px;background:var(--ink);border-radius:2px;margin:5px 0}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff,var(--bg))}
+.hero:before{content:"";position:absolute;left:-140px;top:-120px;width:520px;height:520px;border-radius:50%;background:var(--brand-l);opacity:.6}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:50px;align-items:center;padding:80px 0 90px}
+.pill{display:inline-block;background:var(--brand-l);color:var(--brand-d);font-weight:700;padding:8px 16px;border-radius:99px;font-size:15px}
+h1{font-size:clamp(36px,5vw,60px);font-weight:900;line-height:1.25;margin:22px 0 18px}
+h1 span{color:var(--brand)}
+.lead{font-size:clamp(17px,1.6vw,20px);color:var(--muted);line-height:1.9;max-width:560px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
+.stats{display:flex;flex-wrap:wrap;gap:40px;margin-top:44px}
+.stats b{display:block;font-size:34px;font-weight:900;color:var(--brand);line-height:1.2}
+.stats small{color:var(--muted);font-size:15px}
+.devices{position:relative;height:470px}
+.laptop{position:absolute;left:30px;top:30px;width:min(500px,85%);aspect-ratio:16/10.5;background:var(--ink);border-radius:18px;padding:14px}
+.screen{background:#fff;border-radius:8px;height:100%;overflow:hidden}
+.bar{height:26px;background:#F1EFE8;display:flex;gap:6px;align-items:center;padding:0 10px}
+.bar i{width:9px;height:9px;border-radius:50%;background:#D5D2C6}
+.mock{padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mock .h{grid-column:1/-1;height:90px;border-radius:8px;background:linear-gradient(120deg,var(--brand),#E9A487)}
+.mock .c{height:100px;border-radius:8px;background:#F4F2EC}
+.phone{position:absolute;right:0;top:120px;width:180px;height:350px;background:var(--ink);border-radius:30px;padding:10px;box-shadow:0 30px 60px rgba(20,20,19,.18)}
+.phone .screen{border-radius:22px;padding:14px}
+.phone .h{height:70px;border-radius:12px;background:var(--brand);margin-bottom:10px}
+.phone .r{height:44px;border-radius:10px;background:#F4F2EC;margin-bottom:8px}
+.float-tag{position:absolute;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px;box-shadow:0 12px 30px rgba(20,20,19,.08);display:flex;gap:8px;align-items:center;animation:float 4s ease-in-out infinite}
+.float-tag .d{width:10px;height:10px;border-radius:50%;background:var(--brand)}
+@keyframes float{50%{transform:translateY(-8px)}}
+
+/* sections */
+section{padding:96px 0}
+.white{background:#fff}
+.sh{text-align:center;margin-bottom:50px}
+.k{color:var(--brand);font-weight:800;font-size:16px}
+.sh h2,.about h2{font-size:clamp(30px,3.6vw,42px);font-weight:900;line-height:1.3;margin:10px 0 12px}
+.sh p{color:var(--muted);font-size:18px}
+
+/* about */
+.about .wrap{display:grid;grid-template-columns:400px 1fr;gap:70px;align-items:center}
+.avatar{aspect-ratio:400/450;border-radius:28px;background:linear-gradient(160deg,var(--brand-l),#fff);border:1px solid var(--line);position:relative;display:flex;align-items:center;justify-content:center}
+.avatar .face{width:180px;height:180px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:86px;font-weight:900}
+.avatar .badge{position:absolute;bottom:22px;inset-inline:22px;background:var(--ink);color:#fff;border-radius:16px;padding:14px 18px;font-weight:700;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.avatar .badge span{color:#8BE3A8}
+.about p{font-size:18px;color:var(--muted);line-height:1.9;margin-bottom:14px}
+.skills{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.skills span{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 15px;font-weight:700;font-size:15px}
+
+/* cards */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.svc{background:#fff;border:1px solid var(--line);border-radius:22px;padding:32px;transition:.25s}
+.svc:hover{border-color:var(--brand);transform:translateY(-4px);box-shadow:0 16px 40px rgba(217,119,87,.12)}
+.ic{width:58px;height:58px;border-radius:16px;background:var(--brand-l);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.ic svg{width:28px;height:28px;stroke:var(--brand-d);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.svc h3{font-size:22px;font-weight:800;margin-bottom:8px}
+.svc p{color:var(--muted);font-size:17px;line-height:1.8}
+
+/* portfolio */
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:40px}
+.tabs button{padding:10px 22px;border-radius:99px;border:1px solid var(--line);background:#fff;font:700 16px Tajawal,sans-serif;cursor:pointer;color:var(--ink)}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.proj{border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;transition:.25s}
+.proj:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(20,20,19,.08)}
+.thumb{height:200px;position:relative}
+.thumb .win{position:absolute;inset:24px 28px 0;background:#fff;border-radius:12px 12px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.06);overflow:hidden}
+.thumb .x{margin:12px;height:46px;border-radius:8px}
+.thumb .y{margin:0 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.thumb .y i{height:50px;border-radius:8px;background:#F1EFE8}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.pb{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.tag{font-size:13px;font-weight:800;padding:4px 11px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.tag.sale{background:#E7F7EE;color:#167A45;border-color:#BFE8D0}
+.tag.replit{background:#FFF0E6;color:#C2410C;border-color:#FAD6BE}
+.tag.claude,.tag.claude-code{background:var(--brand-l);color:var(--brand-d);border-color:#EBC8B7}
+.tag.chatgpt{background:#E6F4F1;color:#0F7A63;border-color:#BCE3D9}
+.empty{grid-column:1/-1;text-align:center;padding:56px 24px;border:2px dashed var(--line);border-radius:22px;color:var(--muted);font-size:18px}
+.empty b{display:block;color:var(--ink);font-size:22px;margin-bottom:6px}
+.pb h3{font-size:20px;font-weight:800;margin-bottom:6px}
+.pb p{color:var(--muted);font-size:16px;line-height:1.7}
+.pf{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line)}
+.pb .pf{margin-top:18px}
+.price{font-weight:900;font-size:21px}
+.price small{font-size:14px;color:var(--muted);font-weight:500}
+.lnk{color:var(--brand);font-weight:800;font-size:16px}
+.lnk:hover{text-decoration:underline}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.st{background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px 24px}
+.st .n{width:46px;height:46px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;margin-bottom:16px}
+.st:first-child .n{background:var(--brand)}
+.st h3{font-size:20px;font-weight:800;margin-bottom:6px}
+.st p{color:var(--muted);font-size:16px;line-height:1.7}
+
+/* plans */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.plan{background:#fff;border:1px solid var(--line);border-radius:24px;padding:34px;display:flex;flex-direction:column}
+.plan.hot{background:var(--ink);color:#fff;border-color:var(--ink)}
+.plan.hot p,.plan.hot li{color:#D9D7CF}
+.plan h3{font-size:22px;font-weight:800}
+.plan .pp{font-size:42px;font-weight:900;margin:12px 0 2px}
+.plan .pp small{font-size:16px;font-weight:500}
+.plan p{color:var(--muted);font-size:16px}
+.plan ul{list-style:none;margin:22px 0 28px;flex:1}
+.plan li{padding:8px 0;font-size:17px;display:flex;gap:10px;color:var(--muted)}
+.plan li:before{content:"✓";color:var(--brand);font-weight:900}
+.plan .btn.ghost{border-color:var(--line)}
+.hot-badge{display:inline-block;background:var(--brand);color:#fff;font-size:13px;font-weight:800;padding:4px 12px;border-radius:99px;margin-inline-start:6px;vertical-align:middle}
+
+/* faq */
+.faq{max-width:860px;margin:0 auto}
+details{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin-bottom:12px}
+summary{font-weight:700;font-size:18px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";color:var(--brand);font-size:26px;line-height:1}
+details[open] summary:after{content:"−"}
+details p{color:var(--muted);font-size:17px;line-height:1.8;margin-top:12px}
+
+/* contact */
+.contact{padding-top:0}
+.cbox{background:var(--brand);border-radius:32px;padding:60px 64px;color:#fff;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center;position:relative;overflow:hidden}
+.cbox:after{content:"";position:absolute;left:-80px;bottom:-120px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.12)}
+.cbox h2{font-size:clamp(28px,3.6vw,42px);font-weight:900;line-height:1.35}
+.cbox p{font-size:18px;opacity:.95;margin-top:14px;line-height:1.8}
+.side{background:#fff;color:var(--ink);border-radius:22px;padding:28px;position:relative;z-index:1}
+.side .row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
+.side .btn{width:100%;margin-top:16px;font-size:19px;padding:16px}
+
+footer{background:var(--ink);color:#BDBAB0;padding:48px 0 30px}
+footer .wrap.top{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+footer .logo .t1{color:#fff}
+footer .logo .t2{color:#8E8B82}
+footer nav{display:flex;flex-wrap:wrap;gap:24px}
+footer nav a:hover{color:#fff}
+.copy{text-align:center;font-size:14px;margin-top:28px;padding-top:22px;border-top:1px solid #2E2D2A;color:#8E8B82}
+
+.wa-float{position:fixed;left:22px;bottom:22px;z-index:60;width:62px;height:62px;border-radius:50%;background:var(--wa);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(37,211,102,.45);transition:.2s}
+.wa-float:hover{transform:scale(1.08)}
+.wa-float svg{width:34px;height:34px}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+.reveal.in{opacity:1;transform:none}
+
+/* responsive */
+@media (max-width:1024px){
+  .hero .wrap,.about .wrap,.cbox{grid-template-columns:1fr}
+  .devices{height:400px;max-width:560px;width:100%;margin-inline:auto}
+  .about .wrap{gap:40px}
+  .avatar{max-width:400px;width:100%;margin-inline:auto}
+  .grid3,.plans{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:860px){
+  nav.main{position:absolute;top:76px;inset-inline:0;background:#fff;flex-direction:column;gap:0;border-bottom:1px solid var(--line);display:none}
+  nav.main.open{display:flex}
+  nav.main a{padding:16px 24px;border-top:1px solid var(--line)}
+  .menu-btn{display:block}
+  header .btn.wa .lbl{display:none}
+  header .btn.wa{padding:11px}
+}
+@media (max-width:640px){
+  section{padding:68px 0}
+  .hero .wrap{padding:48px 0 60px;gap:30px}
+  .devices{height:300px}
+  .laptop{left:0;width:88%;padding:9px;border-radius:12px}
+  .mock{padding:10px;gap:6px}.mock .h{height:56px}.mock .c{height:56px}
+  .phone{width:120px;height:240px;top:70px;border-radius:22px;padding:7px}
+  .phone .h{height:44px}.phone .r{height:30px}
+  .float-tag{font-size:13px;padding:8px 12px}
+  .grid3,.plans,.steps{grid-template-columns:1fr}
+  .stats{gap:26px}
+  .cbox{padding:40px 22px;border-radius:24px}
+  .logo .t1{font-size:18px}.logo img{width:42px;height:42px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="wa" viewBox="0 0 24 24"><path fill="#fff" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-3.3-.8-2.7-1.1-4.5-3.9-4.6-4.1-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 1-2.3.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.6-.1 1.1z"/></symbol>
+</svg>
+
+<header>
+  <div class="wrap">
+    <a href="#home" class="logo" aria-label="قاسم للتطوير الرقمي">
+      <img src="logo.svg" alt="">
+      <div><div class="t1">قاسم <span>للتطوير الرقمي</span></div><div class="t2">QASEM DIGITAL</div></div>
+    </a>
+    <nav class="main" id="nav">
+      <a href="#about">من أنا</a><a href="#services">الخدمات</a><a href="#work">أعمالي</a><a href="#plans">الباقات</a><a href="#faq">الأسئلة</a><a href="#contact">تواصل</a>
+    </nav>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a class="btn wa" data-wa href="#" target="_blank" rel="noopener"><svg><use href="#wa"/></svg><span class="lbl">تواصل واتساب</span></a>
+      <button class="menu-btn" id="menuBtn" aria-label="القائمة"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<main id="home">
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <span class="pill">✦ متجر المواقع والتطبيقات الجاهزة</span>
+      <h1>نحوّل فكرتك إلى <span>موقع وتطبيق</span> يعمل ويبيع</h1>
+      <p class="lead">تطبيقات ومواقع جاهزة للشراء، أو تصميم مخصص من الصفر بأحدث التقنيات والذكاء الاصطناعي — بسرعة واحترافية وبسعر مناسب.</p>
+      <div class="cta">
+        <a class="btn" href="#work">تصفح الأعمال ←</a>
+        <a class="btn ghost" data-wa data-msg="مرحبًا قاسم، أرغب في طلب مشروع جديد" href="#" target="_blank" rel="noopener">اطلب مشروعك</a>
+      </div>
+      <div class="stats">
+        <div><b>+30</b><small>مشروع منجز</small></div>
+        <div><b>+15</b><small>تطبيق جاهز للبيع</small></div>
+        <div><b>48h</b><small>أسرع تسليم</small></div>
+      </div>
+    </div>
+    <div class="devices" aria-hidden="true">
+      <div class="laptop"><div class="screen"><div class="bar"><i></i><i></i><i></i></div>
+        <div class="mock"><div class="h"></div><div class="c"></div><div class="c"></div><div class="c"></div></div></div></div>
+      <div class="phone"><div class="screen"><div class="h"></div><div class="r"></div><div class="r"></div><div class="r"></div><div class="r" style="background:var(--brand-l)"></div></div></div>
+      <div class="float-tag" style="top:0;right:140px"><span class="d"></span>Replit · Claude · ChatGPT</div>
+      <div class="float-tag" style="bottom:10px;left:40px;animation-delay:1.5s"><span class="d" style="background:var(--wa)"></span>جاهز للتسليم فورًا</div>
+    </div>
+  </div>
+</div>
+
+<section class="about white" id="about">
+  <div class="wrap">
+    <div class="avatar reveal">
+      <!-- لاستبدال الحرف بصورتك: <img src="me.jpg" alt="قاسم" style="width:100%;height:100%;object-fit:cover;border-radius:28px"> -->
+      <div class="face">ق</div>
+      <div class="badge">قاسم محمد الشريف <span>● متاح للعمل</span></div>
+    </div>
+    <div class="reveal">
+      <span class="k">تعرّف عليّ</span>
+      <h2>أنا قاسم محمد الشريف<br>مطور مواقع وتطبيقات</h2>
+      <p>أصمم وأبني مواقع وتطبيقات ويب حديثة باستخدام أدوات الذكاء الاصطناعي مثل Replit وClaude وClaude Code وChatGPT، وأحوّل الأفكار إلى منتجات حقيقية قابلة للاستخدام والبيع.</p>
+      <p>أقدّم تطبيقات جاهزة يمكنك شراؤها وتشغيلها باسمك وشعارك، أو أصمم لك مشروعًا مخصصًا يناسب نشاطك التجاري من الفكرة حتى الإطلاق.</p>
+      <div class="skills"><span>HTML / CSS</span><span>JavaScript</span><span>React</span><span>Replit</span><span>Claude</span><span>Claude Code</span><span>ChatGPT</span><span>قواعد البيانات</span><span>تصميم UI/UX</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="wrap">
+    <div class="sh reveal"><div class="k">الخدمات</div><h2>ماذا أقدّم لك؟</h2><p>حلول رقمية متكاملة لأصحاب المشاريع والمتاجر والشركات</p></div>
+    <div class="grid3">
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>تصميم المواقع</h3><p>مواقع تعريفية، صفحات هبوط، ومتاجر إلكترونية متجاوبة مع الجوال.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>تطبيقات الويب</h3><p>أنظمة حجز، لوحات تحكم، وتطبيقات إدارة مخصصة لنشاطك.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M6 2h12l-2 6H8z"/><path d="M4 8h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></div><h3>تطبيقات جاهزة للبيع</h3><p>اشترِ تطبيقًا مكتملًا وشغّله باسمك وشعارك خلال أيام.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z"/></svg></div><h3>حلول بالذكاء الاصطناعي</h3><p>دمج المساعدات الذكية والأتمتة داخل موقعك أو تطبيقك.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><h3>تطوير وتحديث</h3><p>تحسين مواقع قائمة، إضافة ميزات جديدة، وإصلاح المشاكل.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><h3>استضافة ودعم فني</h3><p>رفع المشروع على الإنترنت مع ربط الدومين ودعم بعد التسليم.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="white" id="work">
+  <div class="wrap">
+    <div class="sh reveal"><div class="k">معرض الأعمال</div><h2>تطبيقات ومواقع من تصميمي</h2><p>بعضها متاح للشراء الآن، وبعضها نماذج لمشاريع نفّذتها لعملاء</p></div>
+    <div class="tabs" id="tabs">
+      <button class="on" data-f="all">الكل</button><button data-f="site">مواقع</button><button data-f="app">تطبيقات</button><button data-f="sale">جاهز للبيع</button><button data-f="replit">Replit</button><button data-f="claude">Claude</button><button data-f="claude-code">Claude Code</button><button data-f="chatgpt">ChatGPT</button>
+    </div>
+    <div class="grid3" id="projects"></div>
+  </div>
+</section>
+
+<section id="process">
+  <div class="wrap">
+    <div class="sh reveal"><div class="k">طريقة العمل</div><h2>من الفكرة إلى الإطلاق في 4 خطوات</h2></div>
+    <div class="steps">
+      <div class="st reveal"><div class="n">1</div><h3>تواصل معي</h3><p>راسلني على الواتساب واشرح فكرتك أو اختر تطبيقًا جاهزًا.</p></div>
+      <div class="st reveal"><div class="n">2</div><h3>التخطيط والتسعير</h3><p>نتفق على التفاصيل والمدة والسعر بوضوح.</p></div>
+      <div class="st reveal"><div class="n">3</div><h3>التصميم والتطوير</h3><p>أبني المشروع وأشاركك المعاينة أولًا بأول.</p></div>
+      <div class="st reveal"><div class="n">4</div><h3>التسليم والدعم</h3><p>إطلاق المشروع مع دعم فني بعد التسليم.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="plans" style="padding-top:0">
+  <div class="wrap">
+    <div class="sh reveal"><div class="k">الباقات</div><h2>باقات تناسب كل مشروع</h2><p>أسعار تقريبية — السعر النهائي حسب المتطلبات</p></div>
+    <div class="plans">
+      <div class="plan reveal"><h3>صفحة هبوط</h3><div class="pp">299 <small>ريال</small></div><p>مثالية للتعريف بنشاطك</p><ul><li>صفحة واحدة متجاوبة</li><li>زر واتساب مباشر</li><li>تسليم خلال 3 أيام</li></ul><a class="btn ghost" data-wa data-msg="مرحبًا قاسم، أرغب في باقة صفحة هبوط" href="#" target="_blank" rel="noopener">اطلب الآن</a></div>
+      <div class="plan hot reveal"><h3>موقع / تطبيق كامل <span class="hot-badge">الأكثر طلبًا</span></h3><div class="pp">899 <small>ريال</small></div><p>للمشاريع والمتاجر</p><ul><li>حتى 6 صفحات أو أقسام</li><li>لوحة تحكم بسيطة</li><li>ربط دومين واستضافة</li><li>دعم فني 30 يومًا</li></ul><a class="btn" data-wa data-msg="مرحبًا قاسم، أرغب في باقة الموقع / التطبيق الكامل" href="#" target="_blank" rel="noopener">اطلب الآن</a></div>
+      <div class="plan reveal"><h3>مشروع مخصص</h3><div class="pp" style="font-size:34px">حسب الطلب</div><p>أنظمة وتطبيقات متقدمة</p><ul><li>تحليل كامل للفكرة</li><li>ذكاء اصطناعي وأتمتة</li><li>دعم وتطوير مستمر</li></ul><a class="btn ghost" data-wa data-msg="مرحبًا قاسم، أرغب في استشارة لمشروع مخصص" href="#" target="_blank" rel="noopener">استشارة مجانية</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="white" id="faq">
+  <div class="wrap">
+    <div class="sh reveal"><div class="k">الأسئلة الشائعة</div><h2>عندك سؤال؟</h2></div>
+    <div class="faq">
+      <details open><summary>هل أستطيع شراء تطبيق جاهز ووضع اسمي وشعاري عليه؟</summary><p>نعم، كل التطبيقات الجاهزة قابلة للتخصيص بالاسم والشعار والألوان قبل التسليم.</p></details>
+      <details><summary>كم يستغرق تنفيذ مشروع جديد؟</summary><p>صفحات الهبوط من 2 إلى 3 أيام، والمواقع والتطبيقات الكاملة من أسبوع إلى أسبوعين حسب حجم المشروع.</p></details>
+      <details><summary>ما طرق الدفع المتاحة؟</summary><p>التحويل البنكي، ويتم الاتفاق على دفعة مقدمة والباقي عند التسليم.</p></details>
+      <details><summary>هل يوجد دعم فني بعد التسليم؟</summary><p>نعم، كل مشروع يشمل فترة دعم فني مجانية، مع إمكانية الاشتراك في دعم وتطوير مستمر.</p></details>
+      <details><summary>هل يعمل الموقع على الجوال؟</summary><p>بالتأكيد، جميع المواقع والتطبيقات متجاوبة وتعمل بشكل ممتاز على الجوال والتابلت والكمبيوتر.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="contact white" id="contact">
+  <div class="wrap">
+    <div class="cbox reveal">
+      <div style="position:relative;z-index:1"><h2>جاهز تبدأ مشروعك؟<br>تواصل معي الآن</h2><p>أرسل فكرتك على الواتساب وسأرد عليك بعرض سعر واضح خلال ساعات.</p></div>
+      <div class="side">
+        <div class="row"><b>واتساب</b><span dir="ltr">0596125002</span></div>
+        <div class="row"><b>أوقات الرد</b><span>يوميًا 10ص – 11م</span></div>
+        <div class="row" style="border:0"><b>مدة الرد</b><span>خلال ساعات</span></div>
+        <a class="btn wa" data-wa href="#" target="_blank" rel="noopener"><svg><use href="#wa"/></svg>راسلني على واتساب</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap top">
+    <a href="#home" class="logo"><img src="logo.svg" alt=""><div><div class="t1">قاسم <span style="color:var(--brand)">للتطوير الرقمي</span></div><div class="t2">QASEM DIGITAL</div></div></a>
+    <nav><a href="#about">من أنا</a><a href="#services">الخدمات</a><a href="#work">أعمالي</a><a href="#plans">الباقات</a><a href="#contact">تواصل</a></nav>
+  </div>
+  <div class="wrap copy">© <span id="yr">2026</span> قاسم محمد الشريف — قاسم للتطوير الرقمي. جميع الحقوق محفوظة</div>
+</footer>
+
+<a class="wa-float" data-wa href="#" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب"><svg><use href="#wa"/></svg></a>
+
+<script>
+// رقم الواتساب (السعودية)
+const WA = "966596125002";
+
+// ===== أعمالك =====
+// type: site أو app | sale: true للبيع | platform: replit أو claude أو claude-code أو chatgpt
+// price: رقم بالريال أو null لمشروع عميل | url: رابط المعاينة | img: صورة (اختياري)
+const projects = [];
+
+const waLink = msg => `https://wa.me/${WA}?text=${encodeURIComponent(msg || "مرحبًا قاسم، أرغب في الاستفسار عن خدماتك")}`;
+document.querySelectorAll("[data-wa]").forEach(a => a.href = waLink(a.dataset.msg));
+
+const PLATFORMS = {replit:"Replit", claude:"Claude", "claude-code":"Claude Code", chatgpt:"ChatGPT"};
+const THEMES = [["#D97757","#E9A487","#FBE9E0"],["#141413","#3D3C38","#141413"],["#F4E3DA","#FAF9F5","#D97757"]];
+
+const tagHtml = p => [
+  p.sale ? '<span class="tag sale">للبيع</span>' : '<span class="tag">مشروع عميل</span>',
+  `<span class="tag ${p.platform}">${PLATFORMS[p.platform] || p.platform}</span>`,
+  `<span class="tag">${p.type === "site" ? "موقع" : "تطبيق"}</span>`
+].join("");
+
+const thumbHtml = p => p.img
+  ? `<img src="${p.img}" alt="${p.title}" loading="lazy">`
+  : `<div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="x" style="background:${p.theme[2]}"></div><div class="y"><i></i><i></i></div></div>`;
+
+function render(filter) {
+  const list = projects.filter(p => filter === "all" || p.type === filter || p.platform === filter || (filter === "sale" && p.sale));
+  const box = document.getElementById("projects");
+  if (!list.length) {
+    box.innerHTML = '<div class="empty"><b>الأعمال قادمة قريبًا</b>يتم تجهيز المشاريع حاليًا — تواصل معي على الواتساب لمعاينة أعمالي</div>';
+    return;
+  }
+  box.innerHTML = list.map((p, i) => (p.theme = p.theme || THEMES[i % THEMES.length], p)).map(p => `
+    <article class="proj">
+      <div class="thumb" style="background:linear-gradient(135deg,${p.theme[0]},${p.theme[1]})">${thumbHtml(p)}</div>
+      <div class="pb">
+        <div class="tags">${tagHtml(p)}</div>
+        <h3>${p.title}</h3><p>${p.desc}</p>
+        <div class="pf">
+          ${p.price ? `<div class="price">${p.price} <small>ريال</small></div>` : '<div class="price" style="font-size:17px">تصميم مخصص</div>'}
+          ${p.sale
+            ? `<a class="lnk" href="${waLink("مرحبًا قاسم، أرغب في شراء: " + p.title)}" target="_blank" rel="noopener">اطلب الآن ←</a>`
+            : `<a class="lnk" href="${p.url}" target="_blank" rel="noopener">معاينة ←</a>`}
+        </div>
+      </div>
+    </article>`).join("");
+}
+render("all");
+
+document.getElementById("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  render(b.dataset.f);
+});
+
+const nav = document.getElementById("nav");
+document.getElementById("menuBtn").addEventListener("click", () => nav.classList.toggle("open"));
+nav.addEventListener("click", e => { if (e.target.tagName === "A") nav.classList.remove("open"); });
+
+document.getElementById("yr").textContent = new Date().getFullYear();
+
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), {threshold:.12});
+document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+</script>
+</body>
+</html>
