@@ -116,6 +116,12 @@
   .share svg { width: 70px; height: 70px; margin-bottom: 6px; }
   #ctaBtn { left: 190px; top: 1380px; width: 700px; height: 150px; border-radius: 80px; background: var(--yellow); color: var(--ink);
     font-size: 70px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 60px rgba(255,201,60,.45); }
+  .pw { display: inline-block; margin: 0 4px; }
+  .toast { position: absolute; left: 160px; width: 760px; height: 128px; border-radius: 34px; background: #fff; color: var(--ink);
+    display: flex; align-items: center; padding: 0 30px; box-shadow: 0 20px 50px rgba(0,0,0,.4); opacity: 0; }
+  .toast .bell { width: 80px; height: 80px; border-radius: 24px; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 44px; margin-left: 24px; flex: none; }
+  .toast b { display: block; font-size: 40px; font-weight: 900; line-height: 1.2; }
+  .toast small { display: block; font-size: 28px; font-weight: 700; color: var(--muted); }
   #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
   #progress { position: absolute; left: 0; top: 0; height: 10px; background: var(--green); }
 </style>
@@ -192,7 +198,7 @@
       <div class="bt" style="width:180px;height:40px;"></div></div></div>
   </div>
   <div class="device" id="laptopBase" style="left:510px;top:1210px;width:580px;height:30px;border-radius:0 0 30px 30px;background:#2b3550;"></div>
-  <div class="txt" id="platforms" style="text-align:center;opacity:0;">آيفون • أندرويد • تابلت • كمبيوتر</div>
+  <div class="txt" id="platforms" style="text-align:center;"><span class="pw" id="pw0">آيفون</span> <span class="pw" id="pw1">• أندرويد</span> <span class="pw" id="pw2">• تابلت</span> <span class="pw" id="pw3">• كمبيوتر</span></div>
 
   <!-- phone -->
   <div class="abs" id="phone">
@@ -289,6 +295,9 @@
       <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3l9 16H3z"/></svg>تيك توك</div>
     <div class="share" id="sh3" style="left:775px;background:#e1306c;">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="4"/></svg>انستقرام</div>
+    <div class="toast" id="toast0" style="top:1110px;"><div class="bell">🔔</div><div><b>طلب توصيل جديد</b><small>من: نورة • الآن</small></div></div>
+    <div class="toast" id="toast1" style="top:1260px;"><div class="bell">🔔</div><div><b>طلب توصيل جديد</b><small>من: خالد • الآن</small></div></div>
+    <div class="toast" id="toast2" style="top:1410px;"><div class="bell">🔔</div><div><b>طلب توصيل جديد</b><small>من: سارة • الآن</small></div></div>
     <div class="abs" id="ctaBtn">حمّل التطبيق الحين</div>
   </div>
 
@@ -365,17 +374,39 @@ for (let i = 0; i < 18; i++) {
 
 const LINK = 'mandoobi.app/abufahad';
 
-// timeline (seconds)
+// Voice cues (seconds, in final video time) — measured from the ElevenLabs voiceover
+// after align_voice.py places its phrases. Every animation below hangs off these.
+const VO = {
+  pain: 0.35,          // تعبت من العمولات؟
+  payoff: 0.97,        // خلّ أرباحك
+  allYours: 1.77,      // كلها لك
+  brand: 2.15,         // مندوبي
+  tagline: 3.0,        // هو تطبيقك الخاص لتوصيل الطلبات
+  f1: 5.63,            // صفحة خاصة لكل مندوب
+  f2: 7.35,            // اشتراك شهري ثابت
+  noCommission: 8.67,  // بدون عمولة على عدد الطلبات
+  f3: 10.9,            // انت تحدد تسعيرة التوصيل
+  f4: 12.95,           // متوافق مع جميع الأجهزة
+  platforms: [15.15, 15.37, 16.02, 16.44], // آيفون، أندرويد، تابلت، كمبيوتر
+  f5: 17.6,            // ضع طرق الدفع الخاصة بك
+  pay: [19.24, 19.5, 19.95, 20.92, 21.8],  // مدى، أبل باي، STC باي، تحويل بنكي، كاش
+  cta: 22.2,           // انشر رابط صفحتك
+  customers: 23.44,    // وخلّ عملاءك يطلبون منك مباشرة
+  social: [26.15, 26.69, 27.14, 27.44],    // انستقرام، تيك توك، سناب، واتساب
+  download: 28.27,     // حمّل التطبيق الحين
+};
+
+// scene windows (seconds)
 const T = {
-  hookA: [0, 1.65],
-  hookB: [1.65, 3.2],
-  logo: [3.2, 6.2],
-  f1: [6.2, 10.2],
-  f2: [10.2, 14.2],
-  f3: [14.2, 18.2],
-  f4: [18.2, 21.8],
-  f5: [21.8, 25.4],
-  cta: [25.4, 30],
+  hookA: [0, VO.payoff],
+  hookB: [VO.payoff, VO.brand - .03],
+  logo: [VO.brand - .03, VO.f1 - .13],
+  f1: [VO.f1 - .13, VO.f2 - .1],
+  f2: [VO.f2 - .1, VO.f3 - .1],
+  f3: [VO.f3 - .1, VO.f4 - .1],
+  f4: [VO.f4 - .1, VO.f5 - .1],
+  f5: [VO.f5 - .1, VO.cta - .1],
+  cta: [VO.cta - .1, 30],
 };
 
 function render(t) {
@@ -389,14 +420,14 @@ function render(t) {
   }
 
   // global camera shake on impacts
-  const impacts = [0.05, 0.95, 1.7, 2.35, 3.25, 25.45];
+  const impacts = [0.05, 0.62, VO.payoff, VO.allYours, VO.brand, VO.cta];
   let shake = 0;
   for (const i of impacts) { const d = t - i; if (d >= 0 && d < .3) shake = Math.max(shake, (1 - d / .3)); }
   const sx = Math.sin(t * 95) * 18 * shake, sy = Math.cos(t * 83) * 18 * shake;
   $('stage').style.transform = `translate(${sx}px, ${sy}px)`;
 
   // white flash on transitions
-  const flashes = [1.65, 3.2, 25.4];
+  const flashes = [T.hookB[0], T.logo[0], T.cta[0]];
   let fl = 0;
   for (const f of flashes) { const d = t - f; if (d >= 0 && d < .25) fl = Math.max(fl, .7 * (1 - d / .25)); }
   $('flash').style.opacity = fl;
@@ -406,16 +437,16 @@ function render(t) {
   // ---------- SCENE 1A: pain ----------
   {
     const [a, b] = T.hookA;
-    const o = win(t, a, b, .01, .12);
+    const o = win(t, a, b, .01, .1);
     $('s1a').style.opacity = o;
     if (o > 0) {
-      const p1 = seg(t, 0, .35);
+      const p1 = seg(t, 0, .25);
       set('s1aTop', { s: lerp(2.5, 1, easeOutCubic(p1)), o: clamp(p1 * 2) });
-      const p2 = seg(t, .12, .5);
+      const p2 = seg(t, VO.pain - .2, VO.pain + .15);
       set('s1aBig', { s: lerp(3, 1, easeOutBack(p2)), o: clamp(p2 * 2), r: lerp(-8, 0, easeOutCubic(p2)) });
-      const pr = slideUp(t, .45, .4, 300);
+      const pr = slideUp(t, .3, .3, 300);
       set('receipt', { y: pr.y, o: pr.o, r: -3 });
-      const ps = seg(t, .9, 1.15);
+      const ps = seg(t, .6, .8);
       set('stamp', { s: lerp(2.6, 1, easeOutCubic(ps)), o: ps > 0 ? 1 : 0, r: -12 });
     }
   }
@@ -423,18 +454,18 @@ function render(t) {
   // ---------- SCENE 1B: payoff ----------
   {
     const [a, b] = T.hookB;
-    const o = win(t, a, b, .05, .2);
+    const o = win(t, a, b, .05, .15);
     $('s1b').style.opacity = o;
     if (o > 0) {
       const lt = t - a;
-      const p1 = seg(lt, 0, .3);
+      const p1 = seg(lt, 0, .25);
       set('s1bTop', { y: lerp(-80, 0, easeOutCubic(p1)), o: p1 });
-      const p2 = seg(lt, .08, .5);
+      const p2 = seg(t, VO.allYours - .12, VO.allYours + .3);
       set('s1bBig', { s: lerp(0, 1, easeOutElastic(p2)), o: clamp(p2 * 3) });
-      const pz = seg(lt, .55, 1.05);
+      const pz = seg(lt, .15, .55);
       set('zeroBadge', { s: lerp(0, 1, easeOutBack(pz)) * (1 + Math.sin(lt * 8) * .02 * pz), r: lerp(-200, 0, easeOutCubic(pz)), o: clamp(pz * 3) });
       for (const c of COINS) {
-        const ct = lt - .5 - c.delay;
+        const ct = lt - .2 - c.delay;
         if (ct < 0) { c.el.style.opacity = 0; continue; }
         const x = 485 + c.vx * ct;
         const y = 1250 + c.vy * ct + .5 * 3600 * ct * ct;
@@ -446,21 +477,19 @@ function render(t) {
   // ---------- SCENE 2: logo ----------
   {
     const [a, b] = T.logo;
-    const o = win(t, a, b, .05, .35);
+    const o = win(t, a, b, .05, .3);
     $('s2').style.opacity = o;
     if (o > 0) {
       const lt = t - a;
-      const pm = seg(lt, 0, .6);
+      const pm = seg(lt, 0, .5);
       const bob = Math.sin(lt * 6) * 6;
       set('logoMark', { s: lerp(0, 1, easeOutBack(pm)), r: lerp(-90, 0, easeOutCubic(pm)), y: bob });
-      const psc = seg(lt, .25, .9);
+      const psc = seg(lt, .15, .7);
       set('scooter', { x: lerp(-400, 0, easeOutCubic(psc)), o: psc });
-      const pn = slideUp(lt, .55, .5, 120);
-      set('logoName', pn);
-      const ptg = slideUp(lt, .8, .5, 80);
-      set('logoTag', ptg);
+      set('logoName', slideUp(t, VO.brand, .4, 120));
+      set('logoTag', slideUp(t, VO.tagline - .1, .5, 80));
       // exit: everything lifts up
-      const pe = easeInCubic(seg(t, b - .35, b));
+      const pe = easeInCubic(seg(t, b - .3, b));
       if (pe > 0) {
         set('logoMark', { s: 1 - pe * .4, y: -pe * 300 });
         set('logoName', { y: -pe * 300, o: 1 - pe });
@@ -474,17 +503,16 @@ function render(t) {
   feats.forEach((k, i) => {
     const [a, b] = T[k];
     const el = $('fh' + (i + 1));
-    const o = win(t, a, b, .3, .25);
+    const o = win(t, a, b, .25, .2);
     if (o <= 0) { el.style.opacity = 0; return; }
     const lt = t - a;
-    const pin = seg(lt, 0, .45);
-    const pout = seg(t, b - .25, b);
+    const pin = seg(lt, 0, .4);
+    const pout = seg(t, b - .2, b);
     set(el, { y: lerp(-60, 0, easeOutCubic(pin)) - pout * 60, o });
     const num = el.querySelector('.fnum');
-    const pn = seg(lt, 0, .45);
-    set(num, { s: lerp(0, 1, easeOutBack(pn)), r: lerp(-180, 0, easeOutCubic(pn)) });
+    set(num, { s: lerp(0, 1, easeOutBack(pin)), r: lerp(-180, 0, easeOutCubic(pin)) });
     const sub = el.querySelector('.fsub');
-    if (sub) { const ps = slideUp(lt, .35, .4, 40); set(sub, ps); }
+    if (sub) set(sub, slideUp(t, VO.noCommission - .1, .4, 40));
   });
 
   // ---------- phone ----------
@@ -493,12 +521,12 @@ function render(t) {
     if (t < a - .1 || t > b + .1) {
       $('phone').style.opacity = 0;
     } else {
-      const pin = easeOutCubic(seg(t, a - .1, a + .5));
-      const pout = easeInCubic(seg(t, b - .4, b));
+      const pin = easeOutCubic(seg(t, a - .1, a + .4));
+      const pout = easeInCubic(seg(t, b - .35, b));
       let x = 0, y = lerp(900, 0, pin) + pout * 1100, s = 1, r = lerp(12, 0, pin);
-      // feature 4: phone shrinks to the middle, devices flank
-      const [f4a, f4b] = T.f4;
-      const p4 = easeInOut(seg(t, f4a, f4a + .5)) * (1 - easeInOut(seg(t, f4b - .45, f4b)));
+      // feature 4: phone shrinks to the middle on "iPhone/Android", devices flank it
+      const [, f4b] = T.f4;
+      const p4 = easeInOut(seg(t, VO.platforms[0] - .3, VO.platforms[0] + .2)) * (1 - easeInOut(seg(t, f4b - .4, f4b)));
       s = lerp(.92, .6, p4);
       y += lerp(0, 200, p4);
       const float = Math.sin(t * 2.2) * 8;
@@ -508,55 +536,54 @@ function render(t) {
     // screens
     const screens = [['ui1', T.f1], ['ui2', T.f2], ['ui3', T.f3], ['ui4', T.f4], ['ui5', T.f5]];
     for (const [id, [sa, sb]] of screens) {
-      const o = win(t, sa, sb, .25, .2);
-      const pin = seg(t, sa, sa + .3);
+      const o = win(t, sa, sb, .2, .15);
+      const pin = seg(t, sa, sa + .25);
       set(id, { o, x: lerp(-120, 0, easeOutCubic(pin)) });
     }
 
-    // UI 1 details
+    // UI 1 details (profile page builds while "صفحة خاصة لكل مندوب" is spoken)
     {
       const lt = t - T.f1[0];
-      set('u1av', pop(lt, .35));
-      set('u1name', slideUp(lt, .55, .35, 40));
-      set('u1stars', slideUp(lt, .7, .35, 40));
-      set('u1chip', pop(lt, .85, .4));
-      set('u1card', slideUp(lt, 1.0, .35, 60));
-      set('u1card2', slideUp(lt, 1.15, .35, 60));
-      const pb = pop(lt, 1.35, .45);
-      const pulse = lt > 2.4 && lt < 2.8 ? 1 - Math.sin(seg(lt, 2.4, 2.8) * Math.PI) * .06 : 1;
+      set('u1av', pop(lt, .15, .35));
+      set('u1name', slideUp(lt, .25, .3, 40));
+      set('u1stars', slideUp(lt, .35, .3, 40));
+      set('u1chip', pop(lt, .45, .3));
+      set('u1card', slideUp(lt, .55, .3, 60));
+      set('u1card2', slideUp(lt, .65, .3, 60));
+      const pb = pop(lt, .75, .35);
+      const pulse = lt > 1.25 && lt < 1.5 ? 1 - Math.sin(seg(lt, 1.25, 1.5) * Math.PI) * .06 : 1;
       set('u1btn', { s: pb.s * pulse, o: pb.o });
     }
     // UI 2 details
     {
       const lt = t - T.f2[0];
-      set('u2plan', slideUp(lt, .3, .4, 60));
-      set('u2orders', slideUp(lt, .5, .4, 60));
-      set('u2comm', slideUp(lt, .7, .4, 60));
-      const pc = easeOutCubic(seg(lt, .8, 3.2));
+      set('u2plan', slideUp(lt, .2, .35, 60));
+      set('u2orders', slideUp(lt, .35, .35, 60));
+      set('u2comm', slideUp(lt, .5, .35, 60));
+      const pc = easeOutCubic(seg(lt, .6, 3.0));
       $('u2count').textContent = AR(Math.round(pc * 248));
-      const zp = lt > 1.2 ? 1 + Math.sin(lt * 7) * .04 : 1;
+      const zp = t > VO.noCommission ? 1 + Math.sin((t - VO.noCommission) * 7) * .06 : 1;
       set('u2zero', { s: zp });
     }
-    // UI 3 details
+    // UI 3 details (price slides while "تحدد تسعيرة التوصيل" is spoken)
     {
-      const lt = t - T.f3[0];
-      const pp = easeInOut(seg(lt, .7, 2.0));
+      const pp = easeInOut(seg(t, VO.f3 + .3, VO.f3 + 1.4));
       const val = Math.round(lerp(10, 25, pp));
       $('u3price').innerHTML = AR(val) + ' <span style="font-size:56px;">ر.س</span>';
       const frac = (val - 5) / 45;
       $('u3fill').style.width = (frac * 100) + '%';
       $('u3knob').style.right = (frac * 100) + '%';
-      set('u3r1', slideUp(lt, 1.9, .35, 50));
-      set('u3r2', slideUp(lt, 2.1, .35, 50));
-      set('u3r3', slideUp(lt, 2.3, .35, 50));
+      set('u3r1', slideUp(t, VO.f3 + 1.2, .3, 50));
+      set('u3r2', slideUp(t, VO.f3 + 1.35, .3, 50));
+      set('u3r3', slideUp(t, VO.f3 + 1.5, .3, 50));
     }
-    // UI 5 details
+    // UI 5 details (each method switches on as it is named)
     {
       const lt = t - T.f5[0];
       for (let i = 0; i < 5; i++) {
         const row = $('pm' + i);
-        set(row, slideUp(lt, .25 + i * .12, .35, 50));
-        const on = seg(lt, 1.0 + i * .38, 1.2 + i * .38);
+        set(row, slideUp(lt, .15 + i * .1, .35, 50));
+        const on = seg(t, VO.pay[i] - .05, VO.pay[i] + .15);
         const tg = row.querySelector('.toggle');
         tg.style.background = on > .5 ? '#22c55e' : '#cbd5e1';
         tg.querySelector('i').style.transform = `translateX(${-42 * easeOutCubic(on)}px)`;
@@ -567,14 +594,14 @@ function render(t) {
     {
       let target = null, to = 0, ts = 1;
       const l1 = t - T.f1[0];
-      if (l1 > 2.1 && l1 < 3.1) { target = $('u1btn'); to = win(l1, 2.1, 3.1, .15, .2); ts = l1 > 2.4 && l1 < 2.7 ? .8 : 1; }
-      const l3 = t - T.f3[0];
-      if (l3 > .4 && l3 < 2.4) { target = $('u3knob'); to = win(l3, .4, 2.4, .2, .3); ts = .85; }
-      const l5 = t - T.f5[0];
-      if (l5 > .8 && l5 < 3.3) {
-        const k = clamp(Math.floor((l5 - .9) / .38), 0, 4);
-        target = $('pm' + k).querySelector('.toggle'); to = win(l5, .8, 3.3, .15, .25);
-        const ph = ((l5 - .9) % .38) / .38; ts = ph > .2 && ph < .55 ? .78 : 1;
+      if (l1 > 1.0 && l1 < 1.7) { target = $('u1btn'); to = win(l1, 1.0, 1.7, .12, .15); ts = l1 > 1.25 && l1 < 1.45 ? .8 : 1; }
+      if (t > VO.f3 && t < VO.f3 + 1.7) { target = $('u3knob'); to = win(t, VO.f3, VO.f3 + 1.7, .2, .25); ts = .85; }
+      const p0 = VO.pay[0] - .5, p1 = VO.pay[4] + .5;
+      if (t > p0 && t < p1) {
+        let k = 0;
+        for (let i = 0; i < 5; i++) if (t >= VO.pay[i] - .3) k = i;
+        target = $('pm' + k).querySelector('.toggle'); to = win(t, p0, p1, .15, .25);
+        const d = t - VO.pay[k]; ts = d > -.12 && d < .1 ? .78 : 1;
       }
       if (target && to > 0) {
         const r = target.getBoundingClientRect(), sr = $('stage').getBoundingClientRect();
@@ -583,16 +610,25 @@ function render(t) {
     }
   }
 
-  // ---------- feature 4 devices ----------
+  // ---------- feature 4 devices (each device lands on its word) ----------
   {
-    const [a, b] = T.f4;
-    const o = win(t, a + .2, b, .35, .3);
-    const pin = easeOutBack(seg(t, a + .2, a + .7));
-    set('tablet', { o, x: lerp(-300, 0, easeOutCubic(seg(t, a + .2, a + .7))), r: lerp(-10, -4, pin) });
-    set('laptop', { o, x: lerp(300, 0, easeOutCubic(seg(t, a + .35, a + .85))), r: 3 });
-    set('laptopBase', { o, x: lerp(300, 0, easeOutCubic(seg(t, a + .35, a + .85))), r: 3 });
-    const pp = slideUp(t - a, .9, .4, 40);
-    set('platforms', { y: pp.y, o: Math.min(pp.o, o) });
+    const [, b] = T.f4;
+    const [iph, andr, tab, pc] = VO.platforms;
+    const ot = win(t, tab - .1, b, .25, .3);
+    set('tablet', { o: ot, x: lerp(-300, 0, easeOutCubic(seg(t, tab - .1, tab + .35))), r: lerp(-10, -4, easeOutBack(seg(t, tab - .1, tab + .35))) });
+    const ol = win(t, pc - .1, b, .25, .3);
+    const lx = lerp(300, 0, easeOutCubic(seg(t, pc - .1, pc + .35)));
+    set('laptop', { o: ol, x: lx, r: 3 });
+    set('laptopBase', { o: ol, x: lx, r: 3 });
+    const ow = win(t, iph - .1, b, .01, .3);
+    $('platforms').style.opacity = ow;
+    VO.platforms.forEach((pt, i) => {
+      const pp = pop(t, pt - .08, .35);
+      const hl = t >= pt - .05 && (i === 3 || t < VO.platforms[i + 1] - .05);
+      const el = $('pw' + i);
+      set(el, { s: pp.s, o: pp.o });
+      el.style.color = hl ? '#ffc93c' : '';
+    });
   }
 
   // ---------- CTA ----------
@@ -602,23 +638,32 @@ function render(t) {
     $('s7').style.opacity = o;
     if (o > 0) {
       const lt = t - a;
-      const p1 = seg(lt, 0, .35);
+      const p1 = seg(lt, 0, .3);
       set('ctaTitle', { s: lerp(2.2, 1, easeOutCubic(p1)), o: p1 });
-      const p2 = seg(lt, .15, .6);
+      const p2 = seg(t, VO.cta + .3, VO.cta + .7);
       set('ctaTitle2', { s: lerp(0, 1, easeOutElastic(p2)), o: clamp(p2 * 3) });
-      set('ctaSub', slideUp(lt, .55, .4, 40));
-      const pl = pop(lt, .7, .5);
+      const pl = pop(t, VO.cta + .2, .4);
       set('linkPill', { s: pl.s, o: pl.o });
-      const n = Math.floor(clamp((lt - 1.0) / 1.2) * LINK.length);
+      const n = Math.floor(clamp((t - VO.cta - .4) / 1.0) * LINK.length);
       $('linkChars').textContent = LINK.slice(0, n);
       $('caret').style.opacity = (Math.floor(lt * 3) % 2 === 0 || n < LINK.length) ? 1 : 0;
-      for (let i = 0; i < 4; i++) {
-        const ps = pop(lt, 2.2 + i * .12, .45);
-        const bob = lt > 3 ? Math.sin(lt * 4 + i) * 8 : 0;
-        set('sh' + i, { s: ps.s, o: ps.o, y: bob });
+      set('ctaSub', slideUp(t, VO.customers - .1, .4, 40));
+      // incoming orders while "customers order from you directly"; they clear before the social icons
+      const clear = easeInCubic(seg(t, VO.social[0] - .45, VO.social[0] - .1));
+      for (let i = 0; i < 3; i++) {
+        const ps = slideUp(t, VO.customers + .3 + i * .55, .35, 120);
+        const pp = pop(t, VO.customers + .3 + i * .55, .4, .6);
+        set('toast' + i, { y: ps.y + clear * 60, s: pp.s, o: ps.o * (1 - clear) });
       }
-      const pb = pop(lt, 2.9, .5);
-      const pulse = lt > 3.5 ? 1 + Math.sin((lt - 3.5) * 7) * .045 : 1;
+      // share icons pop as each platform is named (right-to-left: Instagram, TikTok, Snap, WhatsApp)
+      const order = [3, 2, 1, 0];
+      order.forEach((idx, k) => {
+        const ps = pop(t, VO.social[k] - .08, .4);
+        const bob = t > VO.social[3] + .5 ? Math.sin(lt * 4 + idx) * 8 : 0;
+        set('sh' + idx, { s: ps.s, o: ps.o, y: bob });
+      });
+      const pb = pop(t, VO.download - .1, .45);
+      const pulse = t > VO.download + .5 ? 1 + Math.sin((t - VO.download - .5) * 7) * .045 : 1;
       set('ctaBtn', { s: pb.s * pulse, o: pb.o });
     }
   }

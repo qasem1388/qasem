@@ -107,24 +107,29 @@ A2, F2, C3, G2 = 110.0, 87.31, 130.81, 98.0
 prog = [(A2, [220, 261.6, 329.6]), (F2, [174.6, 220, 261.6]), (C3, [261.6, 329.6, 392]), (G2, [196, 246.9, 293.7])]
 arp_notes = {A2: [440, 523.3, 659.3, 880], F2: [349.2, 440, 523.3, 698.5], C3: [523.3, 659.3, 784, 1046.5], G2: [392, 493.9, 587.3, 784]}
 
-# --- HOOK (0 - 3.2) ---
+# voice cues — keep in sync with const VO in index.html
+VO = dict(pain=.35, payoff=.97, allYours=1.77, brand=2.15, tagline=3.0, f1=5.63, f2=7.35, noCommission=8.67,
+          f3=10.9, f4=12.95, platforms=[15.15, 15.37, 16.02, 16.44], f5=17.6, pay=[19.24, 19.5, 19.95, 20.92, 21.8],
+          cta=22.2, customers=23.44, social=[26.15, 26.69, 27.14, 27.44], download=28.27)
+
+# --- HOOK ---
 add(impact(), 0.0, 1.0)
 add(snare(), 0.05, .8)
-add(buzz(), 0.92, 1.0)
-add(impact(), 0.95, .5)
-add(riser(.7), 0.95, .9)
-add(impact(), 1.65, .8)
-add(ding(), 1.75, 1.0)
+add(whoosh(.3), 0.25, .6)                     # receipt slides up
+add(buzz(), 0.6, 1.0)                         # cross stamp
+add(impact(), 0.62, .5)
+add(impact(), VO['payoff'], .8)
+add(ding(), VO['payoff'] + .05, 1.0)
 for k in range(8):  # coin sparkles
-    add(pop_sfx(1400 + 200 * k), 2.15 + k * .05, .5, pan=(-1) ** k * .5)
-add(pop_sfx(700), 2.25, 1.0)
-for b in range(3 if MUSIC else 0):  # quick beat under payoff
-    tt = 1.65 + b * BEAT
+    add(pop_sfx(1400 + 200 * k), VO['payoff'] + .2 + k * .05, .5, pan=(-1) ** k * .5)
+add(pop_sfx(700), VO['payoff'] + .3, 1.0)     # 0% badge
+add(impact(), VO['allYours'], .6)
+for b in range(2 if MUSIC else 0):  # quick beat under payoff
+    tt = VO['payoff'] + b * BEAT
     add(kick(), tt, .9); add(hat(), tt + BEAT / 2, 1.0)
-add(whoosh(.5), 2.85, .9)
 
 # --- MAIN GROOVE (3.2 - 30) ---
-start = 3.2
+start = VO['brand']
 bar = 0
 t0 = start
 while MUSIC and t0 < 29.5:
@@ -144,40 +149,60 @@ while MUSIC and t0 < 29.5:
                 add(pluck(arp_notes[root][(b * 2 + s) % 4], .2), tt + s * BEAT / 2, 1.0, pan=.4 if s else -.4)
     t0 += 4 * BEAT; bar += 1
 
-# feature transitions
-for tt in [6.2, 10.2, 14.2, 18.2, 21.8, 25.4]:
-    add(whoosh(.45), tt - .3, .8)
-    add(pop_sfx(600), tt + .05, .9)
-add(impact(), 25.4, .6)
-# UI pops
-for tt in [6.55, 6.75, 6.9, 7.05, 7.55, 10.5, 10.7, 10.9, 14.5, 18.4, 18.55, 22.05, 22.17, 22.29, 22.41, 22.53, 26.1, 27.6, 27.72, 27.84, 27.96, 28.3]:
-    add(pop_sfx(900), tt, .45)
-for k in range(5):  # toggles
-    add(click(), 21.8 + 1.05 + k * .38, 1.0)
-for k in range(21):  # typing link
-    add(click(), 26.4 + k * 1.2 / 21, .5)
-add(ding(), 28.4, .8)
-# outro sustain chord
+# scene transitions
+for tt in [VO['brand'], VO['f1'], VO['f2'], VO['f3'], VO['f4'], VO['f5'], VO['cta']]:
+    add(whoosh(.4), tt - .35, .8)
+    add(pop_sfx(600), tt - .08, .9)
+add(impact(), VO['cta'] - .1, .6)
+
+# logo
+add(whoosh(.6), VO['brand'] + .1, 1.0, pan=-.4)   # scooter drives in
+add(pop_sfx(500), VO['brand'], .9)
+add(whoosh(.4), VO['tagline'] - .1, .5)           # tagline
+add(whoosh(.6), VO['f1'] - .3, .7)                # phone slides up
+# feature 1: profile builds, tap on "order now"
+for d in [.15, .3, .45, .6, .75]:
+    add(pop_sfx(900), VO['f1'] - .13 + d, .45)
+add(click(), VO['f1'] - .13 + 1.3, 1.2); add(pop_sfx(1200), VO['f1'] - .13 + 1.32, .5)
+# feature 2: cards, counter ticking, 0 SAR
+for d in [.2, .35, .5]:
+    add(pop_sfx(900), VO['f2'] - .1 + d, .4)
+for k in range(30):
+    p = k / 29
+    add(click(), VO['f2'] - .1 + .6 + 2.4 * (1 - (1 - p) ** .5), .35 + .3 * (1 - p))
+add(ding(), VO['noCommission'], .5)
+add(whoosh(.35), VO['noCommission'] - .15, .4)
+# feature 3: slider ticks 10 -> 25, rows
+for k in range(16):
+    add(click(), VO['f3'] + .3 + 1.1 * k / 15, .6)
+add(pop_sfx(1100), VO['f3'] + 1.45, .7)
+for d in [1.2, 1.35, 1.5]:
+    add(pop_sfx(900), VO['f3'] + d, .35)
+# feature 4: each platform word pops; tablet + laptop slide in on their words
+for i, tt in enumerate(VO['platforms']):
+    add(pop_sfx(800 + 120 * i), tt - .05, .55)
+add(whoosh(.45), VO['platforms'][2] - .2, .8, pan=.6)
+add(whoosh(.45), VO['platforms'][3] - .2, .8, pan=-.6)
+# feature 5: rows, then a toggle click on each spoken payment method
+for i in range(5):
+    add(pop_sfx(900), VO['f5'] - .1 + .15 + i * .1, .35)
+for tt in VO['pay']:
+    add(click(), tt, 1.0); add(pop_sfx(1300), tt + .02, .35)
+add(whoosh(.5, up=False), VO['cta'] - .5, .6)     # phone drops out
+# CTA: link typing, incoming orders, social icons on their names, download button
+add(pop_sfx(700), VO['cta'] + .2, .7)
+for k in range(21):
+    add(click(), VO['cta'] + .4 + k * 1.0 / 21, .5)
+for i in range(3):
+    add(ding(), VO['customers'] + .3 + i * .55, .35)
+add(whoosh(.4, up=False), VO['social'][0] - .45, .5)
+for tt in VO['social']:
+    add(pop_sfx(1000), tt - .05, .7)
+add(impact(), VO['download'] - .1, .4)
+add(ding(), VO['download'] + .1, .8)
+add(click(), VO['download'] - .05, 1.0)
 if MUSIC:
     add(pad([220, 261.6, 329.6, 440], 1.6), 28.4, 1.4)
-
-# extra motion SFX
-add(whoosh(.6), 3.3, 1.0, pan=-.4)            # scooter drives in
-add(pop_sfx(500), 3.25, .9)                   # logo mark pops
-add(whoosh(.4), 3.85, .5); add(whoosh(.4), 4.05, .4)  # name + tagline slide up
-add(whoosh(.5, up=False), 5.85, .7)           # logo lifts away
-add(whoosh(.7), 5.9, .7)                      # phone slides up
-add(click(), 8.6, 1.2); add(pop_sfx(1200), 8.62, .5)  # tap "order now"
-for k in range(30):                           # orders counter ticking (ease-out spacing)
-    p = k / 29
-    add(click(), 11.0 + 2.4 * (1 - (1 - p) ** .5) * 1.0, .35 + .3 * (1 - p))
-add(ding(), 11.5, .4)                         # 0 SAR commission
-for k in range(16):                           # price slider ticks 10 -> 25
-    add(click(), 14.9 + 1.3 * k / 15, .6)
-add(pop_sfx(1100), 16.25, .7)
-add(whoosh(.5), 18.35, .8, pan=.6); add(whoosh(.5), 18.5, .8, pan=-.6)  # tablet + laptop slide in
-add(whoosh(.6, up=False), 24.95, .6)          # phone drops out
-add(click(), 28.3, 1.0)                       # CTA button lands
 
 mix = np.stack([L, R], 1)
 fade = np.ones(N); fn = int(.6 * SR); fade[-fn:] = np.linspace(1, 0, fn)
