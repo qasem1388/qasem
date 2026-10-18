@@ -1,0 +1,39 @@
+{
+  "product_image": "assets/watch.png",
+  "brand_latin": "Louis Martin",
+  "brand_arabic": "لويس مارتن",
+  "store_name": "متجر قاسم",
+  "cta": "اطلب الآن",
+
+  "colors": {
+    "gold": [212, 175, 55],
+    "gold_light": [245, 222, 150],
+    "gold_dark": [140, 105, 30],
+    "black": [6, 6, 8],
+    "white": [245, 242, 235]
+  },
+
+  "scene4_background": null,
+
+  "texts": {
+    "s1_line1": "مو كل ساعة…",
+    "s1_line2": "تستاهل تكون في يدك!",
+    "s2_tagline": "أناقة رجالية، وتفاصيل تخطف الأنظار",
+    "s3_badge": "مقاومة للماء | ضمان سنتين",
+    "s3_shield_number": "2",
+    "s3_shield_caption": "سنتين ضمان",
+    "s4_a": "في دوامك…",
+    "s4_b": "في مناسباتك…",
+    "s4_c": "حضورك يستاهل التميّز",
+    "s5_tagline": "فخامة تليق فيك"
+  },
+
+  "voiceover": [
+    {"file": "assets/vo/line1.wav", "start": 0.15, "text": "مو كل ساعة… تستاهل تكون في يدك!"},
+    {"file": "assets/vo/line2.wav", "start": 3.40, "text": "لويس مارتن… أناقة رجالية، وتفاصيل تخطف الأنظار."},
+    {"file": "assets/vo/line3.wav", "start": 9.60, "text": "مقاومة للماء… ومعها ضمان سنتين، لثقة تدوم."},
+    {"file": "assets/vo/line4.wav", "start": 16.50, "text": "في دوامك… في مناسباتك… حضورك يستاهل التميّز."},
+    {"file": "assets/vo/line5.wav", "start": 23.60, "text": "ساعة لويس مارتن… فخامة تليق فيك. اطلبها الحين من متجر قاسم."}
+  ],
+  "voiceover_full_track": "assets/vo/full.wav"
+}
