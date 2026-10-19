@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Hesabati",
+  "mainBinaryName": "Hesabati",
+  "version": "0.1.0",
+  "identifier": "sa.hesabati.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "حساباتي | Hesabati",
+        "width": 1366,
+        "height": 820,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "center": true,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: asset:",
+        "font-src": "'self' data:",
+        "connect-src": "ipc: http://ipc.localhost",
+        "object-src": "'none'",
+        "base-uri": "'self'",
+        "frame-ancestors": "'none'"
+      },
+      "freezePrototype": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "deb"],
+    "publisher": "Hesabati",
+    "copyright": "© 2026 Hesabati",
+    "category": "Business",
+    "shortDescription": "برنامج حساباتي المحاسبي",
+    "longDescription": "حساباتي | Hesabati — برنامج محاسبي سعودي لسطح المكتب للمحلات والمؤسسات والشركات الصغيرة والمتوسطة.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "embedBootstrapper" },
+      "nsis": {
+        "languages": ["Arabic", "English"],
+        "displayLanguageSelector": true,
+        "installMode": "currentUser"
+      },
+      "wix": {
+        "language": ["ar-SA", "en-US"]
+      }
+    }
+  }
+}

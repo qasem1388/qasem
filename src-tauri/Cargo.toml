@@ -1,0 +1,53 @@
+[package]
+name = "hesabati"
+version = "0.1.0"
+description = "حساباتي | Hesabati - Saudi accounting desktop application"
+authors = ["Hesabati"]
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+# The `_lib` suffix avoids a name clash with the binary on Windows (cargo#8519).
+name = "hesabati_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+tauri-plugin-log = "2.10"
+tauri-plugin-single-instance = "2.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# SQLCipher (AES-256 encrypted SQLite) compiled from source with a vendored OpenSSL,
+# so the installer does not depend on any system crypto library.
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl", "chrono"] }
+rust_decimal = { version = "1.43", features = ["serde-str"] }
+argon2 = { version = "0.5", features = ["std"] }
+rand = "0.8"
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2"
+zeroize = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+hex = "0.4"
+log = "0.4"
+
+[target.'cfg(windows)'.dependencies]
+# Windows Credential Manager (DPAPI-protected) holds the database key.
+keyring = { version = "3.6", features = ["windows-native"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
+# Optimise dependencies even in debug builds: Argon2 (64 MiB) and SQLCipher are
+# otherwise slow enough to make `tauri dev` logins take several seconds.
+[profile.dev.package."*"]
+opt-level = 3

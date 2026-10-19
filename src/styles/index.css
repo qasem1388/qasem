@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/* Dark mode is driven by a `.dark` class on <html> (see ThemeProvider). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic design tokens. Components use only these names, so the palette
+   can be rebranded in one place. */
+:root {
+  --bg: #f4f6f5;
+  --surface: #ffffff;
+  --surface-2: #f8faf9;
+  --surface-3: #eef2f1;
+  --border: #e2e8e6;
+  --border-strong: #cbd5d1;
+  --text: #0f1f1c;
+  --text-muted: #5b6b67;
+  --text-subtle: #8a9894;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-soft: #e6f4f2;
+  --primary-fg: #ffffff;
+  --accent: #b45309;
+  --accent-soft: #fef3e2;
+  --danger: #b91c1c;
+  --danger-soft: #fdecec;
+  --success: #15803d;
+  --success-soft: #e8f6ee;
+  --warning: #a16207;
+  --warning-soft: #fdf6e3;
+  --chart: #0d9488;
+  --sidebar: #0b2a27;
+  --sidebar-text: #c9dbd7;
+  --sidebar-active: #134e48;
+  --ring: rgb(15 118 110 / 0.35);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b1215;
+  --surface: #111a1f;
+  --surface-2: #152027;
+  --surface-3: #1b2830;
+  --border: #22313a;
+  --border-strong: #2f414c;
+  --text: #e6eeec;
+  --text-muted: #9fb0ac;
+  --text-subtle: #6f817d;
+  --primary: #2bb3a3;
+  --primary-hover: #4cc7b8;
+  --primary-soft: #0f2f2c;
+  --primary-fg: #04201d;
+  --accent: #f0a742;
+  --accent-soft: #33240f;
+  --danger: #f27171;
+  --danger-soft: #3a1717;
+  --success: #4ccb7d;
+  --success-soft: #11301f;
+  --warning: #e5b53e;
+  --warning-soft: #33290f;
+  --chart: #0d9488;
+  --sidebar: #070d10;
+  --sidebar-text: #a8bab6;
+  --sidebar-active: #12302c;
+  --ring: rgb(43 179 163 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-chart: var(--chart);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-active: var(--sidebar-active);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    /* Desktop shell: only inner regions scroll, never the window itself. */
+    overflow: hidden;
+    @apply bg-bg text-text font-sans antialiased;
+    font-feature-settings: "tnum" 1; /* aligned figures in tables */
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--primary-soft);
+  }
+}
+
+/* Thin, theme-aware scrollbars (WebView2 / WebKit). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* Numbers (amounts, VAT numbers, codes) always read left-to-right. */
+.num {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
