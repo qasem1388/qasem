@@ -1,3 +1,11 @@
+<?php
+declare(strict_types=1);
+require __DIR__ . '/includes/settings.php';
+$S = load_settings();
+function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+$wa = preg_replace('~\D~', '', (string)$S['whatsapp']);
+$waLocal = str_starts_with($wa, '966') ? '0' . substr($wa, 3) : '+' . $wa;
+?>
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -213,7 +221,7 @@ footer nav a:hover{color:#fff}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
-</head>
+<?= head_codes($S['codes']) ?></head>
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -248,9 +256,9 @@ footer nav a:hover{color:#fff}
         <a class="btn ghost" data-wa data-msg="مرحبًا قاسم، أرغب في طلب مشروع جديد" href="#" target="_blank" rel="noopener">اطلب مشروعك</a>
       </div>
       <div class="stats">
-        <div><b>+30</b><small>مشروع منجز</small></div>
-        <div><b>+15</b><small>تطبيق جاهز للبيع</small></div>
-        <div><b>48h</b><small>أسرع تسليم</small></div>
+        <?php foreach ($S['stats'] as $st): if (trim((string)$st['value']) === '') continue; ?>
+        <div><b><?= e($st['value']) ?></b><small><?= e($st['label']) ?></small></div>
+        <?php endforeach; ?>
       </div>
     </div>
     <div class="devices" aria-hidden="true">
@@ -320,9 +328,15 @@ footer nav a:hover{color:#fff}
   <div class="wrap">
     <div class="sh reveal"><div class="k">الباقات</div><h2>باقات تناسب كل مشروع</h2><p>أسعار تقريبية — السعر النهائي حسب المتطلبات</p></div>
     <div class="plans">
-      <div class="plan reveal"><h3>صفحة هبوط</h3><div class="pp">299 <small>ريال</small></div><p>مثالية للتعريف بنشاطك</p><ul><li>صفحة واحدة متجاوبة</li><li>زر واتساب مباشر</li><li>تسليم خلال 3 أيام</li></ul><a class="btn ghost" data-wa data-msg="مرحبًا قاسم، أرغب في باقة صفحة هبوط" href="#" target="_blank" rel="noopener">اطلب الآن</a></div>
-      <div class="plan hot reveal"><h3>موقع / تطبيق كامل <span class="hot-badge">الأكثر طلبًا</span></h3><div class="pp">899 <small>ريال</small></div><p>للمشاريع والمتاجر</p><ul><li>حتى 6 صفحات أو أقسام</li><li>لوحة تحكم بسيطة</li><li>ربط دومين واستضافة</li><li>دعم فني 30 يومًا</li></ul><a class="btn" data-wa data-msg="مرحبًا قاسم، أرغب في باقة الموقع / التطبيق الكامل" href="#" target="_blank" rel="noopener">اطلب الآن</a></div>
-      <div class="plan reveal"><h3>مشروع مخصص</h3><div class="pp" style="font-size:34px">حسب الطلب</div><p>أنظمة وتطبيقات متقدمة</p><ul><li>تحليل كامل للفكرة</li><li>ذكاء اصطناعي وأتمتة</li><li>دعم وتطوير مستمر</li></ul><a class="btn ghost" data-wa data-msg="مرحبًا قاسم، أرغب في استشارة لمشروع مخصص" href="#" target="_blank" rel="noopener">استشارة مجانية</a></div>
+      <?php foreach ($S['plans'] as $pl): $num = ctype_digit((string)$pl['price']); ?>
+      <div class="plan<?= !empty($pl['featured']) ? ' hot' : '' ?> reveal">
+        <h3><?= e($pl['name']) ?><?php if (!empty($pl['badge'])): ?> <span class="hot-badge"><?= e($pl['badge']) ?></span><?php endif; ?></h3>
+        <?php if ($num): ?><div class="pp"><?= e($pl['price']) ?> <small>ريال</small></div><?php else: ?><div class="pp" style="font-size:34px"><?= e($pl['price']) ?></div><?php endif; ?>
+        <p><?= e($pl['note']) ?></p>
+        <ul><?php foreach ($pl['features'] as $ft): ?><li><?= e($ft) ?></li><?php endforeach; ?></ul>
+        <a class="btn<?= empty($pl['featured']) ? ' ghost' : '' ?>" data-wa data-msg="<?= e('مرحبًا قاسم، أرغب في باقة ' . $pl['name']) ?>" href="#" target="_blank" rel="noopener"><?= e($pl['button'] ?: 'اطلب الآن') ?></a>
+      </div>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
@@ -345,7 +359,7 @@ footer nav a:hover{color:#fff}
     <div class="cbox reveal">
       <div style="position:relative;z-index:1"><h2>جاهز تبدأ مشروعك؟<br>تواصل معي الآن</h2><p>أرسل فكرتك على الواتساب وسأرد عليك بعرض سعر واضح خلال ساعات.</p></div>
       <div class="side">
-        <div class="row"><b>واتساب</b><span dir="ltr">0596125002</span></div>
+        <div class="row"><b>واتساب</b><span dir="ltr"><?= e($waLocal) ?></span></div>
         <div class="row"><b>أوقات الرد</b><span>يوميًا 10ص – 11م</span></div>
         <div class="row" style="border:0"><b>مدة الرد</b><span>خلال ساعات</span></div>
         <a class="btn wa" data-wa href="#" target="_blank" rel="noopener"><svg><use href="#wa"/></svg>راسلني على واتساب</a>
@@ -367,7 +381,7 @@ footer nav a:hover{color:#fff}
 
 <script>
 // رقم الواتساب (السعودية)
-const WA = "966596125002";
+const WA = <?= json_encode($wa) ?>;
 
 // الأعمال تُضاف من لوحة التحكم (admin/) وتُحفظ في data/projects.json
 let projects = [];
@@ -438,5 +452,5 @@ document.getElementById("yr").textContent = new Date().getFullYear();
 const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), {threshold:.12});
 document.querySelectorAll(".reveal").forEach(el => io.observe(el));
 </script>
-</body>
+<?= body_codes($S['codes']) ?></body>
 </html>

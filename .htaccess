@@ -1,5 +1,10 @@
-# تحويل كل الزوار إلى النسخة الآمنة https
+DirectoryIndex index.php index.html
 RewriteEngine On
+
+# تحويل كل الزوار إلى النسخة الآمنة https
 RewriteCond %{HTTPS} off
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ملف ads.txt الخاص بـ AdSense يُولَّد من لوحة التحكم
+RewriteRule ^ads\.txt$ ads.php [L]

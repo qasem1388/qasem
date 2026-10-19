@@ -12,6 +12,23 @@ const UPLOADS = ROOT . '/uploads';
 const MAX_IMG = 5 * 1024 * 1024;
 const PLATFORMS = ['replit' => 'Replit', 'claude' => 'Claude', 'claude-code' => 'Claude Code', 'chatgpt' => 'ChatGPT'];
 const TYPES     = ['site' => 'موقع', 'app' => 'تطبيق'];
+const TABS      = ['projects' => 'الأعمال', 'plans' => 'الباقات', 'codes' => 'الأكواد والتتبع', 'general' => 'الإعدادات'];
+const CODE_LABELS = [
+    'gsc'          => ['Google Search Console', 'الصق وسم التحقق كاملًا أو الكود فقط', '<meta name="google-site-verification" content="...">'],
+    'ga'           => ['Google Analytics 4', 'معرّف القياس (Measurement ID)', 'G-XXXXXXXXXX'],
+    'adsense'      => ['Google AdSense', 'معرّف الناشر — يُنشأ ملف ads.txt تلقائيًا', 'pub-1234567890123456'],
+    'meta_pixel'   => ['Meta Pixel (فيسبوك وإنستغرام)', 'رقم البيكسل (Pixel ID)', '123456789012345'],
+    'tiktok_pixel' => ['TikTok Pixel', 'معرّف البيكسل (Pixel ID)', 'C1A2B3C4D5E6F7G8H9I0'],
+    'snap_pixel'   => ['Snapchat Pixel', 'معرّف البيكسل (Pixel ID)', 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'],
+    'x_pixel'      => ['X (تويتر) Pixel', 'معرّف البيكسل (Pixel ID)', 'abc12'],
+];
+
+require ROOT . '/includes/settings.php';
+
+// يحوّل الأرقام العربية (٠١٢) إلى أرقام إنجليزية
+function latin_digits(string $s): string { return strtr($s, ['٠'=>'0','١'=>'1','٢'=>'2','٣'=>'3','٤'=>'4','٥'=>'5','٦'=>'6','٧'=>'7','٨'=>'8','٩'=>'9']); }
+
+function clip($v, int $n): string { return mb_substr(trim((string)$v), 0, $n); }
 
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
@@ -172,6 +189,80 @@ if ($authed && $action === 'move') {
     back();
 }
 
+// ---------- الباقات ----------
+if ($authed && $action === 'save_plans') {
+    check_csrf();
+    $plans = [];
+    foreach ((array)($_POST['plans'] ?? []) as $p) {
+        if (!is_array($p) || !empty($p['delete']) || clip($p['name'] ?? '', 60) === '') continue;
+        $lines = preg_split('~\R~u', (string)($p['features'] ?? ''));
+        $plans[] = [
+            'order'    => (int)($p['order'] ?? 0),
+            'name'     => clip($p['name'], 60),
+            'price'    => latin_digits(clip($p['price'] ?? '', 30)),
+            'note'     => clip($p['note'] ?? '', 120),
+            'badge'    => clip($p['badge'] ?? '', 30),
+            'featured' => !empty($p['featured']),
+            'button'   => clip($p['button'] ?? '', 30),
+            'features' => array_values(array_filter(array_map(fn($l) => clip($l, 100), $lines), fn($l) => $l !== '')),
+        ];
+    }
+    usort($plans, fn($a, $b) => $a['order'] <=> $b['order']);
+    $s = load_settings();
+    $s['plans'] = array_map(function ($p) { unset($p['order']); return $p; }, $plans);
+    save_settings($s);
+    flash('تم حفظ الباقات وأصبحت ظاهرة في الموقع.');
+    back('?tab=plans');
+}
+
+// ---------- أكواد التتبع والإعلانات ----------
+if ($authed && $action === 'save_codes') {
+    check_csrf();
+    $s = load_settings();
+    $bad = [];
+    foreach (array_keys(CODE_RULES) as $k) {
+        $v = normalize_code_id($k, (string)($_POST[$k] ?? ''));
+        if (!valid_code_id($k, $v)) { $bad[] = CODE_LABELS[$k][0]; continue; }
+        $s['codes'][$k] = $v;
+    }
+    $s['codes']['head'] = trim((string)($_POST['head'] ?? ''));
+    $s['codes']['body'] = trim((string)($_POST['body'] ?? ''));
+    save_settings($s);
+    if ($bad) flash('تم حفظ الباقي، لكن هذه المعرّفات غير صحيحة ولم تُحفظ: ' . implode('، ', $bad), false);
+    else flash('تم حفظ الأكواد وأصبحت مفعّلة في الموقع.');
+    back('?tab=codes');
+}
+
+// ---------- الإعدادات العامة ----------
+if ($authed && $action === 'save_general') {
+    check_csrf();
+    $s = load_settings();
+    $wa = preg_replace('~\D~', '', latin_digits((string)($_POST['whatsapp'] ?? '')));
+    if (str_starts_with($wa, '00')) $wa = substr($wa, 2);
+    if (str_starts_with($wa, '05')) $wa = '966' . substr($wa, 1);
+    if (strlen($wa) < 10 || strlen($wa) > 15) { flash('رقم الواتساب غير صحيح. اكتبه مثل 0596125002', false); back('?tab=general'); }
+    $s['whatsapp'] = $wa;
+    $s['stats'] = [];
+    foreach ((array)($_POST['stats'] ?? []) as $st) {
+        if (!is_array($st)) continue;
+        $s['stats'][] = ['value' => clip($st['value'] ?? '', 12), 'label' => clip($st['label'] ?? '', 40)];
+    }
+    save_settings($s);
+    flash('تم حفظ الإعدادات.');
+    back('?tab=general');
+}
+
+if ($authed && $action === 'change_password') {
+    check_csrf();
+    $p = (string)($_POST['new'] ?? '');
+    if (!password_verify((string)($_POST['current'] ?? ''), $hash)) { sleep(2); flash('كلمة المرور الحالية غير صحيحة.', false); back('?tab=general'); }
+    if (mb_strlen($p) < 8) { flash('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', false); back('?tab=general'); }
+    if ($p !== ($_POST['confirm'] ?? '')) { flash('كلمتا المرور الجديدتان غير متطابقتين.', false); back('?tab=general'); }
+    file_put_contents(AUTH, '<?php return ' . var_export(password_hash($p, PASSWORD_DEFAULT), true) . ";\n", LOCK_EX);
+    flash('تم تغيير كلمة المرور.');
+    back('?tab=general');
+}
+
 // ---------- العرض ----------
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -182,6 +273,8 @@ $old = $_SESSION['old'] ?? null;
 unset($_SESSION['old']);
 $form = $old ? array_merge($edit ?? [], $old) : $edit;
 $writable = is_writable(ROOT . '/data');
+$tab = array_key_exists($_GET['tab'] ?? '', TABS) ? $_GET['tab'] : 'projects';
+$S = $authed ? load_settings() : [];
 ?>
 <!doctype html>
 <html lang="ar" dir="rtl">
@@ -242,8 +335,24 @@ textarea{min-height:90px;resize:vertical}
 .login form{display:flex;flex-direction:column;gap:14px}
 .cur-img{display:flex;align-items:center;gap:12px;margin-top:8px}
 .cur-img img{width:90px;height:60px;object-fit:cover;border-radius:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px}
+.tabs a{padding:9px 18px;border-radius:10px;font-weight:700;color:var(--muted)}
+.tabs a.on{background:var(--ink);color:#fff}
+.plan-box{border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;background:var(--bg)}
+.plan-box.new{border-style:dashed;background:#fff}
+.plan-box h3{font-size:17px;font-weight:800;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.plan-box textarea{min-height:110px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.code-row{border-bottom:1px solid var(--line);padding:16px 0}
+.code-row:last-of-type{border:0}
+.code-row label{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.on-tag{font-size:12px;font-weight:800;padding:2px 10px;border-radius:7px;background:#E7F7EE;color:var(--ok)}
+.off-tag{font-size:12px;font-weight:800;padding:2px 10px;border-radius:7px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+textarea.code{font-family:ui-monospace,Consolas,monospace;font-size:13px;direction:ltr;text-align:left;min-height:120px}
+input.ltr{direction:ltr;text-align:left}
+.stats-grid{display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px}
 @media (max-width:700px){
-  form.grid{grid-template-columns:1fr}
+  form.grid,.pgrid,.stats-grid{grid-template-columns:1fr}
   .item{flex-wrap:wrap}
   .acts{width:100%;justify-content:flex-start}
   .card{padding:20px}
@@ -291,6 +400,11 @@ textarea{min-height:90px;resize:vertical}
   </div>
 
 <?php else: ?>
+  <nav class="tabs">
+    <?php foreach (TABS as $k => $v): ?><a href="?tab=<?= $k ?>" class="<?= $tab === $k ? 'on' : '' ?>"><?= $v ?></a><?php endforeach; ?>
+  </nav>
+
+<?php if ($tab === 'projects'): ?>
   <div class="card">
     <h2><?= $edit ? 'تعديل المشروع' : 'إضافة مشروع جديد' ?></h2>
     <form class="grid" method="post" enctype="multipart/form-data">
@@ -348,6 +462,88 @@ textarea{min-height:90px;resize:vertical}
       </div>
     <?php endif; ?>
   </div>
+
+<?php elseif ($tab === 'plans'): ?>
+  <form method="post" class="card">
+    <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="action" value="save_plans">
+    <h2>الباقات المعروضة في الموقع</h2>
+    <p class="muted" style="margin-bottom:18px">اكتب السعر رقمًا (مثل 299) ليظهر بجانبه «ريال»، أو نصًا مثل «حسب الطلب». المميزات: كل ميزة في سطر.</p>
+    <?php $plans = $S['plans']; $plans[] = null; foreach ($plans as $i => $p): $new = $p === null; $p = $p ?? ['name' => '', 'price' => '', 'note' => '', 'badge' => '', 'featured' => false, 'button' => 'اطلب الآن', 'features' => []]; ?>
+      <div class="plan-box<?= $new ? ' new' : '' ?>">
+        <h3><?= $new ? '➕ إضافة باقة جديدة (اتركها فارغة إن لم تحتجها)' : 'باقة ' . ($i + 1) . ': ' . h($p['name']) ?>
+          <?php if (!$new): ?><label class="check" style="font-size:14px;color:var(--err)"><input type="checkbox" name="plans[<?= $i ?>][delete]" value="1"> حذف هذه الباقة</label><?php endif; ?>
+        </h3>
+        <div class="pgrid">
+          <div><label>اسم الباقة</label><input type="text" name="plans[<?= $i ?>][name]" maxlength="60" value="<?= h($p['name']) ?>"></div>
+          <div><label>السعر</label><input type="text" name="plans[<?= $i ?>][price]" maxlength="30" value="<?= h($p['price']) ?>" placeholder="299 أو حسب الطلب"></div>
+          <div><label>وصف قصير</label><input type="text" name="plans[<?= $i ?>][note]" maxlength="120" value="<?= h($p['note']) ?>"></div>
+          <div><label>نص الزر</label><input type="text" name="plans[<?= $i ?>][button]" maxlength="30" value="<?= h($p['button']) ?>"></div>
+          <div><label>شارة مميزة (اختياري)</label><input type="text" name="plans[<?= $i ?>][badge]" maxlength="30" value="<?= h($p['badge']) ?>" placeholder="مثل: الأكثر طلبًا"></div>
+          <div><label>الترتيب</label><input type="number" name="plans[<?= $i ?>][order]" value="<?= $i + 1 ?>"></div>
+          <div class="full"><label>المميزات (كل ميزة في سطر)</label><textarea name="plans[<?= $i ?>][features]"><?= h(implode("\n", $p['features'])) ?></textarea></div>
+          <div class="full"><label class="check"><input type="checkbox" name="plans[<?= $i ?>][featured]" value="1" <?= !empty($p['featured']) ? 'checked' : '' ?>> باقة مميزة (تظهر بخلفية سوداء)</label></div>
+        </div>
+      </div>
+    <?php endforeach; ?>
+    <button class="btn">حفظ الباقات</button>
+  </form>
+
+<?php elseif ($tab === 'codes'): ?>
+  <form method="post" class="card">
+    <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="action" value="save_codes">
+    <h2>أكواد التتبع والإعلانات</h2>
+    <p class="muted" style="margin-bottom:8px">يكفي لصق المعرّف فقط، أو الكود كاملًا وسيستخرج النظام المعرّف منه تلقائيًا. اترك الخانة فارغة لإيقاف الكود.</p>
+    <?php foreach (CODE_LABELS as $k => [$label, $hint, $ph]): ?>
+      <div class="code-row">
+        <label><?= h($label) ?> <?= $S['codes'][$k] !== '' ? '<span class="on-tag">مفعّل</span>' : '<span class="off-tag">غير مفعّل</span>' ?></label>
+        <input type="text" class="ltr" name="<?= $k ?>" value="<?= h($S['codes'][$k]) ?>" placeholder="<?= h($ph) ?>">
+        <div class="hint"><?= h($hint) ?><?php if ($k === 'adsense' && $S['codes'][$k] !== ''): ?> — <a href="../ads.txt" target="_blank" style="color:var(--brand)">عرض ads.txt</a><?php endif; ?></div>
+      </div>
+    <?php endforeach; ?>
+    <div class="code-row">
+      <label>أكواد إضافية داخل &lt;head&gt; <?= trim($S['codes']['head']) !== '' ? '<span class="on-tag">مفعّل</span>' : '' ?></label>
+      <textarea class="code" name="head" placeholder="<!-- مثل Google Tag Manager أو أي بيكسل آخر -->"><?= h($S['codes']['head']) ?></textarea>
+      <div class="hint">لأي كود آخر تطلب المنصة وضعه في &lt;head&gt;، مثل Google Tag Manager أو LinkedIn أو Pinterest.</div>
+    </div>
+    <div class="code-row">
+      <label>أكواد إضافية قبل &lt;/body&gt; <?= trim($S['codes']['body']) !== '' ? '<span class="on-tag">مفعّل</span>' : '' ?></label>
+      <textarea class="code" name="body" placeholder="<!-- مثل جزء noscript من Google Tag Manager أو أداة دردشة -->"><?= h($S['codes']['body']) ?></textarea>
+    </div>
+    <p class="msg err" style="margin:16px 0;font-weight:500;font-size:14px">تنبيه: الأكواد في الخانتين الأخيرتين تُضاف للموقع كما هي، فالصق فقط أكوادًا من مصادر موثوقة مثل Google أو منصات التواصل نفسها.</p>
+    <button class="btn">حفظ الأكواد</button>
+  </form>
+
+<?php else: ?>
+  <form method="post" class="card">
+    <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="action" value="save_general">
+    <h2>الإعدادات العامة</h2>
+    <div style="margin-bottom:22px">
+      <label>رقم الواتساب</label>
+      <input type="text" class="ltr" name="whatsapp" value="<?= h(str_starts_with($S['whatsapp'], '966') ? '0' . substr($S['whatsapp'], 3) : $S['whatsapp']) ?>" placeholder="0596125002" style="max-width:320px">
+      <div class="hint">رقم سعودي مثل 0596125002، أو رقم دولي كامل مع رمز الدولة.</div>
+    </div>
+    <label>الأرقام في البنر الرئيسي</label>
+    <div class="hint" style="margin-bottom:10px">اترك الرقم فارغًا لإخفاء الخانة.</div>
+    <?php for ($i = 0; $i < 3; $i++): $st = $S['stats'][$i] ?? ['value' => '', 'label' => '']; ?>
+      <div class="stats-grid">
+        <input type="text" name="stats[<?= $i ?>][value]" maxlength="12" value="<?= h($st['value']) ?>" placeholder="+30">
+        <input type="text" name="stats[<?= $i ?>][label]" maxlength="40" value="<?= h($st['label']) ?>" placeholder="مشروع منجز">
+      </div>
+    <?php endfor; ?>
+    <button class="btn" style="margin-top:8px">حفظ الإعدادات</button>
+  </form>
+
+  <form method="post" class="card">
+    <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="action" value="change_password">
+    <h2>تغيير كلمة المرور</h2>
+    <div style="display:grid;gap:12px;max-width:420px">
+      <div><label>كلمة المرور الحالية</label><input type="password" name="current" required autocomplete="current-password"></div>
+      <div><label>كلمة المرور الجديدة</label><input type="password" name="new" minlength="8" required autocomplete="new-password"></div>
+      <div><label>تأكيد الجديدة</label><input type="password" name="confirm" minlength="8" required autocomplete="new-password"></div>
+      <div><button class="btn">تغيير كلمة المرور</button></div>
+    </div>
+  </form>
+<?php endif; ?>
 <?php endif; ?>
 </main>
 </body>
