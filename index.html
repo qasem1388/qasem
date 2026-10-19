@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حاسبة قوس قزح</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap">
+<style>
+  /* Layout: one centered calculator "toy" on a night-sky ground; every key is its own candy color. */
+  :root {
+    --ground: #1b1640;
+    --ground-2: #2a1f5c;
+    --shell: #fffaf0;
+    --screen: #14112e;
+    --screen-text: #fdfcff;
+    --muted: #a59fd0;
+    --ink: #1b1640;
+
+    --k-red: #ff4d6d;
+    --k-orange: #ff8a1f;
+    --k-yellow: #ffd23f;
+    --k-lime: #8bd346;
+    --k-green: #1fc98e;
+    --k-cyan: #22c3ee;
+    --k-blue: #4f7cff;
+    --k-violet: #9b5cff;
+    --k-pink: #ff5cc8;
+    --k-teal: #14b8a6;
+
+    --font-display: "Baloo Bhaijaan 2", "Segoe UI", Tahoma, system-ui, sans-serif;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    font-family: var(--font-display);
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255, 92, 200, .35), transparent 40%),
+      radial-gradient(circle at 85% 15%, rgba(34, 195, 238, .30), transparent 40%),
+      radial-gradient(circle at 70% 90%, rgba(255, 210, 63, .25), transparent 45%),
+      linear-gradient(160deg, var(--ground), var(--ground-2));
+    background-color: var(--ground);
+    color: var(--screen-text);
+    display: grid;
+    place-items: center;
+    padding-block: 24px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  .calc {
+    width: 100%;
+    max-width: 380px;
+    background: var(--shell);
+    border-radius: 32px;
+    padding: 18px;
+    box-shadow: 0 6px 0 #d9cfff, 0 30px 60px rgba(0, 0, 0, .45);
+    display: grid;
+    gap: 16px;
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--ink);
+  }
+  .brand {
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: .01em;
+    background: linear-gradient(90deg, var(--k-red), var(--k-orange), var(--k-yellow), var(--k-green), var(--k-cyan), var(--k-violet), var(--k-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sound {
+    font: inherit;
+    font-weight: 700;
+    font-size: .9rem;
+    border: 0;
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    background: var(--k-green);
+    color: var(--ink);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, .2);
+  }
+  .sound[aria-pressed="false"] { background: #d8d3ea; }
+
+  .screen {
+    direction: ltr;
+    background: var(--screen);
+    border-radius: 22px;
+    padding: 14px 18px 12px;
+    min-height: 116px;
+    display: grid;
+    align-content: end;
+    gap: 2px;
+    text-align: right;
+    overflow: hidden;
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, .5);
+  }
+  .expr {
+    color: var(--muted);
+    font-size: 1.05rem;
+    min-height: 1.5em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+  .value {
+    font-weight: 800;
+    font-size: 3rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    font-variant-numeric: tabular-nums;
+    transition: color .2s;
+  }
+  .value::-webkit-scrollbar { display: none; }
+  .value.small { font-size: 2.1rem; }
+  .value.pop { animation: pop .35s ease; }
+  .value.err { color: var(--k-red); }
+
+  .keys {
+    direction: ltr;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .key {
+    --c: var(--k-blue);
+    font: inherit;
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: #fff;
+    background: var(--c);
+    border: 0;
+    border-radius: 20px;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0, 0, 0, .22), inset 0 -4px 0 rgba(0, 0, 0, .12), inset 0 3px 0 rgba(255, 255, 255, .35);
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .15);
+    transition: transform .08s, box-shadow .08s, filter .15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .key:hover { filter: brightness(1.08); }
+  .key:active, .key.down {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .22), inset 0 -2px 0 rgba(0, 0, 0, .12), inset 0 3px 0 rgba(255, 255, 255, .35);
+  }
+  .key:focus-visible { outline: 4px solid var(--ink); outline-offset: 2px; }
+  .key.dark-text { color: var(--ink); text-shadow: none; }
+  .key.fn { font-size: 1.3rem; }
+  .key.op { font-size: 1.9rem; }
+  .key.op.active { outline: 4px solid var(--ink); outline-offset: -4px; }
+  .key.equals { grid-column: span 2; aspect-ratio: auto; font-size: 2rem;
+    background: linear-gradient(90deg, var(--k-pink), var(--k-orange)); }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .value.pop { animation: none; }
+    .key { transition: none; }
+  }
+  @media (max-width: 360px) {
+    .key { font-size: 1.35rem; border-radius: 16px; }
+    .value { font-size: 2.4rem; }
+  }
+</style>
+</head>
+<body>
+<main class="calc" aria-label="آلة حاسبة">
+  <div class="top">
+    <span class="brand">حاسبة قوس قزح</span>
+    <button class="sound" id="sound" type="button" aria-pressed="true">🔊 الصوت يعمل</button>
+  </div>
+
+  <div class="screen" role="status" aria-live="polite">
+    <div class="expr" id="expr"></div>
+    <div class="value" id="value">0</div>
+  </div>
+
+  <div class="keys" id="keys">
+    <button class="key fn" type="button" data-action="clear" style="--c: var(--k-red)">AC</button>
+    <button class="key fn" type="button" data-action="back" style="--c: var(--k-orange)" aria-label="حذف">⌫</button>
+    <button class="key fn" type="button" data-action="percent" style="--c: var(--k-teal)">%</button>
+    <button class="key op" type="button" data-op="/" style="--c: var(--k-violet)" aria-label="قسمة">÷</button>
+
+    <button class="key" type="button" data-digit="7" style="--c: var(--k-pink)">7</button>
+    <button class="key" type="button" data-digit="8" style="--c: var(--k-orange)">8</button>
+    <button class="key dark-text" type="button" data-digit="9" style="--c: var(--k-yellow)">9</button>
+    <button class="key op" type="button" data-op="*" style="--c: var(--k-violet)" aria-label="ضرب">×</button>
+
+    <button class="key dark-text" type="button" data-digit="4" style="--c: var(--k-lime)">4</button>
+    <button class="key" type="button" data-digit="5" style="--c: var(--k-green)">5</button>
+    <button class="key" type="button" data-digit="6" style="--c: var(--k-cyan)">6</button>
+    <button class="key op" type="button" data-op="-" style="--c: var(--k-violet)" aria-label="طرح">−</button>
+
+    <button class="key" type="button" data-digit="1" style="--c: var(--k-blue)">1</button>
+    <button class="key" type="button" data-digit="2" style="--c: var(--k-red)">2</button>
+    <button class="key" type="button" data-digit="3" style="--c: var(--k-teal)">3</button>
+    <button class="key op" type="button" data-op="+" style="--c: var(--k-violet)" aria-label="جمع">+</button>
+
+    <button class="key" type="button" data-digit="0" style="--c: var(--k-pink)">0</button>
+    <button class="key dark-text" type="button" data-action="dot" style="--c: var(--k-yellow)" aria-label="فاصلة عشرية">.</button>
+    <button class="key equals" type="button" data-action="equals" aria-label="يساوي">=</button>
+  </div>
+</main>
+
+<script>
+(() => {
+  // ---------- Sound (Web Audio, no files needed) ----------
+  let ctx = null;
+  let soundOn = true;
+  // A bright major-pentatonic scale: each digit gets its own note.
+  const digitNotes = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.51, 1567.98, 1760.0];
+
+  function audio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  function tone(freq, { type = "sine", start = 0, dur = 0.15, vol = 0.25, slideTo = null } = {}) {
+    if (!soundOn) return;
+    const a = audio();
+    if (!a) return;
+    const t = a.currentTime + start;
+    const osc = a.createOscillator();
+    const gain = a.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain).connect(a.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+  }
+
+  const sounds = {
+    digit: d => { tone(digitNotes[d], { type: "sine", dur: 0.18 }); tone(digitNotes[d] * 2, { type: "sine", dur: 0.08, vol: 0.06 }); },
+    op: () => tone(440, { type: "triangle", dur: 0.16, vol: 0.28, slideTo: 660 }),
+    dot: () => tone(1500, { type: "sine", dur: 0.06, vol: 0.18 }),
+    back: () => tone(500, { type: "triangle", dur: 0.1, vol: 0.2, slideTo: 300 }),
+    clear: () => [880, 660, 440].forEach((f, i) => tone(f, { type: "triangle", start: i * 0.06, dur: 0.12, vol: 0.2 })),
+    equals: () => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+      tone(f, { type: "sine", start: i * 0.08, dur: i === 3 ? 0.45 : 0.2, vol: 0.25 })),
+    error: () => tone(160, { type: "sawtooth", dur: 0.3, vol: 0.15, slideTo: 90 }),
+  };
+
+  // ---------- Calculator ----------
+  const valueEl = document.getElementById("value");
+  const exprEl = document.getElementById("expr");
+  const symbols = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+
+  let current = "0";    // number being typed
+  let previous = null;  // stored left operand
+  let operator = null;  // pending operator
+  let fresh = false;    // next digit replaces `current`
+  let errored = false;
+
+  function format(n) {
+    if (!isFinite(n)) return null;
+    const r = Math.round(n * 1e10) / 1e10;
+    const s = String(r);
+    return s.length > 14 ? r.toPrecision(10).replace(/\.?0+(e|$)/, "$1") : s;
+  }
+
+  function compute(a, b, op) {
+    switch (op) {
+      case "+": return a + b;
+      case "-": return a - b;
+      case "*": return a * b;
+      case "/": return b === 0 ? NaN : a / b;
+    }
+    return b;
+  }
+
+  function render(pop = false) {
+    valueEl.textContent = current;
+    valueEl.classList.toggle("small", current.length > 9);
+    valueEl.classList.toggle("err", errored);
+    exprEl.textContent = previous !== null && operator ? `${previous} ${symbols[operator]}` : exprEl.dataset.done || "";
+    document.querySelectorAll(".key.op").forEach(k =>
+      k.classList.toggle("active", fresh && k.dataset.op === operator));
+    if (pop) {
+      valueEl.classList.remove("pop");
+      void valueEl.offsetWidth;
+      valueEl.classList.add("pop");
+    }
+  }
+
+  function resetIfError() {
+    if (errored) { current = "0"; previous = null; operator = null; errored = false; }
+  }
+
+  function inputDigit(d) {
+    resetIfError();
+    exprEl.dataset.done = "";
+    if (fresh || current === "0") { current = d; fresh = false; }
+    else if (current.replace(/[-.]/g, "").length < 15) current += d;
+    sounds.digit(Number(d));
+    render();
+  }
+
+  function inputDot() {
+    resetIfError();
+    exprEl.dataset.done = "";
+    if (fresh) { current = "0."; fresh = false; }
+    else if (!current.includes(".")) current += ".";
+    sounds.dot();
+    render();
+  }
+
+  function setOperator(op) {
+    resetIfError();
+    exprEl.dataset.done = "";
+    if (operator && !fresh) {
+      const out = format(compute(Number(previous), Number(current), operator));
+      if (out === null) return fail();
+      current = out;
+    }
+    previous = current;
+    operator = op;
+    fresh = true;
+    sounds.op();
+    render();
+  }
+
+  function equals() {
+    if (!operator || previous === null) { sounds.equals(); render(true); return; }
+    const b = fresh ? previous : current;
+    const out = format(compute(Number(previous), Number(b), operator));
+    if (out === null) return fail();
+    exprEl.dataset.done = `${previous} ${symbols[operator]} ${b} =`;
+    current = out;
+    previous = null;
+    operator = null;
+    fresh = true;
+    sounds.equals();
+    render(true);
+  }
+
+  function fail() {
+    current = "خطأ";
+    errored = true;
+    previous = null;
+    operator = null;
+    fresh = true;
+    exprEl.dataset.done = "لا يمكن القسمة على صفر";
+    sounds.error();
+    render(true);
+  }
+
+  function clearAll() {
+    current = "0"; previous = null; operator = null; fresh = false; errored = false;
+    exprEl.dataset.done = "";
+    sounds.clear();
+    render();
+  }
+
+  function backspace() {
+    if (errored || fresh) { clearAll(); return; }
+    current = current.length > 1 && !(current.length === 2 && current.startsWith("-")) ? current.slice(0, -1) : "0";
+    sounds.back();
+    render();
+  }
+
+  function percent() {
+    resetIfError();
+    const n = Number(current);
+    // With a pending + or −, % means "percent of the first number" (e.g. 200 + 10% = 220).
+    const v = previous !== null && (operator === "+" || operator === "-") ? Number(previous) * n / 100 : n / 100;
+    current = format(v) ?? "0";
+    fresh = false;
+    sounds.op();
+    render();
+  }
+
+  function press(btn) {
+    if (btn.dataset.digit) return inputDigit(btn.dataset.digit);
+    if (btn.dataset.op) return setOperator(btn.dataset.op);
+    switch (btn.dataset.action) {
+      case "dot": return inputDot();
+      case "equals": return equals();
+      case "clear": return clearAll();
+      case "back": return backspace();
+      case "percent": return percent();
+    }
+  }
+
+  document.getElementById("keys").addEventListener("click", e => {
+    const btn = e.target.closest(".key");
+    if (btn) press(btn);
+  });
+
+  // Keyboard support
+  const keyMap = { Enter: '[data-action="equals"]', "=": '[data-action="equals"]', Escape: '[data-action="clear"]',
+    Backspace: '[data-action="back"]', ".": '[data-action="dot"]', ",": '[data-action="dot"]', "%": '[data-action="percent"]',
+    "+": '[data-op="+"]', "-": '[data-op="-"]', "*": '[data-op="*"]', x: '[data-op="*"]', "/": '[data-op="/"]' };
+  document.addEventListener("keydown", e => {
+    const sel = /^[0-9]$/.test(e.key) ? `[data-digit="${e.key}"]` : keyMap[e.key];
+    if (!sel) return;
+    e.preventDefault();
+    const btn = document.querySelector(".key" + sel);
+    btn.classList.add("down");
+    setTimeout(() => btn.classList.remove("down"), 110);
+    press(btn);
+  });
+
+  // Sound toggle
+  const soundBtn = document.getElementById("sound");
+  soundBtn.addEventListener("click", () => {
+    soundOn = !soundOn;
+    soundBtn.setAttribute("aria-pressed", String(soundOn));
+    soundBtn.textContent = soundOn ? "🔊 الصوت يعمل" : "🔇 الصوت مغلق";
+    if (soundOn) sounds.digit(5);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
