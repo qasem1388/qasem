@@ -14,6 +14,15 @@ $waLocal = str_starts_with($wa, '966') ? '0' . substr($wa, 3) : '+' . $wa;
 <title>قاسم للتطوير الرقمي | مواقع وتطبيقات</title>
 <meta name="description" content="قاسم محمد الشريف – مطور مواقع وتطبيقات. تطبيقات ومواقع جاهزة للبيع وتصميم مشاريع مخصصة.">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
+<?php $site = 'https://' . preg_replace('~[^a-z0-9.\-:]~i', '', $_SERVER['HTTP_HOST'] ?? 'qasemdigital.shop') . '/'; ?>
+<link rel="canonical" href="<?= $site ?>">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ar_SA">
+<meta property="og:site_name" content="قاسم للتطوير الرقمي">
+<meta property="og:title" content="قاسم للتطوير الرقمي | مواقع وتطبيقات">
+<meta property="og:description" content="تطبيقات ومواقع جاهزة للشراء، أو تصميم مخصص من الصفر بأحدث التقنيات والذكاء الاصطناعي.">
+<meta property="og:url" content="<?= $site ?>">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">

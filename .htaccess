@@ -6,5 +6,7 @@ RewriteCond %{HTTPS} off
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# ملف ads.txt الخاص بـ AdSense يُولَّد من لوحة التحكم
+# ملفات تُولَّد تلقائيًا: ads.txt لـ AdSense، وخريطة الموقع وrobots.txt لمحركات البحث
 RewriteRule ^ads\.txt$ ads.php [L]
+RewriteRule ^sitemaps?\.xml$ sitemap.php [L]
+RewriteRule ^robots\.txt$ robots.php [L]

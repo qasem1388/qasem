@@ -8,6 +8,8 @@
 .htaccess         ← تحويل https وملف ads.txt
 index.php         ← الموقع
 ads.php           ← يولّد ads.txt لـ AdSense
+sitemap.php       ← خريطة الموقع sitemap.xml
+robots.php        ← ملف robots.txt
 logo.svg
 admin/            ← لوحة التحكم
 includes/         ← إعدادات الموقع (محمي)
