@@ -1,0 +1,141 @@
+import type { Locale } from "./config";
+
+const ar = {
+  skipToContent: "تخطَّ إلى المحتوى",
+  menu: { open: "فتح القائمة", close: "إغلاق القائمة", main: "القائمة الرئيسية" },
+  language: { switchTo: "English", switchLabel: "التبديل إلى الإنجليزية" },
+  contact: {
+    call: "اتصل بنا",
+    whatsapp: "واتساب",
+    email: "البريد الإلكتروني",
+    address: "العنوان",
+    hours: "ساعات العمل",
+    phone: "الهاتف",
+    map: "عرض على الخريطة",
+  },
+  common: {
+    readMore: "اقرأ المزيد",
+    details: "التفاصيل",
+    viewAll: "عرض الكل",
+    all: "الكل",
+    completed: "مكتمل",
+    ongoing: "قيد التنفيذ",
+    requestService: "اطلب الخدمة",
+  },
+  newsKinds: { news: "خبر", article: "مقال", announcement: "إعلان", event: "فعالية" },
+  forms: {
+    name: "الاسم الكامل",
+    company: "اسم الشركة / الجهة",
+    phone: "رقم الجوال",
+    email: "البريد الإلكتروني",
+    service: "الخدمة المطلوبة",
+    selectService: "اختر الخدمة",
+    message: "رسالتك",
+    details: "وصف الاحتياج",
+    optional: "اختياري",
+    send: "إرسال الرسالة",
+    sendQuote: "إرسال الطلب",
+    sending: "جارٍ الإرسال…",
+    successContact: "شكرًا لتواصلك معنا، سنرد عليك في أقرب وقت.",
+    successQuote: "تم استلام طلبك بنجاح. رقمك المرجعي:",
+    error: "تعذر إرسال النموذج، يرجى مراجعة الحقول والمحاولة مرة أخرى.",
+    rateLimited: "تم تجاوز عدد المحاولات المسموح بها، يرجى المحاولة لاحقًا.",
+    privacyNote: "بإرسال النموذج فإنك توافق على سياسة الخصوصية.",
+    errors: {
+      name: "يرجى إدخال الاسم (حرفان على الأقل).",
+      phone: "يرجى إدخال رقم جوال صحيح.",
+      email: "يرجى إدخال بريد إلكتروني صحيح.",
+      message: "يرجى كتابة رسالة لا تقل عن 10 أحرف.",
+      service: "يرجى اختيار الخدمة.",
+    },
+  },
+  footer: {
+    contactTitle: "تواصل معنا",
+    followUs: "تابعنا",
+    cr: "السجل التجاري",
+    vat: "الرقم الضريبي",
+    demoNotice: "موقع تجريبي: جميع البيانات والأرقام والصور افتراضية لأغراض العرض فقط.",
+  },
+  stats: { title: "أرقام تتحدث عن إنجازاتنا" },
+  notFound: {
+    title: "الصفحة غير موجودة",
+    body: "عذرًا، الصفحة التي تبحث عنها غير متوفرة أو تم نقلها. يمكنك العودة إلى الرئيسية أو التواصل معنا.",
+    home: "العودة إلى الرئيسية",
+  },
+  backToTop: "العودة إلى الأعلى",
+  whatsappFloat: "تواصل عبر واتساب",
+};
+
+export type Dictionary = typeof ar;
+
+const en: Dictionary = {
+  skipToContent: "Skip to content",
+  menu: { open: "Open menu", close: "Close menu", main: "Main navigation" },
+  language: { switchTo: "العربية", switchLabel: "Switch to Arabic" },
+  contact: {
+    call: "Call us",
+    whatsapp: "WhatsApp",
+    email: "Email",
+    address: "Address",
+    hours: "Working hours",
+    phone: "Phone",
+    map: "View on map",
+  },
+  common: {
+    readMore: "Read more",
+    details: "Details",
+    viewAll: "View all",
+    all: "All",
+    completed: "Completed",
+    ongoing: "Ongoing",
+    requestService: "Request service",
+  },
+  newsKinds: { news: "News", article: "Article", announcement: "Announcement", event: "Event" },
+  forms: {
+    name: "Full name",
+    company: "Company / organisation",
+    phone: "Mobile number",
+    email: "Email address",
+    service: "Required service",
+    selectService: "Select a service",
+    message: "Your message",
+    details: "Describe your needs",
+    optional: "optional",
+    send: "Send message",
+    sendQuote: "Submit request",
+    sending: "Sending…",
+    successContact: "Thank you for reaching out. We will get back to you shortly.",
+    successQuote: "Your request was received. Reference number:",
+    error: "We couldn’t submit the form. Please review the fields and try again.",
+    rateLimited: "Too many attempts. Please try again later.",
+    privacyNote: "By submitting this form you agree to our privacy policy.",
+    errors: {
+      name: "Please enter your name (at least 2 characters).",
+      phone: "Please enter a valid mobile number.",
+      email: "Please enter a valid email address.",
+      message: "Please write a message of at least 10 characters.",
+      service: "Please select a service.",
+    },
+  },
+  footer: {
+    contactTitle: "Get in touch",
+    followUs: "Follow us",
+    cr: "CR No.",
+    vat: "VAT No.",
+    demoNotice: "Demo website: all data, numbers and images are placeholders for presentation only.",
+  },
+  stats: { title: "Numbers that speak for our achievements" },
+  notFound: {
+    title: "Page not found",
+    body: "Sorry, the page you are looking for doesn’t exist or has been moved. Go back home or get in touch with us.",
+    home: "Back to home",
+  },
+  backToTop: "Back to top",
+  whatsappFloat: "Chat on WhatsApp",
+};
+
+const dictionaries: Record<Locale, Dictionary> = { ar, en };
+
+export function getDictionary(locale: Locale): Dictionary {
+  return dictionaries[locale];
+}
