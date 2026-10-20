@@ -3,7 +3,8 @@
 Camera 1 (front): slow push-in with a gentle tilt up toward the minarets.
 Camera 2 (right): virtual camera on the right, sweeping from a steep angle to the facade.
 Camera 3 (left):  mirror of camera 2 from the left side.
-Each camera runs 7 seconds. Perspective is simulated with a rotation homography.
+Each camera runs 7 seconds. Pass "orbit" as a third argument instead for one
+continuous 21s camera that swings front -> right -> left -> front without cuts. Perspective is simulated with a rotation homography.
 """
 import math
 import subprocess
@@ -14,6 +15,7 @@ import numpy as np
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else "source.jpg"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "mosque_3cam_panorama.mp4"
+ORBIT = len(sys.argv) > 3 and sys.argv[3] == "orbit"  # one continuous moving camera
 OW, OH, FPS, SECONDS = 1080, 1920, 30, 7
 N = FPS * SECONDS
 FADE = 12  # frames of cross-fade at each camera change
@@ -73,6 +75,15 @@ def camera_params(cam, t):
     return yaw, math.radians(1.5 * math.sin(math.pi * t)), 1.05, dx, 0.0
 
 
+def orbit_params(t):
+    """Continuous sweep over the full 21s: front -> right -> front -> left -> front."""
+    yaw = math.radians(12) * math.sin(2 * math.pi * t)
+    dx = -4 * math.degrees(yaw)
+    pitch = math.radians(1.5 - 2.5 * math.sin(math.pi * t) ** 2)
+    zoom = 1.04 + 0.08 * math.sin(math.pi * t) ** 2
+    return yaw, pitch, zoom, dx, 40 * math.sin(math.pi * t)
+
+
 def grade(frame):
     """Light cinematic grade: lift contrast, warm highlights, soft vignette."""
     x = frame.astype(np.float32) / 255
@@ -90,13 +101,15 @@ VIG = (1 - 0.28 * np.clip(r - 0.45, 0, 1) ** 1.5)[..., None]
 LABELS = ["CAM 1  FRONT", "CAM 2  RIGHT", "CAM 3  LEFT"]
 
 
-def render(cam, i):
-    yaw, pitch, zoom, dx, dy = camera_params(cam, i / (N - 1))
+def render(cam, i, params=None):
+    yaw, pitch, zoom, dx, dy = params or camera_params(cam, i / (N - 1))
     zoom = fit_zoom(yaw, pitch, zoom, dx, dy)
     hm = homography(yaw, pitch, zoom, dx, dy)
     fr = cv2.warpPerspective(img, hm, (OW, OH), flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP,
                              borderMode=cv2.BORDER_REPLICATE)
     fr = grade(fr)
+    if cam is None:
+        return fr
     cv2.circle(fr, (70, 82), 11, (40, 40, 230), -1)
     cv2.putText(fr, LABELS[cam], (95, 95), cv2.FONT_HERSHEY_DUPLEX, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
     return fr
@@ -106,7 +119,10 @@ ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "
                        "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-c:v", "libx264",
                        "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p",
                        "-movflags", "+faststart", OUT], stdin=subprocess.PIPE)
-for cam in range(3):
+if ORBIT:
+    for i in range(3 * N):
+        ff.stdin.write(render(None, i, orbit_params(i / (3 * N))).tobytes())
+for cam in ([] if ORBIT else range(3)):
     for i in range(N):
         fr = render(cam, i)
         if cam < 2 and i >= N - FADE:  # dissolve into the next camera's first frames
