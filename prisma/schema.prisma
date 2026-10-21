@@ -48,6 +48,15 @@ model Session {
   @@index([expiresAt])
 }
 
+/// Fixed-window counters shared by every app instance (public form throttling).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}
+
 model LoginAttempt {
   id        String   @id @default(cuid())
   email     String

@@ -1,3 +1,4 @@
+import { GA4_ID, PLAUSIBLE_DOMAIN } from "@/lib/analytics";
 import { z } from "zod";
 import { hexColor, href, httpsUrl, iconName, imageSrc, localized } from "./common";
 
@@ -87,7 +88,17 @@ export const generalSchema = z.object({
     careers: z.boolean(),
     faq: z.boolean(),
   }),
-  seo: z.object({ shareImage: imageSrc.optional() }),
+  seo: z.object({
+    shareImage: imageSrc.optional(),
+    schemaType: z.enum(["Organization", "LocalBusiness", "ProfessionalService", "GeneralContractor", "Corporation"]),
+    indexable: z.boolean(),
+    analytics: z.object({
+      ga4Id: z.union([z.string().trim().regex(GA4_ID, "المعرّف بالصيغة G-XXXXXXXXXX"), z.literal("")]).optional(),
+      plausibleDomain: z
+        .union([z.string().trim().toLowerCase().regex(PLAUSIBLE_DOMAIN, "اكتب النطاق فقط مثل example.sa"), z.literal("")])
+        .optional(),
+    }),
+  }),
 });
 
 type NavNode = { id: string; label: { ar: string; en: string }; href: string; visible: boolean; children?: NavNode[] };

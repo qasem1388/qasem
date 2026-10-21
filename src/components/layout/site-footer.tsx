@@ -1,8 +1,10 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import Link from "next/link";
 import { SocialIcon, WhatsAppIcon, socialLabels } from "@/components/ui/brand-icons";
+import { ManageCookiesButton } from "@/components/consent/cookie-consent";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { analyticsConfig } from "@/lib/analytics";
 import { localizeHref, tr, whatsappUrl } from "@/lib/utils";
 import { isPathEnabled } from "@/content/defaults/pages";
 import type { SiteSettings } from "@/types/content";
@@ -117,6 +119,11 @@ export function SiteFooter({ settings, locale, dict }: { settings: SiteSettings;
                 </Link>
               </li>
             ))}
+            {analyticsConfig(settings) && (
+              <li>
+                <ManageCookiesButton label={dict.consent.manage} className="hover:text-secondary cursor-pointer" />
+              </li>
+            )}
           </ul>
           <p className="flex flex-wrap gap-x-4 gap-y-1">
             <span>

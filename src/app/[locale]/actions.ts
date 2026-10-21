@@ -1,18 +1,17 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { rateLimit } from "@/lib/rate-limit";
 import { storePrivateFile } from "@/server/files";
 import { notifySubmission } from "@/server/notify";
+import { rateLimit } from "@/server/rate-limit";
+import { requestInfo } from "@/server/request";
 import { isLocale, type Locale } from "@/i18n/config";
 import { ATTACHMENT_RULES, CV_RULES, validateUpload } from "@/lib/uploads";
 import { applicationSchema, contactSchema, formValues, quoteSchema, toFieldErrors, type FormState } from "@/lib/validation";
 
 async function clientIp() {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  return (await requestInfo()).ip;
 }
 
 async function clientKey(scope: string) {
@@ -46,7 +45,7 @@ function referenceNumber(prefix = "RQ") {
 
 export async function submitContact(_prev: FormState, formData: FormData): Promise<FormState> {
   if (isSpam(formData)) return { status: "success", reference: referenceNumber("CM") };
-  if (!rateLimit(await clientKey("contact"), 5, 10 * 60_000)) {
+  if (!(await rateLimit(await clientKey("contact"), 5, 10 * 60_000))) {
     return { status: "error", fieldErrors: {}, code: "rate_limited", values: formValues(formData) };
   }
   const parsed = contactSchema.safeParse(formValues(formData));
@@ -78,7 +77,7 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
 
 export async function submitQuote(_prev: FormState, formData: FormData): Promise<FormState> {
   if (isSpam(formData)) return { status: "success", reference: referenceNumber() };
-  if (!rateLimit(await clientKey("quote"), 5, 10 * 60_000)) {
+  if (!(await rateLimit(await clientKey("quote"), 5, 10 * 60_000))) {
     return { status: "error", fieldErrors: {}, code: "rate_limited", values: formValues(formData) };
   }
   const parsed = quoteSchema.safeParse(formValues(formData));
@@ -137,7 +136,7 @@ export async function submitQuote(_prev: FormState, formData: FormData): Promise
 
 export async function submitApplication(_prev: FormState, formData: FormData): Promise<FormState> {
   if (isSpam(formData)) return { status: "success", reference: referenceNumber("JA") };
-  if (!rateLimit(await clientKey("apply"), 3, 10 * 60_000)) {
+  if (!(await rateLimit(await clientKey("apply"), 3, 10 * 60_000))) {
     return { status: "error", fieldErrors: {}, code: "rate_limited", values: formValues(formData) };
   }
   const parsed = applicationSchema.safeParse(formValues(formData));

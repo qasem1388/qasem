@@ -4,7 +4,7 @@ import { useState } from "react";
 import { saveCompany, saveFooter, saveGeneral } from "@/app/admin/actions/settings";
 import { socialLabels } from "@/components/ui/brand-icons";
 import { cn } from "@/lib/utils";
-import type { LinkItem, Localized, OptionalPage, SiteSettings, SocialPlatform } from "@/types/content";
+import type { LinkItem, Localized, OptionalPage, SchemaType, SiteSettings, SocialPlatform } from "@/types/content";
 import { ImagePicker } from "./image-picker";
 import {
   AddButton,
@@ -340,9 +340,19 @@ const pageLabels: Record<OptionalPage, string> = {
   faq: "الأسئلة الشائعة",
 };
 
+const schemaTypeLabels: Record<SchemaType, string> = {
+  Organization: "منظمة / شركة (Organization)",
+  Corporation: "شركة مساهمة أو قابضة (Corporation)",
+  LocalBusiness: "نشاط تجاري محلي (LocalBusiness)",
+  ProfessionalService: "خدمات مهنية (ProfessionalService)",
+  GeneralContractor: "مقاولات عامة (GeneralContractor)",
+};
+
 export function GeneralEditor({ initial }: { initial: General }) {
   const [v, setV] = useState(initial);
   const save = useSaveWrap(saveGeneral, v);
+  const setAnalytics = (patch: NonNullable<General["seo"]["analytics"]>) =>
+    setV((p) => ({ ...p, seo: { ...p.seo, analytics: { ...p.seo.analytics, ...patch } } }));
   return (
     <div className="space-y-6">
       <Section
@@ -367,6 +377,59 @@ export function GeneralEditor({ initial }: { initial: General }) {
           onChange={(x) => setV((p) => ({ ...p, seo: { ...p.seo, shareImage: x } }))}
           hint="تظهر عند مشاركة روابط الموقع في واتساب وX ولينكدإن. المقاس المثالي 1200×630 بصيغة JPG أو PNG."
         />
+      </Section>
+      <Section
+        title="محركات البحث"
+        description="تُولَّد خريطة الموقع (sitemap.xml) وملف robots.txt والبيانات المنظمة تلقائيًا من محتوى الموقع."
+      >
+        <div className="space-y-4">
+          <Toggle
+            label="السماح لمحركات البحث بأرشفة الموقع"
+            hint="أطفئه أثناء تجهيز الموقع أو على نسخة الاختبار؛ ستُضاف علامة noindex ويُمنع الزحف في robots.txt."
+            checked={v.seo.indexable !== false}
+            onChange={(x) => setV((p) => ({ ...p, seo: { ...p.seo, indexable: x } }))}
+          />
+          <label className="block max-w-md">
+            <span className="text-ink mb-1.5 block text-sm font-semibold">نوع المنشأة في البيانات المنظمة (Schema.org)</span>
+            <select
+              className={cn(controlClass, "h-10")}
+              value={v.seo.schemaType ?? "Organization"}
+              onChange={(ev) => setV((p) => ({ ...p, seo: { ...p.seo, schemaType: ev.target.value as SchemaType } }))}
+            >
+              {(Object.keys(schemaTypeLabels) as SchemaType[]).map((k) => (
+                <option key={k} value={k}>
+                  {schemaTypeLabels[k]}
+                </option>
+              ))}
+            </select>
+            <span className="text-muted mt-1 block text-xs">
+              يساعد Google على فهم طبيعة النشاط. الأنواع المحلية تُضيف العنوان والموقع الجغرافي وأوقات العمل.
+            </span>
+          </label>
+        </div>
+      </Section>
+      <Section
+        title="التحليلات"
+        description="لا تُحمَّل أدوات التحليل إلا بعد موافقة الزائر على ملفات تعريف الارتباط. اترك الحقل فارغًا لتعطيل الأداة."
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextInput
+            label="معرّف Google Analytics 4"
+            dir="ltr"
+            placeholder="G-XXXXXXXXXX"
+            value={v.seo.analytics?.ga4Id ?? ""}
+            onChange={(x) => setAnalytics({ ga4Id: x.trim().toUpperCase() })}
+            error={err(save.errors, "seo.analytics.ga4Id")}
+          />
+          <TextInput
+            label="نطاق Plausible"
+            dir="ltr"
+            placeholder="example.sa"
+            value={v.seo.analytics?.plausibleDomain ?? ""}
+            onChange={(x) => setAnalytics({ plausibleDomain: x.trim().toLowerCase() })}
+            error={err(save.errors, "seo.analytics.plausibleDomain")}
+          />
+        </div>
       </Section>
       <Section title="وضع العرض التجريبي">
         <Toggle

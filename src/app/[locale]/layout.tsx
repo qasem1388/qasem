@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+import { CookieConsent } from "@/components/consent/cookie-consent";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Logo } from "@/components/layout/logo";
@@ -10,8 +11,10 @@ import { RevealObserver } from "@/components/ui/reveal-observer";
 import { isLocale, localeMeta, locales, type Locale } from "@/i18n/config";
 import { fontVariables } from "@/lib/fonts";
 import { getDictionary } from "@/i18n/dictionaries";
+import { analyticsConfig } from "@/lib/analytics";
 import { getSiteSettings } from "@/lib/content";
 import { siteUrl } from "@/lib/site-url";
+import { DEFAULT_SHARE_IMAGE } from "@/lib/seo";
 import { brandCssVariables } from "@/lib/theme";
 import { localizeHref, tr, whatsappUrl } from "@/lib/utils";
 import { isPathEnabled } from "@/content/defaults/pages";
@@ -48,9 +51,11 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
       locale: localeMeta[locale].ogLocale,
       title: name,
       description: tr(settings.description, locale),
-      ...(settings.seo.shareImage ? { images: [{ url: settings.seo.shareImage }] } : {}),
+      images: [{ url: settings.seo.shareImage || DEFAULT_SHARE_IMAGE }],
     },
+    twitter: { card: "summary_large_image", images: [settings.seo.shareImage || DEFAULT_SHARE_IMAGE] },
     icons: { icon: settings.logo.favicon || "/favicon.ico" },
+    robots: settings.seo.indexable === false ? { index: false, follow: false } : undefined,
   };
 }
 
@@ -72,6 +77,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const settings = await getSiteSettings();
   const dict = getDictionary(locale);
   const homeHref = localizeHref("/", locale);
+  const analytics = analyticsConfig(settings);
   const logo = (
     <Logo
       href={homeHref}
@@ -121,6 +127,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
           whatsappLabel={dict.whatsappFloat}
           backToTopLabel={dict.backToTop}
         />
+        {analytics && <CookieConsent config={analytics} labels={dict.consent} policyHref={localizeHref("/cookies", locale)} />}
         <RevealObserver />
       </body>
     </html>

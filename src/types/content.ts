@@ -62,9 +62,20 @@ export type SiteSettings = {
   demoMode: boolean;
   /** Optional public sections that can be disabled. */
   pages: Record<OptionalPage, boolean>;
-  /** Default social-share data. */
-  seo: { shareImage?: string; titleSuffix?: Localized };
+  /** Search, sharing and analytics settings. */
+  seo: {
+    shareImage?: string;
+    titleSuffix?: Localized;
+    /** Schema.org type describing the business on the homepage. */
+    schemaType?: SchemaType;
+    /** When false: robots.txt disallows everything and pages send noindex (e.g. staging). */
+    indexable?: boolean;
+    /** Loaded only after the visitor accepts analytics cookies. */
+    analytics?: { ga4Id?: string; plausibleDomain?: string };
+  };
 };
+
+export type SchemaType = "Organization" | "LocalBusiness" | "ProfessionalService" | "GeneralContractor" | "Corporation";
 
 export type OptionalPage = "sectors" | "media" | "clients" | "careers" | "faq";
 

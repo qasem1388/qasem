@@ -14,28 +14,59 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const dict = getDictionary(locale);
   const base = siteUrl();
 
+  const name = tr(settings.name, locale);
+  const type = settings.seo.schemaType ?? "Organization";
+  const isPlace = type !== "Organization" && type !== "Corporation";
+  const { contact } = settings;
   const organization = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: tr(settings.name, locale),
+    "@type": type,
+    "@id": `${base}/#organization`,
+    name,
+    alternateName: tr(settings.name, locale === "ar" ? "en" : "ar"),
     description: tr(settings.description, locale),
     url: `${base}/${locale}`,
     logo: `${base}${settings.logo.src ?? settings.logo.mark}`,
-    email: settings.contact.email,
-    telephone: settings.contact.phone,
+    image: settings.seo.shareImage ? `${base}${settings.seo.shareImage}` : `${base}/brand/og-default.jpg`,
+    email: contact.email,
+    telephone: contact.phone,
+    ...(settings.legal.vatNumber ? { taxID: settings.legal.vatNumber } : {}),
     address: {
       "@type": "PostalAddress",
-      streetAddress: tr(settings.contact.address, locale),
+      streetAddress: tr(contact.address, locale),
+      addressLocality: tr(contact.city, locale),
+      ...(contact.region ? { addressRegion: tr(contact.region, locale) } : {}),
       addressCountry: "SA",
     },
+    ...(isPlace && contact.lat && contact.lng
+      ? { geo: { "@type": "GeoCoordinates", latitude: contact.lat, longitude: contact.lng } }
+      : {}),
+    ...(isPlace ? { openingHours: tr(contact.workingHours, "en") } : {}),
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: contact.phone,
+      email: contact.email,
+      contactType: "customer service",
+      areaServed: "SA",
+      availableLanguage: ["Arabic", "English"],
+    },
     sameAs: settings.social.map((s) => s.url),
+  };
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${base}/#website`,
+    url: `${base}/${locale}`,
+    name,
+    inLanguage: locale === "ar" ? "ar-SA" : "en",
+    publisher: { "@id": `${base}/#organization` },
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organization).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([organization, website]).replace(/</g, "\\u003c") }}
       />
       {home.sections
         .filter((s) => s.enabled)

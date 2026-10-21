@@ -51,7 +51,7 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
     brand: { ...defaultBrand, ...stored.brand },
     logo: { ...defaultLogo, ...stored.logo },
     pages: { ...defaultPageToggles, ...stored.pages },
-    seo: { ...stored.seo },
+    seo: { schemaType: "Organization", indexable: true, ...stored.seo, analytics: { ...stored.seo?.analytics } },
   };
 });
 export const getHomePage = cache(() => setting<HomePage>("home"));

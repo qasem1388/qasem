@@ -12,7 +12,7 @@ export default async function GeneralPage() {
     <>
       <PageTitle
         title="الإعدادات العامة"
-        description="تفعيل الأقسام الاختيارية، صورة المشاركة الافتراضية، ووضع العرض التجريبي."
+        description="الأقسام الاختيارية، محركات البحث والتحليلات، صورة المشاركة، ووضع العرض التجريبي."
       />
       <GeneralEditor initial={{ demoMode: s.demoMode, pages: s.pages, seo: s.seo }} />
     </>
