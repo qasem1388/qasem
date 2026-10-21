@@ -35,13 +35,19 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
         { href: "/admin/media", label: "مكتبة الوسائط", icon: "media" },
       ],
     },
-    {
-      title: "التوظيف",
-      items: [
-        ...contentItems(["jobs"]),
-        ...(has("inbox.view") ? [{ href: "/admin/applications", label: "طلبات التوظيف", icon: "applications" } as const] : []),
-      ],
-    },
+    ...(has("inbox.view")
+      ? [
+          {
+            title: "الوارد",
+            items: [
+              { href: "/admin/messages", label: "رسائل التواصل", icon: "messages" },
+              { href: "/admin/quotes", label: "طلبات عروض الأسعار", icon: "quotes" },
+              { href: "/admin/applications", label: "طلبات التوظيف", icon: "applications" },
+            ] satisfies AdminNavItem[],
+          },
+        ]
+      : []),
+    { title: "التوظيف", items: contentItems(["jobs"]) },
     ...(has("settings.manage")
       ? [
           {
@@ -52,6 +58,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
               { href: "/admin/settings/branches", label: "الفروع", icon: "branches" },
               { href: "/admin/menus", label: "القوائم", icon: "menus" },
               { href: "/admin/settings/footer", label: "التذييل", icon: "footer" },
+              { href: "/admin/settings/notifications", label: "الإشعارات والبريد", icon: "notifications" },
               { href: "/admin/settings/general", label: "الإعدادات العامة", icon: "general" },
             ] satisfies AdminNavItem[],
           },

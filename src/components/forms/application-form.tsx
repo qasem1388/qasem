@@ -6,7 +6,7 @@ import { submitApplication } from "@/app/[locale]/actions";
 import { buttonClasses } from "@/components/ui/button";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { FormState } from "@/lib/validation";
-import { FileField, Honeypot, TextAreaField, TextField } from "./field";
+import { FileField, Honeypot, LocaleInput, TextAreaField, TextField } from "./field";
 import { FormStatus } from "./form-status";
 
 const initial: FormState = { status: "idle" };
@@ -27,6 +27,7 @@ export function ApplicationForm({ dict, job }: { dict: Dictionary; job: string }
   return (
     <form action={action} noValidate className="relative space-y-5">
       <Honeypot />
+      <LocaleInput />
       <input type="hidden" name="job" value={job} />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <TextField

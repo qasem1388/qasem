@@ -6,7 +6,7 @@ import { submitContact } from "@/app/[locale]/actions";
 import { buttonClasses } from "@/components/ui/button";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { FormState } from "@/lib/validation";
-import { Honeypot, TextAreaField, TextField } from "./field";
+import { Honeypot, LocaleInput, TextAreaField, TextField } from "./field";
 import { FormStatus } from "./form-status";
 
 const initial: FormState = { status: "idle" };
@@ -28,6 +28,7 @@ export function ContactForm({ dict }: { dict: Dictionary }) {
   return (
     <form action={action} noValidate className="relative space-y-5">
       <Honeypot />
+      <LocaleInput />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <TextField
           name="name"

@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  BellRing,
+  MessageSquare,
   Briefcase,
   BriefcaseBusiness,
   CircleHelp,
@@ -64,6 +66,9 @@ const icons = {
   faqs: CircleHelp,
   jobs: BriefcaseBusiness,
   applications: Inbox,
+  notifications: BellRing,
+  messages: MessageSquare,
+  quotes: FileText,
 } as const;
 export type AdminNavItem = { href: string; label: string; icon: keyof typeof icons };
 export type AdminNavGroup = { title?: string; items: AdminNavItem[] };

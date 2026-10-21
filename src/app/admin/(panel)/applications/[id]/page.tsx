@@ -1,13 +1,13 @@
 import { Download, FileText, Mail, MapPin, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
-import { ApplicationStatusForm } from "@/components/admin/application-form";
+import { StatusForm } from "@/components/admin/status-form";
 import { Badge, Card, PageTitle } from "@/components/admin/ui";
 import { applicationStatuses } from "@/lib/application-status";
 import { db } from "@/lib/db";
 import { can } from "@/server/auth/permissions";
 import { requireUser } from "@/server/auth/session";
 import type { Localized } from "@/types/content";
-import { deleteApplication } from "../../../actions/applications";
+import { deleteApplication, updateApplication } from "../../../actions/applications";
 
 export const metadata = { title: "طلب توظيف" };
 
@@ -126,7 +126,13 @@ export default async function ApplicationPage({ params }: PageProps<"/admin/appl
             )}
           </Card>
           <Card title="المتابعة">
-            <ApplicationStatusForm id={app.id} status={app.status} notes={app.notes ?? ""} canManage={canManage} />
+            <StatusForm
+              action={updateApplication.bind(null, app.id)}
+              status={app.status}
+              notes={app.notes ?? ""}
+              canManage={canManage}
+              options={Object.entries(applicationStatuses).map(([value, s]) => ({ value, label: s.label }))}
+            />
           </Card>
         </div>
       </div>

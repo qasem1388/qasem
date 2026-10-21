@@ -1,3 +1,4 @@
+import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const control =
@@ -147,4 +148,10 @@ export function FileField({ accept, hint, ...props }: Common & { accept: string;
       </p>
     </Wrapper>
   );
+}
+
+/** Sends the page language so confirmation emails use the visitor's language. */
+export function LocaleInput() {
+  const params = useParams<{ locale?: string }>();
+  return <input type="hidden" name="locale" value={params?.locale === "en" ? "en" : "ar"} />;
 }

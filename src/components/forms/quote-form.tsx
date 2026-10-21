@@ -6,7 +6,7 @@ import { submitQuote } from "@/app/[locale]/actions";
 import { buttonClasses } from "@/components/ui/button";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { FormState } from "@/lib/validation";
-import { FileField, Honeypot, SelectField, TextAreaField, TextField } from "./field";
+import { FileField, Honeypot, LocaleInput, SelectField, TextAreaField, TextField } from "./field";
 import { FormStatus } from "./form-status";
 
 const initial: FormState = { status: "idle" };
@@ -53,6 +53,7 @@ export function QuoteForm({
       className="relative space-y-5"
     >
       <Honeypot />
+      <LocaleInput />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <TextField
           name="name"

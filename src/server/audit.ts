@@ -48,4 +48,7 @@ export const auditLabels: Record<string, string> = {
   "application.updated": "تحديث طلب توظيف",
   "application.deleted": "حذف طلب توظيف",
   "file.downloaded": "تنزيل ملف خاص",
+  "inbox.updated": "تحديث رسالة/طلب",
+  "inbox.deleted": "حذف رسالة/طلب",
+  "inbox.exported": "تصدير بيانات",
 };

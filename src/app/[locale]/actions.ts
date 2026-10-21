@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { storePrivateFile } from "@/server/files";
+import { notifySubmission } from "@/server/notify";
+import { isLocale, type Locale } from "@/i18n/config";
 import { ATTACHMENT_RULES, CV_RULES, validateUpload } from "@/lib/uploads";
 import { applicationSchema, contactSchema, formValues, quoteSchema, toFieldErrors, type FormState } from "@/lib/validation";
 
@@ -26,6 +28,12 @@ async function uniqueReference(prefix: string, exists: (ref: string) => Promise<
   throw new Error("Could not allocate a reference number");
 }
 
+/** Language of the page the form was sent from (used for the confirmation email). */
+function localeOf(formData: FormData): Locale {
+  const v = String(formData.get("locale") ?? "");
+  return isLocale(v) ? v : "ar";
+}
+
 /** Bots fill hidden fields; real users never see the honeypot. */
 function isSpam(formData: FormData) {
   return String(formData.get("website") ?? "").length > 0;
@@ -37,7 +45,7 @@ function referenceNumber(prefix = "RQ") {
 }
 
 export async function submitContact(_prev: FormState, formData: FormData): Promise<FormState> {
-  if (isSpam(formData)) return { status: "success" };
+  if (isSpam(formData)) return { status: "success", reference: referenceNumber("CM") };
   if (!rateLimit(await clientKey("contact"), 5, 10 * 60_000)) {
     return { status: "error", fieldErrors: {}, code: "rate_limited", values: formValues(formData) };
   }
@@ -46,8 +54,26 @@ export async function submitContact(_prev: FormState, formData: FormData): Promi
     return { status: "error", fieldErrors: toFieldErrors(parsed.error), code: "invalid", values: formValues(formData) };
   }
 
-  // Phase 6: persist the message, notify by email and list it in /admin.
-  return { status: "success" };
+  const locale = localeOf(formData);
+  const reference = await uniqueReference("CM", (r) =>
+    db.contactMessage.findUnique({ where: { reference: r }, select: { id: true } }),
+  );
+  const msg = await db.contactMessage.create({ data: { ...parsed.data, reference, locale, ip: await clientIp() } });
+  notifySubmission({
+    kind: "contact",
+    id: msg.id,
+    reference,
+    locale,
+    name: msg.name,
+    email: msg.email,
+    fields: [
+      ["الاسم", msg.name],
+      ["الجوال", msg.phone],
+      ["البريد", msg.email],
+      ["الرسالة", msg.message],
+    ],
+  });
+  return { status: "success", reference };
 }
 
 export async function submitQuote(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -63,8 +89,50 @@ export async function submitQuote(_prev: FormState, formData: FormData): Promise
     return { status: "error", fieldErrors, code: "invalid", values: formValues(formData) };
   }
 
-  // Phase 6: store the request with this reference and its follow-up status.
-  return { status: "success", reference: referenceNumber() };
+  const service = await db.service.findFirst({
+    where: { slug: parsed.data.service, published: true },
+    select: { slug: true, title: true },
+  });
+  if (!service) return { status: "error", fieldErrors: { service: "service" }, code: "invalid", values: formValues(formData) };
+
+  const locale = localeOf(formData);
+  const file = attachment ? await storePrivateFile(attachment, "attachments") : null;
+  const reference = await uniqueReference("RQ", (r) =>
+    db.quoteRequest.findUnique({ where: { reference: r }, select: { id: true } }),
+  );
+  const { name, company, phone, email, details } = parsed.data;
+  const quote = await db.quoteRequest.create({
+    data: {
+      name,
+      company: company || null,
+      phone,
+      email,
+      details,
+      serviceSlug: service.slug,
+      reference,
+      locale,
+      attachmentId: file?.id,
+      ip: await clientIp(),
+    },
+  });
+  notifySubmission({
+    kind: "quote",
+    id: quote.id,
+    reference,
+    locale,
+    name: quote.name,
+    email: quote.email,
+    fields: [
+      ["الاسم", quote.name],
+      ["الجهة", quote.company ?? ""],
+      ["الجوال", quote.phone],
+      ["البريد", quote.email],
+      ["الخدمة", (service.title as { ar: string }).ar],
+      ["الاحتياج", quote.details],
+      ["مرفق", file ? file.originalName : ""],
+    ],
+  });
+  return { status: "success", reference };
 }
 
 export async function submitApplication(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -87,7 +155,7 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
   const reference = await uniqueReference("JA", (r) =>
     db.jobApplication.findUnique({ where: { reference: r }, select: { id: true } }),
   );
-  await db.jobApplication.create({
+  const application = await db.jobApplication.create({
     data: {
       reference,
       jobId: job?.id,
@@ -99,8 +167,26 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
       linkedin: data.linkedin || null,
       coverLetter: data.coverLetter || null,
       cvId: file.id,
+      locale: localeOf(formData),
       ip: await clientIp(),
     },
+    include: { job: { select: { title: true } } },
+  });
+  notifySubmission({
+    kind: "application",
+    id: application.id,
+    reference,
+    locale: localeOf(formData),
+    name: application.name,
+    email: application.email,
+    fields: [
+      ["الوظيفة", application.job ? (application.job.title as { ar: string }).ar : "طلب عام"],
+      ["الاسم", application.name],
+      ["الجوال", application.phone],
+      ["البريد", application.email],
+      ["المدينة", application.city ?? ""],
+      ["سنوات الخبرة", application.experience ?? ""],
+    ],
   });
   return { status: "success", reference };
 }

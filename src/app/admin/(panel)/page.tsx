@@ -38,9 +38,9 @@ export default async function DashboardPage() {
     { label: "القطاعات", value: sectors, icon: FileText },
   ];
   const inbox = [
-    { label: "رسائل جديدة", value: messages, icon: MessageSquare },
-    { label: "طلبات عروض أسعار جديدة", value: quotes, icon: Inbox },
-    { label: "طلبات توظيف جديدة", value: applications, icon: Users },
+    { label: "رسائل جديدة", value: messages, icon: MessageSquare, href: "/admin/messages?status=NEW" },
+    { label: "طلبات عروض أسعار جديدة", value: quotes, icon: Inbox, href: "/admin/quotes?status=NEW" },
+    { label: "طلبات توظيف جديدة", value: applications, icon: Users, href: "/admin/applications?status=NEW" },
   ];
 
   return (
@@ -50,14 +50,19 @@ export default async function DashboardPage() {
       <h2 className="sr-only">الطلبات الواردة</h2>
       <ul className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {inbox.map(({ icon: I, ...s }) => (
-          <li key={s.label} className="rounded-brand-lg bg-primary flex items-center gap-4 p-5 text-white">
-            <span className="rounded-brand bg-secondary text-primary inline-flex size-12 items-center justify-center">
-              <I className="size-6" aria-hidden />
-            </span>
-            <span>
-              <span className="block text-2xl font-bold">{s.value}</span>
-              <span className="text-sm text-white/70">{s.label}</span>
-            </span>
+          <li key={s.label}>
+            <Link
+              href={s.href}
+              className="rounded-brand-lg bg-primary hover:bg-primary-900 flex items-center gap-4 p-5 text-white transition-colors"
+            >
+              <span className="rounded-brand bg-secondary text-primary inline-flex size-12 items-center justify-center">
+                <I className="size-6" aria-hidden />
+              </span>
+              <span>
+                <span className="block text-2xl font-bold">{s.value}</span>
+                <span className="text-sm text-white/70">{s.label}</span>
+              </span>
+            </Link>
           </li>
         ))}
       </ul>
@@ -109,7 +114,7 @@ export default async function DashboardPage() {
             </li>
           </ul>
           <p className="rounded-brand bg-secondary-50 text-secondary-700 mt-5 p-3 text-xs leading-6">
-            إدارة الهوية والقوائم والصفحات والمحتوى والطلبات ستُضاف إلى هذه اللوحة في المراحل القادمة.
+            راجع «الإشعارات والبريد» لتحديد من تصله تنبيهات الطلبات الجديدة.
           </p>
         </Card>
       </div>

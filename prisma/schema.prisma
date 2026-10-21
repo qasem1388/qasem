@@ -322,13 +322,17 @@ enum InboxStatus {
 
 model ContactMessage {
   id        String      @id @default(cuid())
+  reference String      @unique
   name      String
   phone     String
   email     String
   message   String
   status    InboxStatus @default(NEW)
+  notes     String?
+  locale    String      @default("ar")
   ip        String?
   createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   @@index([status, createdAt])
 }
@@ -355,6 +359,7 @@ model QuoteRequest {
   attachment   StoredFile? @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
   status       QuoteStatus @default(NEW)
   notes        String?
+  locale       String      @default("ar")
   ip           String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -386,9 +391,33 @@ model JobApplication {
   cv          StoredFile?       @relation(fields: [cvId], references: [id], onDelete: SetNull)
   status      ApplicationStatus @default(NEW)
   notes       String?
+  locale      String            @default("ar")
   ip          String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
   @@index([status, createdAt])
+}
+
+/**
+ * ───────────── Email notifications ─────────────
+ */
+
+enum EmailStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
+/// Delivery log for notification and confirmation emails (shown in the admin panel).
+model EmailLog {
+  id        String      @id @default(cuid())
+  kind      String
+  to        String
+  subject   String
+  status    EmailStatus
+  error     String?
+  createdAt DateTime    @default(now())
+
+  @@index([createdAt])
 }

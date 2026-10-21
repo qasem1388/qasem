@@ -51,9 +51,25 @@ export function Badge({ tone = "gray", children }: { tone?: keyof typeof tones; 
   );
 }
 
-export function Table({ head, children, empty }: { head: ReactNode[]; children: ReactNode; empty?: string }) {
+export function Table({
+  head,
+  children,
+  empty,
+  label = "جدول البيانات",
+}: {
+  head: ReactNode[];
+  children: ReactNode;
+  empty?: string;
+  label?: string;
+}) {
   return (
-    <div className="rounded-brand-lg border-primary/8 overflow-x-auto border bg-white">
+    // Focusable so keyboard users can scroll wide tables horizontally.
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label={label}
+      className="rounded-brand-lg border-primary/8 overflow-x-auto border bg-white"
+    >
       <table className="w-full min-w-[40rem] text-sm">
         <thead className="bg-surface text-muted text-xs">
           <tr>
