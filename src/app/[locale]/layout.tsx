@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -9,20 +8,15 @@ import { SiteHeader, type ResolvedNavItem } from "@/components/layout/site-heade
 import { TopBar } from "@/components/layout/top-bar";
 import { RevealObserver } from "@/components/ui/reveal-observer";
 import { isLocale, localeMeta, locales, type Locale } from "@/i18n/config";
+import { fontVariables } from "@/lib/fonts";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getSiteSettings } from "@/lib/content";
 import { siteUrl } from "@/lib/site-url";
 import { brandCssVariables } from "@/lib/theme";
 import { localizeHref, tr, whatsappUrl } from "@/lib/utils";
-import type { NavItem } from "@/types/content";
+import { isPathEnabled } from "@/content/defaults/pages";
+import type { NavItem, SiteSettings } from "@/types/content";
 import "../globals.css";
-
-const plexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-plex-arabic",
-  display: "swap",
-});
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -54,19 +48,20 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
       locale: localeMeta[locale].ogLocale,
       title: name,
       description: tr(settings.description, locale),
+      ...(settings.seo.shareImage ? { images: [{ url: settings.seo.shareImage }] } : {}),
     },
-    icons: { icon: "/favicon.ico" },
+    icons: { icon: settings.logo.favicon || "/favicon.ico" },
   };
 }
 
-function resolveNav(items: NavItem[], locale: Locale): ResolvedNavItem[] {
+function resolveNav(items: NavItem[], locale: Locale, pages: SiteSettings["pages"]): ResolvedNavItem[] {
   return items
-    .filter((i) => i.visible)
+    .filter((i) => i.visible && isPathEnabled(i.href, pages))
     .map((i) => ({
       id: i.id,
       label: tr(i.label, locale),
       href: localizeHref(i.href, locale),
-      children: i.children?.length ? resolveNav(i.children, locale) : undefined,
+      children: i.children?.length ? resolveNav(i.children, locale, pages) : undefined,
     }));
 }
 
@@ -88,7 +83,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   );
 
   return (
-    <html lang={locale} dir={localeMeta[locale].dir} className={plexArabic.variable} suppressHydrationWarning>
+    <html lang={locale} dir={localeMeta[locale].dir} className={fontVariables} suppressHydrationWarning>
       <head>
         <style>{`:root{${brandCssVariables(settings.brand)}}`}</style>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
@@ -103,7 +98,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <TopBar settings={settings} locale={locale} dict={dict} />
         <SiteHeader
           logo={logo}
-          items={resolveNav(settings.navigation, locale)}
+          items={resolveNav(settings.navigation, locale, settings.pages)}
           homeHref={homeHref}
           cta={{ label: tr(settings.headerCta.label, locale), href: localizeHref(settings.headerCta.href, locale) }}
           phone={settings.contact.phone}

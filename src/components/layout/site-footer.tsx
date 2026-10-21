@@ -4,6 +4,7 @@ import { SocialIcon, WhatsAppIcon, socialLabels } from "@/components/ui/brand-ic
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { localizeHref, tr, whatsappUrl } from "@/lib/utils";
+import { isPathEnabled } from "@/content/defaults/pages";
 import type { SiteSettings } from "@/types/content";
 import { Logo } from "./logo";
 
@@ -47,13 +48,15 @@ export function SiteFooter({ settings, locale, dict }: { settings: SiteSettings;
           <nav key={col.title.en} aria-label={tr(col.title, locale)} className="lg:col-span-2">
             <h2 className="mb-5 text-base font-bold text-white">{tr(col.title, locale)}</h2>
             <ul className="space-y-3 text-sm">
-              {col.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={localizeHref(link.href, locale)} className="hover:text-secondary transition-colors">
-                    {tr(link.label, locale)}
-                  </Link>
-                </li>
-              ))}
+              {col.links
+                .filter((link) => isPathEnabled(link.href, settings.pages))
+                .map((link) => (
+                  <li key={link.href}>
+                    <Link href={localizeHref(link.href, locale)} className="hover:text-secondary transition-colors">
+                      {tr(link.label, locale)}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </nav>
         ))}

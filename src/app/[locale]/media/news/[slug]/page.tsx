@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Prose } from "@/components/shared/prose";
 import { SocialIcon, WhatsAppIcon } from "@/components/ui/brand-icons";
 import { getNews, getNewsPost, getSiteSettings } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { siteUrl } from "@/lib/site-url";
 import { formatDate, tr } from "@/lib/utils";
@@ -35,6 +35,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/media/ne
 
 export default async function NewsPostPage({ params }: PageProps<"/[locale]/media/news/[slug]">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("media");
   const { slug } = await params;
   const [post, all, settings] = await Promise.all([getNewsPost(slug), getNews(), getSiteSettings()]);
   if (!post) notFound();

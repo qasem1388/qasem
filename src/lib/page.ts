@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { isLocale, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import type { Crumb } from "@/components/shared/breadcrumbs";
+import { getSiteSettings } from "./content";
+import type { OptionalPage } from "@/types/content";
 import { localizeHref } from "./utils";
 
 /** Resolves and validates the locale route param for a page. */
@@ -17,4 +19,10 @@ export function trail(locale: Locale, ...items: { label: string; href?: string }
     { label: getDictionary(locale).breadcrumbHome, href: localizeHref("/", locale) },
     ...items.map((i) => ({ label: i.label, href: i.href ? localizeHref(i.href, locale) : undefined })),
   ];
+}
+
+/** 404s when an optional section has been disabled in the general settings. */
+export async function requireSection(key: OptionalPage) {
+  const settings = await getSiteSettings();
+  if (settings.pages[key] === false) notFound();
 }

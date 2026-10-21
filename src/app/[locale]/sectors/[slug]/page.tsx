@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Prose } from "@/components/shared/prose";
 import { Icon } from "@/components/ui/icon";
 import { getProjects, getSector, getSectors } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
 import { toProjectCards } from "@/lib/view-models";
@@ -32,6 +32,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/sectors/
 
 export default async function SectorPage({ params }: PageProps<"/[locale]/sectors/[slug]">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("sectors");
   const { slug } = await params;
   const [sector, sectors] = await Promise.all([getSector(slug), getSectors()]);
   if (!sector) notFound();

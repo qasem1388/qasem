@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
-import { getJobs, getNews, getProjects, getSectors, getServices } from "@/lib/content";
+import { isPathEnabled } from "@/content/defaults/pages";
+import { getJobs, getNews, getProjects, getSectors, getServices, getSiteSettings } from "@/lib/content";
 import { pageContext, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
@@ -66,6 +67,11 @@ export default async function SitemapPage({ params }: PageProps<"/[locale]/sitem
     },
   ];
 
+  const settings = await getSiteSettings();
+  const visible = groups
+    .map((g) => ({ ...g, links: g.links.filter((l) => isPathEnabled(l.href, settings.pages)) }))
+    .filter((g) => g.links.length > 0);
+
   return (
     <>
       <PageHeader
@@ -76,7 +82,7 @@ export default async function SitemapPage({ params }: PageProps<"/[locale]/sitem
       />
       <section className="py-14 sm:py-16">
         <div className="container-page columns-1 gap-8 sm:columns-2 lg:columns-3">
-          {groups.map((g) => (
+          {visible.map((g) => (
             <nav
               key={g.title}
               aria-label={g.title}

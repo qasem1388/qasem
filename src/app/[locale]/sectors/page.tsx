@@ -4,7 +4,7 @@ import { CtaBand } from "@/components/shared/cta-band";
 import { PageHeader } from "@/components/shared/page-header";
 import { Icon } from "@/components/ui/icon";
 import { getProjects, getSectors } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/sectors"
 
 export default async function SectorsPage({ params }: PageProps<"/[locale]/sectors">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("sectors");
   const [sectors, projects] = await Promise.all([getSectors(), getProjects()]);
   return (
     <>

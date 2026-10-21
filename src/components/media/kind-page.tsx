@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
 import { getNews } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import type { NewsKind } from "@/types/content";
 import { MediaList } from "./media-list";
@@ -24,6 +24,7 @@ export async function kindMetadata(params: Promise<{ locale: string }>, section:
 /** Listing page for one kind of media-center post. */
 export async function KindPage({ params, section }: { params: Promise<{ locale: string }>; section: Section }) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("media");
   const posts = await getNews(kindOf[section]);
   return (
     <>

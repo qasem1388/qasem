@@ -23,6 +23,8 @@ import type {
   Testimonial,
   Video,
 } from "@/types/content";
+import { defaultBrand, defaultLogo } from "@/content/defaults/brand";
+import { defaultPageToggles } from "@/content/defaults/pages";
 import { db } from "./db";
 
 /**
@@ -41,7 +43,17 @@ async function setting<T>(key: string): Promise<T> {
   return row.value as T;
 }
 
-export const getSiteSettings = cache(() => setting<SiteSettings>("site"));
+/** Site settings merged over factory defaults, so fields added in newer versions always exist. */
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
+  const stored = await setting<SiteSettings>("site");
+  return {
+    ...stored,
+    brand: { ...defaultBrand, ...stored.brand },
+    logo: { ...defaultLogo, ...stored.logo },
+    pages: { ...defaultPageToggles, ...stored.pages },
+    seo: { ...stored.seo },
+  };
+});
 export const getHomePage = cache(() => setting<HomePage>("home"));
 export const getAboutPage = cache(() => setting<AboutPage>("about"));
 
@@ -267,4 +279,25 @@ export const getLegalPage = cache(async (slug: string): Promise<LegalPage | null
   const row = await db.page.findFirst({ where: { slug, status: "PUBLISHED" } });
   if (!row) return null;
   return { slug: row.slug as LegalPage["slug"], title: L(row.title), updatedAt: day(row.updatedAt), body: L(row.body) };
+});
+
+/** A published custom page by slug (built-in legal pages use getLegalPage). */
+export const getCustomPage = cache(async (slug: string) => {
+  const row = await db.page.findFirst({ where: { slug, status: "PUBLISHED" } });
+  if (!row) return null;
+  return {
+    slug: row.slug,
+    title: L(row.title),
+    body: L(row.body),
+    seoDescription: row.seoDescription ? L(row.seoDescription) : undefined,
+    updatedAt: day(row.updatedAt),
+  };
+});
+
+export const getCustomPageSlugs = cache(async () => {
+  const rows = await db.page.findMany({
+    where: { status: "PUBLISHED", slug: { notIn: ["privacy", "terms", "cookies"] } },
+    select: { slug: true },
+  });
+  return rows.map((r) => r.slug);
 });

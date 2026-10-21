@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 import { formatDate, tr } from "@/lib/utils";
 import type { LegalPage as LegalPageData } from "@/types/content";
 import { PageHeader } from "./page-header";
-import { Prose } from "./prose";
+import { RichContent } from "./rich-content";
 
 type Slug = LegalPageData["slug"];
 
@@ -30,7 +30,7 @@ export async function LegalPage({ params, slug }: { params: Promise<{ locale: st
       </PageHeader>
       <section className="py-14 sm:py-16">
         <div className="container-page max-w-3xl">
-          <Prose text={tr(page.body, locale)} />
+          <RichContent value={tr(page.body, locale)} />
         </div>
       </section>
     </>

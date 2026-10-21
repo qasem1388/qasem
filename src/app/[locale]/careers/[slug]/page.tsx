@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ApplicationForm } from "@/components/forms/application-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { getJob, getJobs, getSiteSettings } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { formatDate, tr } from "@/lib/utils";
 
@@ -29,6 +29,7 @@ const employmentType = {
 
 export default async function JobPage({ params }: PageProps<"/[locale]/careers/[slug]">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("careers");
   const { slug } = await params;
   const [job, settings] = await Promise.all([getJob(slug), getSiteSettings()]);
   if (!job) notFound();

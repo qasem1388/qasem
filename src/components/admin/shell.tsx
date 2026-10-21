@@ -1,13 +1,46 @@
 "use client";
 
-import { ExternalLink, FileClock, LayoutDashboard, LogOut, Menu, UserCog, Users, X } from "lucide-react";
+import {
+  Building,
+  ExternalLink,
+  FileClock,
+  FileText,
+  Home,
+  Images,
+  LayoutDashboard,
+  ListTree,
+  LogOut,
+  MapPinned,
+  Menu,
+  Palette,
+  PanelBottom,
+  Settings2,
+  UserCog,
+  Users,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-const icons = { dashboard: LayoutDashboard, users: Users, audit: FileClock, account: UserCog } as const;
+const icons = {
+  dashboard: LayoutDashboard,
+  users: Users,
+  audit: FileClock,
+  account: UserCog,
+  home: Home,
+  pages: FileText,
+  menus: ListTree,
+  media: Images,
+  identity: Palette,
+  company: Building,
+  branches: MapPinned,
+  footer: PanelBottom,
+  general: Settings2,
+} as const;
 export type AdminNavItem = { href: string; label: string; icon: keyof typeof icons };
+export type AdminNavGroup = { title?: string; items: AdminNavItem[] };
 
 export function AdminShell({
   nav,
@@ -16,7 +49,7 @@ export function AdminShell({
   logout,
   children,
 }: {
-  nav: AdminNavItem[];
+  nav: AdminNavGroup[];
   user: { name: string; roleLabel: string };
   siteName: string;
   logout: () => Promise<void>;
@@ -41,27 +74,32 @@ export function AdminShell({
         </button>
       </div>
       <nav aria-label="قائمة لوحة التحكم" className="flex-1 overflow-y-auto p-3">
-        <ul className="space-y-1">
-          {nav.map((item) => {
-            const Icon = icons[item.icon];
-            const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "rounded-brand flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors",
-                    active ? "bg-secondary text-primary" : "text-white/75 hover:bg-white/10 hover:text-white",
-                  )}
-                >
-                  <Icon className="size-4.5" aria-hidden />
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {nav.map((group, gi) => (
+          <div key={gi} className={gi ? "mt-5" : undefined}>
+            {group.title && <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-wide text-white/40">{group.title}</p>}
+            <ul className="space-y-1">
+              {group.items.map((item) => {
+                const Icon = icons[item.icon];
+                const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "rounded-brand flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors",
+                        active ? "bg-secondary text-primary" : "text-white/75 hover:bg-white/10 hover:text-white",
+                      )}
+                    >
+                      <Icon className="size-4.5" aria-hidden />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
       <div className="space-y-1 border-t border-white/10 p-3 text-sm">
         <a

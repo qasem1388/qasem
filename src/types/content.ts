@@ -20,17 +20,26 @@ export type BrandTheme = {
   accent: string;
   surface: string;
   text: string;
+  /** Main call-to-action button colours. */
+  button: string;
+  buttonText: string;
   /** Base corner radius in px. */
   radius: number;
+  font: "plex" | "tajawal" | "cairo" | "almarai";
+  /** Global text size multiplier (0.9 – 1.15). */
+  fontScale: number;
 };
 
 export type SiteSettings = {
   name: Localized;
   tagline: Localized;
   description: Localized;
-  logo: { src?: string; footerSrc?: string; mark: string };
+  logo: { src?: string; footerSrc?: string; favicon?: string; mark: string };
   brand: BrandTheme;
   contact: {
+    region?: Localized;
+    lat?: number;
+    lng?: number;
     phone: string;
     phoneDisplay: string;
     email: string;
@@ -51,7 +60,13 @@ export type SiteSettings = {
   };
   /** Shows a notice that the content is sample data. */
   demoMode: boolean;
+  /** Optional public sections that can be disabled. */
+  pages: Record<OptionalPage, boolean>;
+  /** Default social-share data. */
+  seo: { shareImage?: string; titleSuffix?: Localized };
 };
+
+export type OptionalPage = "sectors" | "media" | "clients" | "careers" | "faq";
 
 export type HomeSectionKey =
   | "hero"

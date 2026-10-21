@@ -2,7 +2,7 @@ import { ChevronDown, MessageCircleQuestion } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { getFaqs } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/faq">) {
 
 export default async function FaqPage({ params }: PageProps<"/[locale]/faq">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("faq");
   const faqs = await getFaqs();
   const groups = [...new Set(faqs.map((f) => tr(f.category, locale)))].map((name) => ({
     name,

@@ -22,7 +22,11 @@ export const siteSettings: SiteSettings = {
     accent: "#1d4e89",
     surface: "#f5f7fa",
     text: "#0f172a",
+    button: "#c8a24a",
+    buttonText: "#0b1f3a",
     radius: 14,
+    font: "plex",
+    fontScale: 1,
   },
   contact: {
     phone: "+966110000000",
@@ -34,6 +38,9 @@ export const siteSettings: SiteSettings = {
       en: "King Fahd Road, Al Olaya District, Riyadh 12211",
     },
     city: { ar: "الرياض، المملكة العربية السعودية", en: "Riyadh, Saudi Arabia" },
+    region: { ar: "منطقة الرياض", en: "Riyadh Region" },
+    lat: 24.7136,
+    lng: 46.6753,
     workingHours: {
       ar: "الأحد – الخميس: 8:00 ص – 5:00 م",
       en: "Sun – Thu: 8:00 AM – 5:00 PM",
@@ -128,4 +135,6 @@ export const siteSettings: SiteSettings = {
     },
   },
   demoMode: true,
+  pages: { sectors: true, media: true, clients: true, careers: true, faq: true },
+  seo: {},
 };

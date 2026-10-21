@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { localeMeta, locales, type Locale } from "@/i18n/config";
+import { getSiteSettings } from "./content";
 import { siteUrl } from "./site-url";
 
 /**
  * Per-page metadata with canonical URL, hreflang alternates and Open Graph.
  * `path` is the locale-less path, e.g. "/services/logistics".
  */
-export function pageMetadata({
+export async function pageMetadata({
   locale,
   path,
   title,
@@ -20,7 +21,9 @@ export function pageMetadata({
   description?: string;
   image?: string;
   type?: "website" | "article";
-}): Metadata {
+}): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const share = image && !image.endsWith(".svg") ? image : settings.seo.shareImage;
   const clean = path === "/" ? "" : path;
   const languages = Object.fromEntries(locales.map((l) => [l, `/${l}${clean}`]));
   return {
@@ -33,7 +36,8 @@ export function pageMetadata({
       description,
       url: `${siteUrl()}/${locale}${clean}`,
       locale: localeMeta[locale].ogLocale,
-      ...(image && !image.endsWith(".svg") ? { images: [{ url: image }] } : {}),
+      siteName: settings.name[locale],
+      ...(share ? { images: [{ url: share }] } : {}),
     },
   };
 }

@@ -2,7 +2,7 @@ import { MediaTabs } from "@/components/media/media-tabs";
 import { VideoCard } from "@/components/media/video-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { getSiteSettings, getVideos } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { tr } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/media/vi
 
 export default async function VideosPage({ params }: PageProps<"/[locale]/media/videos">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("media");
   const [videos, settings] = await Promise.all([getVideos(), getSiteSettings()]);
   const channel = settings.social.find((s) => s.platform === "youtube")?.url;
   return (

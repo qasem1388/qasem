@@ -2,7 +2,7 @@ import { MediaTabs } from "@/components/media/media-tabs";
 import { Gallery } from "@/components/shared/gallery";
 import { PageHeader } from "@/components/shared/page-header";
 import { getPhotos } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { tr } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/media/ph
 
 export default async function PhotosPage({ params }: PageProps<"/[locale]/media/photos">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("media");
   const photos = await getPhotos();
   return (
     <>

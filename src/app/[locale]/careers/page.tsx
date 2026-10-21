@@ -3,7 +3,7 @@ import { JobCard } from "@/components/cards/job-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getJobs, getSiteSettings } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/careers"
 
 export default async function CareersPage({ params }: PageProps<"/[locale]/careers">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("careers");
   const [jobs, settings] = await Promise.all([getJobs(), getSiteSettings()]);
   return (
     <>

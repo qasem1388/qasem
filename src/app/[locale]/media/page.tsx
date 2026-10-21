@@ -7,7 +7,7 @@ import { Gallery } from "@/components/shared/gallery";
 import { PageHeader } from "@/components/shared/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { getNews, getPhotos } from "@/lib/content";
-import { pageContext, trail } from "@/lib/page";
+import { pageContext, requireSection, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
 import { formatDate, localizeHref, tr } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/media">)
 
 export default async function MediaPage({ params }: PageProps<"/[locale]/media">) {
   const { locale, dict } = await pageContext(params);
+  await requireSection("media");
   const [posts, photos] = await Promise.all([getNews(), getPhotos()]);
   const [featured, ...rest] = posts;
 
