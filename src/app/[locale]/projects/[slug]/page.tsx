@@ -75,6 +75,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
             src={project.image}
             alt=""
             width={960}
+            sizes="(min-width: 1024px) 50vw, 100vw"
             height={640}
             priority
             className="rounded-brand-lg aspect-[3/2] h-auto w-full object-cover shadow-lg"

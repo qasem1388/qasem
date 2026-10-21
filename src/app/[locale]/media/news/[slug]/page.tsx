@@ -117,6 +117,7 @@ export default async function NewsPostPage({ params }: PageProps<"/[locale]/medi
           src={post.image}
           alt=""
           width={1200}
+          sizes="(min-width: 1280px) 1200px, 100vw"
           height={675}
           priority
           className="rounded-brand-lg aspect-video h-auto w-full object-cover shadow-lg"

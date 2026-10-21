@@ -67,6 +67,7 @@ export function Gallery({
                 src={item.src}
                 alt={item.caption ?? ""}
                 width={800}
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 height={600}
                 className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
@@ -94,6 +95,7 @@ export function Gallery({
               src={current.src}
               alt={current.caption ?? ""}
               width={1280}
+              sizes="100vw"
               height={960}
               className="rounded-brand-lg max-h-[80vh] w-full object-contain"
             />

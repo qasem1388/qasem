@@ -13,7 +13,14 @@ export function AboutSection({ locale, home }: SectionProps) {
         <div className="relative order-2 lg:order-1" data-reveal>
           <div className="rounded-brand-lg bg-secondary-100 absolute -top-4 size-28 ltr:-left-4 rtl:-right-4" aria-hidden />
           <div className="rounded-brand-lg shadow-primary/10 relative overflow-hidden shadow-xl">
-            <Image src={about.image} alt="" width={800} height={640} className="aspect-[5/4] h-auto w-full object-cover" />
+            <Image
+              src={about.image}
+              alt=""
+              width={800}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              height={640}
+              className="aspect-[5/4] h-auto w-full object-cover"
+            />
           </div>
         </div>
         <div className="order-1 lg:order-2">

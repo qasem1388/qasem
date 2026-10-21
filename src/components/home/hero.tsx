@@ -66,6 +66,7 @@ export function HeroSection({ locale, home }: SectionProps) {
               src={hero.image}
               alt=""
               width={960}
+              sizes="(min-width: 1024px) 50vw, 100vw"
               height={760}
               priority
               className="aspect-[6/5] h-auto w-full object-cover"

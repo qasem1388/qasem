@@ -100,6 +100,7 @@ export function ProjectsGrid({
                 src={p.image}
                 alt=""
                 width={640}
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 height={520}
                 className="aspect-[4/3.4] h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />

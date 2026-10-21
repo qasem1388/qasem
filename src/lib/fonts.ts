@@ -7,13 +7,13 @@ import { Almarai, Cairo, IBM_Plex_Sans_Arabic, Tajawal } from "next/font/google"
  */
 const plex = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-plex",
   display: "swap",
 });
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "700", "800"],
+  weight: ["400", "500", "700", "800"],
   variable: "--font-tajawal",
   display: "swap",
   preload: false,
@@ -21,7 +21,7 @@ const tajawal = Tajawal({
 const cairo = Cairo({ subsets: ["arabic", "latin"], variable: "--font-cairo", display: "swap", preload: false });
 const almarai = Almarai({
   subsets: ["arabic"],
-  weight: ["300", "400", "700", "800"],
+  weight: ["400", "700", "800"],
   variable: "--font-almarai",
   display: "swap",
   preload: false,

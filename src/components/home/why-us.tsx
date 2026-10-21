@@ -41,7 +41,14 @@ export function WhyUsSection({ locale, home }: SectionProps) {
         <div className="relative" data-reveal>
           <div className="border-secondary/30 absolute -inset-4 rounded-[calc(var(--brand-radius)*2.4)] border" aria-hidden />
           <div className="relative overflow-hidden rounded-[calc(var(--brand-radius)*2)]">
-            <Image src={whyUs.image} alt="" width={800} height={880} className="aspect-[10/11] h-auto w-full object-cover" />
+            <Image
+              src={whyUs.image}
+              alt=""
+              width={800}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              height={880}
+              className="aspect-[10/11] h-auto w-full object-cover"
+            />
           </div>
         </div>
       </div>

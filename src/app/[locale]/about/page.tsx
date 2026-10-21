@@ -52,6 +52,7 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
               src={about.image}
               alt=""
               width={800}
+              sizes="(min-width: 1024px) 50vw, 100vw"
               height={640}
               className="rounded-brand-lg relative aspect-[5/4] h-auto w-full object-cover shadow-xl"
             />
