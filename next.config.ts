@@ -34,6 +34,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker image (see Dockerfile); `npm start` uses the regular build.
+  output: process.env.BUILD_STANDALONE === "1" ? "standalone" : undefined,
   poweredByHeader: false,
   serverExternalPackages: ["@node-rs/argon2"],
   turbopack: {

@@ -4,6 +4,9 @@
  * audit logs and inbox records are never touched.
  *
  * Usage: npx prisma db seed
+ *
+ * Re-seeding replaces ALL site content, so on a database that already has
+ * content it refuses unless forced:  npx prisma db seed -- --force
  */
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -25,6 +28,15 @@ const jobType: Record<string, JobType> = {
 const newsKind: Record<string, NewsKind> = { news: "NEWS", article: "ARTICLE", announcement: "ANNOUNCEMENT", event: "EVENT" };
 
 async function main() {
+  const force = process.argv.includes("--force") || process.env.SEED_FORCE === "1";
+  if (!force && (await db.setting.findUnique({ where: { key: "site" } }))) {
+    console.error(
+      "✖ This database already has site content. Seeding would replace it with the demo data.\n" +
+        "  If that is really what you want (e.g. a fresh demo), run: npx prisma db seed -- --force",
+    );
+    process.exitCode = 1;
+    return;
+  }
   await db.$transaction(
     async (tx) => {
       // Children first to respect foreign keys.

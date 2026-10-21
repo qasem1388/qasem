@@ -1,3 +1,4 @@
+import { staticParams } from "@/lib/static-params";
 import { Calendar, CalendarClock, Link2, MapPin } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -13,9 +14,8 @@ import { formatDate, tr } from "@/lib/utils";
 
 const sectionOf = { news: "news", article: "articles", announcement: "announcements", event: "events" } as const;
 
-export async function generateStaticParams() {
-  const posts = await getNews();
-  return posts.map((p) => ({ slug: p.slug }));
+export function generateStaticParams() {
+  return staticParams(async () => (await getNews()).map((p) => ({ slug: p.slug })));
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/media/news/[slug]">) {

@@ -1,0 +1,26 @@
+# systemd unit for running the site without Docker.
+#   sudo cp deploy/riyada.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now riyada
+# Assumes the project lives in /var/www/riyada, owned by the "riyada" user, with .env filled in.
+[Unit]
+Description=Riyada corporate website (Next.js)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=riyada
+Group=riyada
+WorkingDirectory=/var/www/riyada
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env npx next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/www/riyada/storage /var/www/riyada/.next
+
+[Install]
+WantedBy=multi-user.target

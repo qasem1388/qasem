@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { siteUrl } from "@/lib/site-url";
 
 /** Regenerated hourly and whenever content changes (see revalidateSite). */
-export const revalidate = 3600;
+// Rendered per request so it always reflects the live database (cheap queries).
+export const dynamic = "force-dynamic";
 
 const STATIC_PATHS = [
   "/",

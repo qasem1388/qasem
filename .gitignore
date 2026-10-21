@@ -46,3 +46,8 @@ next-env.d.ts
 
 # uploaded files (local storage driver)
 /storage/
+
+# test output
+/playwright-report
+/test-results
+/backups

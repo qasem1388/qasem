@@ -1,3 +1,4 @@
+import { staticParams } from "@/lib/static-params";
 import { Briefcase, Calendar, CircleCheck, Clock, GraduationCap, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ApplicationForm } from "@/components/forms/application-form";
@@ -7,9 +8,8 @@ import { pageContext, requireSection, trail } from "@/lib/page";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { formatDate, tr } from "@/lib/utils";
 
-export async function generateStaticParams() {
-  const jobs = await getJobs();
-  return jobs.map((j) => ({ slug: j.slug }));
+export function generateStaticParams() {
+  return staticParams(async () => (await getJobs()).map((j) => ({ slug: j.slug })));
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/careers/[slug]">) {

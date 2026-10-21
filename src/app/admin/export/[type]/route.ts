@@ -1,4 +1,5 @@
 import { searchWhere } from "@/components/admin/inbox-toolbar";
+import { toCsv as csv } from "@/lib/csv";
 import { applicationStatuses } from "@/lib/application-status";
 import { db } from "@/lib/db";
 import { messageStatuses, quoteStatuses } from "@/lib/inbox-status";
@@ -6,20 +7,7 @@ import { audit } from "@/server/audit";
 import { requireUser } from "@/server/auth/session";
 import type { Localized } from "@/types/content";
 
-/**
- * Exports an inbox (respecting the current filters) as CSV.
- * UTF-8 with BOM so Excel shows Arabic correctly; cells starting with = + - @
- * are prefixed to prevent spreadsheet formula injection.
- */
-function cell(v: unknown) {
-  let s = v instanceof Date ? v.toISOString().replace("T", " ").slice(0, 16) : String(v ?? "");
-  // Plain numbers such as +966… phones are safe; anything else that could start a formula is neutralised.
-  if (/^[=+\-@\t\r]/.test(s) && !/^[+-]?\d[\d\s]*$/.test(s)) s = `'${s}`;
-  return `"${s.replace(/"/g, '""')}"`;
-}
-
-const csv = (head: string[], rows: unknown[][]) => "﻿" + [head, ...rows].map((r) => r.map(cell).join(",")).join("\r\n");
-
+/** Exports an inbox (respecting the current filters) as CSV. */
 export async function GET(req: Request, ctx: RouteContext<"/admin/export/[type]">) {
   const me = await requireUser("inbox.view");
   const { type } = await ctx.params;

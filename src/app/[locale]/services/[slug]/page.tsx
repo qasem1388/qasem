@@ -1,3 +1,4 @@
+import { staticParams } from "@/lib/static-params";
 import { ArrowRight, CircleCheck, FileText, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,9 +15,8 @@ import { jsonLd, pageMetadata } from "@/lib/seo";
 import { siteUrl } from "@/lib/site-url";
 import { localizeHref, tr, whatsappUrl } from "@/lib/utils";
 
-export async function generateStaticParams() {
-  const services = await getServices();
-  return services.map((s) => ({ slug: s.slug }));
+export function generateStaticParams() {
+  return staticParams(async () => (await getServices()).map((s) => ({ slug: s.slug })));
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/services/[slug]">) {

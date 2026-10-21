@@ -1,3 +1,4 @@
+import { staticParams } from "@/lib/static-params";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { RichContent } from "@/components/shared/rich-content";
@@ -10,8 +11,8 @@ import { formatDate, tr } from "@/lib/utils";
  * Custom pages created in the admin panel live at /{locale}/{slug}.
  * Any other unknown path renders the localized 404 page.
  */
-export async function generateStaticParams() {
-  return (await getCustomPageSlugs()).map((slug) => ({ rest: [slug] }));
+export function generateStaticParams() {
+  return staticParams(async () => (await getCustomPageSlugs()).map((slug) => ({ rest: [slug] })));
 }
 
 async function load(params: Promise<{ locale: string; rest: string[] }>) {

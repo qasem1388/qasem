@@ -1,3 +1,4 @@
+import { staticParams } from "@/lib/static-params";
 import { ArrowRight, CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,9 +13,8 @@ import { pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
 import { toProjectCards } from "@/lib/view-models";
 
-export async function generateStaticParams() {
-  const sectors = await getSectors();
-  return sectors.map((s) => ({ slug: s.slug }));
+export function generateStaticParams() {
+  return staticParams(async () => (await getSectors()).map((s) => ({ slug: s.slug })));
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/sectors/[slug]">) {

@@ -1,7 +1,8 @@
 import { getSiteSettings } from "@/lib/content";
 import { siteUrl } from "@/lib/site-url";
 
-export const revalidate = 86400;
+// Rendered per request so it always reflects the live database (cheap queries).
+export const dynamic = "force-dynamic";
 
 /** RFC 9116 security contact, built from the company email set in the admin panel. */
 export async function GET() {

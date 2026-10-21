@@ -15,6 +15,7 @@ import { analyticsConfig } from "@/lib/analytics";
 import { getSiteSettings } from "@/lib/content";
 import { siteUrl } from "@/lib/site-url";
 import { DEFAULT_SHARE_IMAGE } from "@/lib/seo";
+import { staticParams } from "@/lib/static-params";
 import { brandCssVariables } from "@/lib/theme";
 import { localizeHref, tr, whatsappUrl } from "@/lib/utils";
 import { isPathEnabled } from "@/content/defaults/pages";
@@ -22,7 +23,7 @@ import type { NavItem, SiteSettings } from "@/types/content";
 import "../globals.css";
 
 export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
+  return staticParams(() => locales.map((locale) => ({ locale })));
 }
 
 export const viewport: Viewport = {

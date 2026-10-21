@@ -34,6 +34,7 @@ export const auditLabels: Record<string, string> = {
   "media.deleted": "حذف وسائط",
   "settings.updated": "تعديل الإعدادات",
   "settings.reset": "استعادة الهوية الافتراضية",
+  "site.cache_refreshed": "تحديث صفحات الموقع",
   "homepage.updated": "تعديل الصفحة الرئيسية",
   "menu.updated": "تعديل القوائم",
   "branch.saved": "حفظ فرع",

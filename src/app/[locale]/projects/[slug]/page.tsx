@@ -1,3 +1,4 @@
+import { staticParams } from "@/lib/static-params";
 import { Building2, Calendar, CircleCheck, Layers, MapPin, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,9 +14,8 @@ import { pageMetadata } from "@/lib/seo";
 import { localizeHref, tr } from "@/lib/utils";
 import { toProjectCards } from "@/lib/view-models";
 
-export async function generateStaticParams() {
-  const projects = await getProjects();
-  return projects.map((p) => ({ slug: p.slug }));
+export function generateStaticParams() {
+  return staticParams(async () => (await getProjects()).map((p) => ({ slug: p.slug })));
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/projects/[slug]">) {

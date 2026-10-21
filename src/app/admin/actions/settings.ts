@@ -60,3 +60,11 @@ export async function saveGeneral(json: string) {
 export async function saveMenu(json: string) {
   return updateSite(json, menuSchema, "menu");
 }
+
+/** Rebuilds every cached public page, e.g. after restoring a backup or editing the database directly. */
+export async function refreshSiteCache(): Promise<SaveResult> {
+  const me = await requireUser("settings.manage");
+  revalidateSite();
+  await audit("site.cache_refreshed", { userId: me.id, entity: "settings" });
+  return { ok: true, message: "سيُعاد بناء صفحات الموقع من قاعدة البيانات مع أول زيارة لكل صفحة." };
+}

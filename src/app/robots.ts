@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { getSiteSettings } from "@/lib/content";
 import { siteUrl } from "@/lib/site-url";
 
-export const revalidate = 3600;
+// Rendered per request so it always reflects the live database (cheap queries).
+export const dynamic = "force-dynamic";
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const settings = await getSiteSettings();
