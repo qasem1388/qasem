@@ -1,88 +1,270 @@
 import "server-only";
 import { cache } from "react";
-import { clients, news, projects, sectors, serviceCategories, services, testimonials } from "@/content/demo/collections";
-import { aboutPage, branches, faqs, jobs, legalPages, photos, successStories, videos } from "@/content/demo/company";
-import { newsBodies, projectDetails, sectorDetails, serviceDetails } from "@/content/demo/details";
-import { homePage } from "@/content/demo/home";
-import { siteSettings } from "@/content/demo/site";
-import type { NewsKind } from "@/types/content";
+import type { Prisma } from "@/generated/prisma/client";
+import type { IconName } from "@/components/ui/icon";
+import type {
+  AboutPage,
+  Branch,
+  Client,
+  Faq,
+  GalleryPhoto,
+  HomePage,
+  Job,
+  LegalPage,
+  Localized,
+  NewsKind,
+  NewsPost,
+  Project,
+  Sector,
+  Service,
+  ServiceCategory,
+  SiteSettings,
+  SuccessStory,
+  Testimonial,
+  Video,
+} from "@/types/content";
+import { db } from "./db";
 
 /**
  * Content access layer. Every page reads data through these functions only,
- * so the demo source can be swapped for the database (phase 3) without
- * touching any UI component.
+ * mapping database rows to the view types in `@/types/content`.
+ * Wrapped in React `cache` so a request never queries the same data twice.
  */
-export const getSiteSettings = cache(async () => siteSettings);
 
-export const getHomePage = cache(async () => homePage);
+const L = (v: Prisma.JsonValue | null | undefined): Localized => (v ?? { ar: "", en: "" }) as Localized;
+const LL = (v: Prisma.JsonValue | null | undefined): Localized[] => (Array.isArray(v) ? (v as Localized[]) : []);
+const day = (d: Date) => d.toISOString().slice(0, 10);
 
-export const getAboutPage = cache(async () => aboutPage);
+async function setting<T>(key: string): Promise<T> {
+  const row = await db.setting.findUnique({ where: { key } });
+  if (!row) throw new Error(`Missing "${key}" settings. Run: npx prisma db seed`);
+  return row.value as T;
+}
+
+export const getSiteSettings = cache(() => setting<SiteSettings>("site"));
+export const getHomePage = cache(() => setting<HomePage>("home"));
+export const getAboutPage = cache(() => setting<AboutPage>("about"));
 
 /* Services */
-export const getServices = cache(async (opts: { featured?: boolean } = {}) =>
-  services.filter((s) => (opts.featured ? s.featured : true)).sort((a, b) => a.order - b.order),
-);
+type ServiceRow = Prisma.ServiceGetPayload<object>;
+const toService = (s: ServiceRow) => ({
+  slug: s.slug,
+  categoryId: s.categoryId,
+  icon: s.icon as IconName,
+  title: L(s.title),
+  summary: L(s.summary),
+  image: s.image,
+  featured: s.featured,
+  order: s.order,
+  body: L(s.body),
+  features: (s.features ?? []) as { title: Localized; body: Localized }[],
+  gallery: s.gallery,
+});
 
-export const getServiceCategories = cache(async () => serviceCategories);
+export const getServices = cache(async (opts: { featured?: boolean } = {}): Promise<Service[]> => {
+  const rows = await db.service.findMany({
+    where: { published: true, ...(opts.featured ? { featured: true } : {}) },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+  });
+  return rows.map(toService);
+});
+
+export const getServiceCategories = cache(async (): Promise<ServiceCategory[]> => {
+  const rows = await db.serviceCategory.findMany({ orderBy: { order: "asc" } });
+  return rows.map((c) => ({ id: c.id, name: L(c.name) }));
+});
 
 export const getService = cache(async (slug: string) => {
-  const service = services.find((s) => s.slug === slug);
-  const detail = serviceDetails[slug];
-  return service && detail ? { ...service, ...detail } : null;
+  const row = await db.service.findFirst({ where: { slug, published: true } });
+  return row ? toService(row) : null;
 });
 
 /* Projects */
-export const getProjects = cache(async (opts: { featured?: boolean; sectorId?: string } = {}) =>
-  projects.filter((p) => (opts.featured ? p.featured : true) && (opts.sectorId ? p.sectorId === opts.sectorId : true)),
-);
+type ProjectRow = Prisma.ProjectGetPayload<object>;
+const toProject = (p: ProjectRow) => ({
+  slug: p.slug,
+  title: L(p.title),
+  summary: L(p.summary),
+  sectorId: p.sectorId ?? "",
+  status: p.status === "COMPLETED" ? ("completed" as const) : ("ongoing" as const),
+  location: L(p.location),
+  year: p.year,
+  image: p.image,
+  featured: p.featured,
+  client: L(p.client),
+  body: L(p.body),
+  scope: LL(p.scope),
+  gallery: p.gallery,
+});
+
+export const getProjects = cache(async (opts: { featured?: boolean; sectorId?: string } = {}): Promise<Project[]> => {
+  const rows = await db.project.findMany({
+    where: {
+      published: true,
+      ...(opts.featured ? { featured: true } : {}),
+      ...(opts.sectorId ? { sectorId: opts.sectorId } : {}),
+    },
+    orderBy: [{ order: "asc" }, { year: "desc" }],
+  });
+  return rows.map(toProject);
+});
 
 export const getProject = cache(async (slug: string) => {
-  const project = projects.find((p) => p.slug === slug);
-  const detail = projectDetails[slug];
-  return project && detail ? { ...project, ...detail } : null;
+  const row = await db.project.findFirst({ where: { slug, published: true } });
+  return row ? toProject(row) : null;
 });
 
 /* Sectors */
-export const getSectors = cache(async () => sectors);
+type SectorRow = Prisma.SectorGetPayload<object>;
+const toSector = (s: SectorRow) => ({
+  id: s.id,
+  slug: s.slug,
+  icon: s.icon as IconName,
+  name: L(s.name),
+  summary: L(s.summary),
+  body: L(s.body),
+  challenges: LL(s.challenges),
+});
+
+export const getSectors = cache(async (): Promise<Sector[]> => {
+  const rows = await db.sector.findMany({ where: { published: true }, orderBy: { order: "asc" } });
+  return rows.map(toSector);
+});
 
 export const getSector = cache(async (slug: string) => {
-  const sector = sectors.find((s) => s.slug === slug);
-  return sector ? { ...sector, ...sectorDetails[sector.id] } : null;
+  const row = await db.sector.findFirst({ where: { slug, published: true } });
+  return row ? toSector(row) : null;
 });
 
-/* Clients & testimonials */
-export const getClients = cache(async () => clients);
+/* Clients, testimonials & stories */
+export const getClients = cache(async (): Promise<Client[]> => {
+  const rows = await db.client.findMany({ where: { published: true }, orderBy: { order: "asc" } });
+  return rows.map((c) => ({ id: c.id, name: L(c.name), logo: c.logo, url: c.url ?? undefined }));
+});
 
-export const getTestimonials = cache(async () => testimonials);
+export const getTestimonials = cache(async (): Promise<Testimonial[]> => {
+  const rows = await db.testimonial.findMany({ where: { published: true }, orderBy: { order: "asc" } });
+  return rows.map((t) => ({ id: t.id, quote: L(t.quote), author: L(t.author), role: L(t.role), rating: t.rating }));
+});
 
-export const getSuccessStories = cache(async () => successStories);
+export const getSuccessStories = cache(async (): Promise<SuccessStory[]> => {
+  const rows = await db.successStory.findMany({ where: { published: true }, orderBy: { order: "asc" } });
+  return rows.map((s) => ({
+    id: s.id,
+    title: L(s.title),
+    sectorId: s.sectorId ?? "",
+    challenge: L(s.challenge),
+    solution: L(s.solution),
+    result: L(s.result),
+    metric: { value: s.metricValue, label: L(s.metricLabel) },
+  }));
+});
 
 /* Media center */
-export const getLatestNews = cache(async (limit = 3) =>
-  [...news].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, limit),
-);
+const kindFromDb = { NEWS: "news", ARTICLE: "article", ANNOUNCEMENT: "announcement", EVENT: "event" } as const;
+const kindToDb = { news: "NEWS", article: "ARTICLE", announcement: "ANNOUNCEMENT", event: "EVENT" } as const;
 
-export const getNews = cache(async (kind?: NewsKind) =>
-  news.filter((n) => (kind ? n.kind === kind : true)).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)),
-);
-
-export const getNewsPost = cache(async (slug: string) => {
-  const post = news.find((n) => n.slug === slug);
-  return post ? { ...post, ...(newsBodies[slug] ?? { body: post.excerpt }) } : null;
+type NewsRow = Prisma.NewsPostGetPayload<object>;
+const toNews = (n: NewsRow) => ({
+  slug: n.slug,
+  kind: kindFromDb[n.kind],
+  title: L(n.title),
+  excerpt: L(n.excerpt),
+  image: n.image,
+  publishedAt: day(n.publishedAt),
+  body: L(n.body),
+  eventDate: n.eventDate ? day(n.eventDate) : undefined,
+  eventLocation: n.eventLocation ? L(n.eventLocation) : undefined,
 });
 
-export const getPhotos = cache(async () => photos);
+const visibleNews = () => ({ published: true, publishedAt: { lte: new Date() } });
 
-export const getVideos = cache(async () => videos);
+export const getNews = cache(async (kind?: NewsKind): Promise<NewsPost[]> => {
+  const rows = await db.newsPost.findMany({
+    where: { ...visibleNews(), ...(kind ? { kind: kindToDb[kind] } : {}) },
+    orderBy: { publishedAt: "desc" },
+  });
+  return rows.map(toNews);
+});
+
+export const getLatestNews = cache(async (limit = 3): Promise<NewsPost[]> => {
+  const rows = await db.newsPost.findMany({ where: visibleNews(), orderBy: { publishedAt: "desc" }, take: limit });
+  return rows.map(toNews);
+});
+
+export const getNewsPost = cache(async (slug: string) => {
+  const row = await db.newsPost.findFirst({ where: { slug, ...visibleNews() } });
+  return row ? toNews(row) : null;
+});
+
+export const getPhotos = cache(async (): Promise<GalleryPhoto[]> => {
+  const rows = await db.galleryPhoto.findMany({ orderBy: { order: "asc" } });
+  return rows.map((p) => ({ id: p.id, src: p.src, caption: L(p.caption), album: L(p.album) }));
+});
+
+export const getVideos = cache(async (): Promise<Video[]> => {
+  const rows = await db.video.findMany({ orderBy: { order: "asc" } });
+  return rows.map((v) => ({
+    id: v.id,
+    title: L(v.title),
+    poster: v.poster,
+    youtubeId: v.youtubeId ?? undefined,
+    duration: v.duration,
+  }));
+});
 
 /* Careers */
-export const getJobs = cache(async () => jobs.filter((j) => j.open).sort((a, b) => b.postedAt.localeCompare(a.postedAt)));
+const jobTypeFromDb = { FULL_TIME: "full-time", PART_TIME: "part-time", CONTRACT: "contract", INTERNSHIP: "internship" } as const;
 
-export const getJob = cache(async (slug: string) => jobs.find((j) => j.slug === slug && j.open) ?? null);
+type JobRow = Prisma.JobGetPayload<object>;
+const toJob = (j: JobRow): Job => ({
+  slug: j.slug,
+  title: L(j.title),
+  department: L(j.department),
+  location: L(j.location),
+  type: jobTypeFromDb[j.type],
+  experience: L(j.experience),
+  postedAt: day(j.postedAt),
+  summary: L(j.summary),
+  responsibilities: LL(j.responsibilities),
+  requirements: LL(j.requirements),
+  open: j.open,
+});
+
+export const getJobs = cache(async (): Promise<Job[]> => {
+  const rows = await db.job.findMany({ where: { open: true }, orderBy: { postedAt: "desc" } });
+  return rows.map(toJob);
+});
+
+export const getJob = cache(async (slug: string) => {
+  const row = await db.job.findFirst({ where: { slug, open: true } });
+  return row ? toJob(row) : null;
+});
 
 /* Contact & misc */
-export const getBranches = cache(async () => branches);
+export const getBranches = cache(async (): Promise<Branch[]> => {
+  const rows = await db.branch.findMany({ orderBy: [{ isMain: "desc" }, { order: "asc" }] });
+  return rows.map((b) => ({
+    id: b.id,
+    name: L(b.name),
+    address: L(b.address),
+    phone: b.phone,
+    phoneDisplay: b.phoneDisplay,
+    email: b.email,
+    hours: L(b.hours),
+    lat: b.lat,
+    lng: b.lng,
+    isMain: b.isMain,
+  }));
+});
 
-export const getFaqs = cache(async () => faqs);
+export const getFaqs = cache(async (): Promise<Faq[]> => {
+  const rows = await db.faq.findMany({ orderBy: { order: "asc" } });
+  return rows.map((f) => ({ id: f.id, category: L(f.category), question: L(f.question), answer: L(f.answer) }));
+});
 
-export const getLegalPage = cache(async (slug: string) => legalPages.find((p) => p.slug === slug) ?? null);
+export const getLegalPage = cache(async (slug: string): Promise<LegalPage | null> => {
+  const row = await db.page.findFirst({ where: { slug, status: "PUBLISHED" } });
+  if (!row) return null;
+  return { slug: row.slug as LegalPage["slug"], title: L(row.title), updatedAt: day(row.updatedAt), body: L(row.body) };
+});

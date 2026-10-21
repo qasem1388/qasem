@@ -1,0 +1,33 @@
+import "server-only";
+import type { Prisma } from "@/generated/prisma/client";
+import { db } from "@/lib/db";
+import { requestInfo } from "./request";
+
+/** Records an important administrative operation. Never throws: auditing must not break the action. */
+export async function audit(
+  action: string,
+  opts: { userId?: string | null; entity?: string; entityId?: string; details?: Prisma.InputJsonValue } = {},
+) {
+  try {
+    const { ip } = await requestInfo();
+    await db.auditLog.create({
+      data: { action, ip, userId: opts.userId ?? null, entity: opts.entity, entityId: opts.entityId, details: opts.details },
+    });
+  } catch (e) {
+    console.error("audit log failed", e);
+  }
+}
+
+export const auditLabels: Record<string, string> = {
+  "auth.login": "تسجيل دخول",
+  "auth.login_failed": "محاولة دخول فاشلة",
+  "auth.login_blocked": "حظر مؤقت لمحاولات الدخول",
+  "auth.logout": "تسجيل خروج",
+  "auth.password_changed": "تغيير كلمة المرور",
+  "auth.sessions_revoked": "إنهاء الجلسات الأخرى",
+  "user.created": "إنشاء مستخدم",
+  "user.updated": "تعديل مستخدم",
+  "user.password_reset": "إعادة تعيين كلمة مرور مستخدم",
+  "user.deleted": "حذف مستخدم",
+  "user.created_cli": "إنشاء مدير من سطر الأوامر",
+};

@@ -32,10 +32,42 @@ function rng(seed) {
 const r1 = (n) => Math.round(n * 10) / 10;
 
 const palettes = {
-  dusk: { sky: ["#0b1f3a", "#1d3a66", "#c97b4a", "#f2c879"], sun: "#ffd98a", far: "#1a3358", mid: "#132a4b", near: "#0b1f3a", win: "#ffd98a", ground: "#0a1a31" },
-  day: { sky: ["#3f79b8", "#79a9d6", "#cfe1ef", "#f4efe2"], sun: "#fff6d8", far: "#9db6cf", mid: "#4f6f93", near: "#22406a", win: "#d9e8f5", ground: "#d9c7a4" },
-  night: { sky: ["#050d1c", "#0b1f3a", "#173459", "#24456e"], sun: "#e9eef6", far: "#14294a", mid: "#0f2240", near: "#081629", win: "#ffcf6b", ground: "#061223" },
-  golden: { sky: ["#1b2f52", "#5a5a78", "#d99a5b", "#f6d08d"], sun: "#fff0c2", far: "#6c6880", mid: "#3a3e5c", near: "#1d2742", win: "#ffe2a1", ground: "#b98d5c" },
+  dusk: {
+    sky: ["#0b1f3a", "#1d3a66", "#c97b4a", "#f2c879"],
+    sun: "#ffd98a",
+    far: "#1a3358",
+    mid: "#132a4b",
+    near: "#0b1f3a",
+    win: "#ffd98a",
+    ground: "#0a1a31",
+  },
+  day: {
+    sky: ["#3f79b8", "#79a9d6", "#cfe1ef", "#f4efe2"],
+    sun: "#fff6d8",
+    far: "#9db6cf",
+    mid: "#4f6f93",
+    near: "#22406a",
+    win: "#d9e8f5",
+    ground: "#d9c7a4",
+  },
+  night: {
+    sky: ["#050d1c", "#0b1f3a", "#173459", "#24456e"],
+    sun: "#e9eef6",
+    far: "#14294a",
+    mid: "#0f2240",
+    near: "#081629",
+    win: "#ffcf6b",
+    ground: "#061223",
+  },
+  golden: {
+    sky: ["#1b2f52", "#5a5a78", "#d99a5b", "#f6d08d"],
+    sun: "#fff0c2",
+    far: "#6c6880",
+    mid: "#3a3e5c",
+    near: "#1d2742",
+    win: "#ffe2a1",
+    ground: "#b98d5c",
+  },
 };
 
 function skyDefs(id, p) {
@@ -142,7 +174,16 @@ function cityScene({ w, h, palette, seed, landmarks = true, roads = true, ...opt
   const rand = rng(seed);
   const base = h * 0.82;
   let body = "";
-  body += skyline(rand, { w, base: base - 18, count: 18, minH: h * 0.12, maxH: h * 0.3, fill: p.far, win: p.win, landmarks: false });
+  body += skyline(rand, {
+    w,
+    base: base - 18,
+    count: 18,
+    minH: h * 0.12,
+    maxH: h * 0.3,
+    fill: p.far,
+    win: p.win,
+    landmarks: false,
+  });
   body += skyline(rand, { w, base: base - 6, count: 16, minH: h * 0.1, maxH: h * 0.34, fill: p.mid, win: p.win, landmarks });
   body += skyline(rand, { w, base, count: 14, minH: h * 0.06, maxH: h * 0.16, fill: p.near, win: p.win });
   body += `<rect y="${base}" width="${w}" height="${h - base}" fill="${p.ground}"/>`;
@@ -167,7 +208,7 @@ function warehouseScene({ w, h, palette, seed }) {
     const bh = h * (0.16 + i * 0.03);
     body += `<path d="M${x} ${base} V${base - bh} Q${x + bw / 2} ${base - bh - 40} ${x + bw} ${base - bh} V${base} Z" fill="${i === 1 ? p.near : p.mid}"/>`;
     for (let d = 0; d < 5; d++) {
-      body += `<rect x="${r1(x + 14 + d * (bw - 28) / 5)}" y="${r1(base - bh * 0.55)}" width="${r1((bw - 28) / 5 - 8)}" height="${r1(bh * 0.55)}" fill="#ffffff" opacity=".12"/>`;
+      body += `<rect x="${r1(x + 14 + (d * (bw - 28)) / 5)}" y="${r1(base - bh * 0.55)}" width="${r1((bw - 28) / 5 - 8)}" height="${r1(bh * 0.55)}" fill="#ffffff" opacity=".12"/>`;
     }
     body += `<rect x="${x}" y="${base - bh - 4}" width="${bw}" height="5" fill="${GOLD}" opacity=".8"/>`;
   }
@@ -227,7 +268,7 @@ function campusScene({ w, h, palette, seed, cross = false }) {
     <rect x="${bx - 10}" y="${base - bh - 12}" width="${bw + 20}" height="14" fill="${p.mid}"/>
     <rect x="${bx + bw * 0.38}" y="${base - bh - 50}" width="${bw * 0.24}" height="50" fill="${p.near}"/>`;
   for (let c = 0; c < 12; c++) {
-    body += `<rect x="${bx + 20 + c * (bw - 40) / 12}" y="${base - bh + 20}" width="${(bw - 40) / 12 - 10}" height="${bh - 20}" fill="#ffffff" opacity=".1"/>`;
+    body += `<rect x="${bx + 20 + (c * (bw - 40)) / 12}" y="${base - bh + 20}" width="${(bw - 40) / 12 - 10}" height="${bh - 20}" fill="#ffffff" opacity=".1"/>`;
   }
   body += windows(rand, bx + 10, base - bh + 24, bw - 20, bh - 40, p.win, 0.35);
   if (cross) {
@@ -256,7 +297,7 @@ function hotelScene({ w, h, palette, seed }) {
   const bh = h * 0.6;
   body += `<path d="M${x} ${base} V${base - bh} Q${x + bw / 2} ${base - bh - 60} ${x + bw} ${base - bh} V${base} Z" fill="${p.near}"/>`;
   for (let r = 0; r < 16; r++) {
-    body += `<rect x="${x + 8}" y="${base - bh + 18 + r * (bh - 30) / 16}" width="${bw - 16}" height="3" fill="${GOLD}" opacity=".55"/>`;
+    body += `<rect x="${x + 8}" y="${base - bh + 18 + (r * (bh - 30)) / 16}" width="${bw - 16}" height="3" fill="${GOLD}" opacity=".55"/>`;
   }
   body += windows(rand, x + 10, base - bh + 20, bw - 20, bh - 30, p.win, 0.5);
   body += `<rect y="${base}" width="${w}" height="${h - base}" fill="${p.ground}"/>`;
@@ -282,7 +323,7 @@ function abstractFacade({ w, h, seed, tint = GOLD }) {
     for (let r = 0; r < 14; r++) {
       const op = r1(0.08 + rand() * 0.35);
       const fill = rand() > 0.82 ? tint : "#7fa4cf";
-      body += `<path d="M${r1(c * cw + skew + 3)} ${r1(r * h / 14 + 3)} h${r1(cw - 6)} l${r1(-skew / 7)} ${r1(h / 14 - 6)} h${r1(-(cw - 6))} Z" fill="${fill}" opacity="${op}"/>`;
+      body += `<path d="M${r1(c * cw + skew + 3)} ${r1((r * h) / 14 + 3)} h${r1(cw - 6)} l${r1(-skew / 7)} ${r1(h / 14 - 6)} h${r1(-(cw - 6))} Z" fill="${fill}" opacity="${op}"/>`;
     }
   }
   body += `<path d="M0 ${h * 0.72} L${w} ${h * 0.35} V${h} H0 Z" fill="${NAVY}" opacity=".55"/>
@@ -330,7 +371,17 @@ const files = {
   "project-6.svg": hotelScene({ w: 640, h: 544, palette: "dusk", seed: 16 }),
   "news-1.svg": cityScene({ w: 640, h: 400, palette: "golden", seed: 31, sunX: 0.3, sunY: 0.6 }),
   "news-2.svg": abstractFacade({ w: 640, h: 400, seed: 32, tint: "#e3c77c" }),
-  "news-3.svg": cityScene({ w: 640, h: 400, palette: "night", seed: 33, night: true, landmarks: false, sunX: 0.2, sunY: 0.2, sunR: 0.1 }),
+  "news-3.svg": cityScene({
+    w: 640,
+    h: 400,
+    palette: "night",
+    seed: 33,
+    night: true,
+    landmarks: false,
+    sunX: 0.2,
+    sunY: 0.2,
+    sunR: 0.1,
+  }),
   "service-supply.svg": warehouseScene({ w: 640, h: 420, palette: "day", seed: 41 }),
   "service-contracting.svg": cityScene({ w: 640, h: 420, palette: "golden", seed: 42, landmarks: false }),
   "service-facility.svg": campusScene({ w: 640, h: 420, palette: "dusk", seed: 43 }),
