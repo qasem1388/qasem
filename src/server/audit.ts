@@ -41,4 +41,11 @@ export const auditLabels: Record<string, string> = {
   "page.created": "إنشاء صفحة",
   "page.updated": "تعديل صفحة",
   "page.deleted": "حذف صفحة",
+  "content.created": "إضافة محتوى",
+  "content.updated": "تعديل محتوى",
+  "content.deleted": "حذف محتوى",
+  "content.reordered": "إعادة ترتيب محتوى",
+  "application.updated": "تحديث طلب توظيف",
+  "application.deleted": "حذف طلب توظيف",
+  "file.downloaded": "تنزيل ملف خاص",
 };

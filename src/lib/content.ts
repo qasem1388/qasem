@@ -186,7 +186,7 @@ const toNews = (n: NewsRow) => ({
   publishedAt: day(n.publishedAt),
   body: L(n.body),
   eventDate: n.eventDate ? day(n.eventDate) : undefined,
-  eventLocation: n.eventLocation ? L(n.eventLocation) : undefined,
+  eventLocation: n.eventLocation && L(n.eventLocation).ar ? L(n.eventLocation) : undefined,
 });
 
 const visibleNews = () => ({ published: true, publishedAt: { lte: new Date() } });

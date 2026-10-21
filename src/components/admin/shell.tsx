@@ -1,6 +1,19 @@
 "use client";
 
 import {
+  Briefcase,
+  BriefcaseBusiness,
+  CircleHelp,
+  Factory,
+  FolderKanban,
+  Handshake,
+  Image as ImageIcon,
+  Inbox,
+  MessageSquareQuote,
+  Newspaper,
+  Tags,
+  Trophy,
+  Video,
   Building,
   ExternalLink,
   FileClock,
@@ -38,6 +51,19 @@ const icons = {
   branches: MapPinned,
   footer: PanelBottom,
   general: Settings2,
+  services: Briefcase,
+  "service-categories": Tags,
+  projects: FolderKanban,
+  sectors: Factory,
+  news: Newspaper,
+  photos: ImageIcon,
+  videos: Video,
+  clients: Handshake,
+  testimonials: MessageSquareQuote,
+  stories: Trophy,
+  faqs: CircleHelp,
+  jobs: BriefcaseBusiness,
+  applications: Inbox,
 } as const;
 export type AdminNavItem = { href: string; label: string; icon: keyof typeof icons };
 export type AdminNavGroup = { title?: string; items: AdminNavItem[] };

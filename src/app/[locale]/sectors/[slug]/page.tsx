@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ProjectsGrid } from "@/components/cards/projects-grid";
 import { CtaBand } from "@/components/shared/cta-band";
 import { PageHeader } from "@/components/shared/page-header";
-import { Prose } from "@/components/shared/prose";
+import { RichContent } from "@/components/shared/rich-content";
 import { Icon } from "@/components/ui/icon";
 import { getProjects, getSector, getSectors } from "@/lib/content";
 import { pageContext, requireSection, trail } from "@/lib/page";
@@ -52,7 +52,7 @@ export default async function SectorPage({ params }: PageProps<"/[locale]/sector
           <span className="rounded-brand-lg bg-primary text-secondary inline-flex size-16 items-center justify-center">
             <Icon name={sector.icon} className="size-8" />
           </span>
-          <div className="mt-8">{sector.body && <Prose text={tr(sector.body, locale)} />}</div>
+          <div className="mt-8">{sector.body && <RichContent value={tr(sector.body, locale)} />}</div>
           {sector.challenges && (
             <>
               <h2 className="text-primary mt-12 text-2xl font-bold">{dict.sectors.challenges}</h2>

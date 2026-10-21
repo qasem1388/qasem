@@ -459,7 +459,7 @@ function CopyFields({
   );
 }
 
-function LocalizedList({
+export function LocalizedList({
   items,
   onChange,
   errors,

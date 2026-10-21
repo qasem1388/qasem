@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Gallery } from "@/components/shared/gallery";
 import { PageHeader } from "@/components/shared/page-header";
-import { Prose } from "@/components/shared/prose";
+import { RichContent } from "@/components/shared/rich-content";
 import { WhatsAppIcon } from "@/components/ui/brand-icons";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -87,7 +87,7 @@ export default async function ServicePage({ params }: PageProps<"/[locale]/servi
             className="rounded-brand-lg aspect-[16/9] h-auto w-full object-cover shadow-lg"
           />
           <div className="mt-10">
-            <Prose text={tr(service.body, locale)} />
+            <RichContent value={tr(service.body, locale)} />
           </div>
 
           <h2 className="text-primary mt-14 text-2xl font-bold">{dict.services.features}</h2>

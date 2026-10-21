@@ -6,7 +6,7 @@ import { ProjectsGrid } from "@/components/cards/projects-grid";
 import { CtaBand } from "@/components/shared/cta-band";
 import { Gallery } from "@/components/shared/gallery";
 import { PageHeader } from "@/components/shared/page-header";
-import { Prose } from "@/components/shared/prose";
+import { RichContent } from "@/components/shared/rich-content";
 import { getProject, getProjects, getSectors } from "@/lib/content";
 import { pageContext, trail } from "@/lib/page";
 import { pageMetadata } from "@/lib/seo";
@@ -80,7 +80,7 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/proje
             className="rounded-brand-lg aspect-[3/2] h-auto w-full object-cover shadow-lg"
           />
           <div className="mt-10">
-            <Prose text={tr(project.body, locale)} />
+            <RichContent value={tr(project.body, locale)} />
           </div>
           <h2 className="text-primary mt-12 text-2xl font-bold">{dict.projects.scope}</h2>
           <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

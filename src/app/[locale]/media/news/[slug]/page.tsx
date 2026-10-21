@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MediaList } from "@/components/media/media-list";
 import { PageHeader } from "@/components/shared/page-header";
-import { Prose } from "@/components/shared/prose";
+import { RichContent } from "@/components/shared/rich-content";
 import { SocialIcon, WhatsAppIcon } from "@/components/ui/brand-icons";
 import { getNews, getNewsPost, getSiteSettings } from "@/lib/content";
 import { pageContext, requireSection, trail } from "@/lib/page";
@@ -147,7 +147,7 @@ export default async function NewsPostPage({ params }: PageProps<"/[locale]/medi
 
         <p className="text-primary mt-10 text-lg leading-9 font-medium">{tr(post.excerpt, locale)}</p>
         <div className="mt-6">
-          <Prose text={tr(post.body, locale)} />
+          <RichContent value={tr(post.body, locale)} />
         </div>
 
         <div className="border-primary/8 mt-12 flex flex-wrap items-center gap-3 border-t pt-6">
