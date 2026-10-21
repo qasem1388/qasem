@@ -308,4 +308,48 @@ export const news: NewsPost[] = [
     image: "/demo/news-3.svg",
     publishedAt: "2026-07-10",
   },
+  {
+    slug: "supply-chain-trends",
+    kind: "article",
+    title: { ar: "اتجاهات سلاسل الإمداد في السنوات القادمة", en: "Supply Chain Trends for the Coming Years" },
+    excerpt: {
+      ar: "قراءة في أبرز التحولات التي تعيد تشكيل سلاسل الإمداد وكيف تستعد لها المنشآت.",
+      en: "A look at the shifts reshaping supply chains and how organisations can prepare.",
+    },
+    image: "/demo/gallery-2.svg",
+    publishedAt: "2026-06-18",
+  },
+  {
+    slug: "working-hours-announcement",
+    kind: "announcement",
+    title: { ar: "إعلان بشأن ساعات العمل الرسمية", en: "Announcement: Official Working Hours" },
+    excerpt: {
+      ar: "تعديل ساعات العمل الرسمية للمقر الرئيسي والفروع اعتبارًا من الشهر القادم.",
+      en: "Updated official working hours for the head office and branches from next month.",
+    },
+    image: "/demo/gallery-6.svg",
+    publishedAt: "2026-09-30",
+  },
+  {
+    slug: "partners-forum",
+    kind: "event",
+    title: { ar: "ملتقى الشركاء السنوي", en: "Annual Partners Forum" },
+    excerpt: {
+      ar: "لقاء سنوي يجمع الشركاء والموردين لمناقشة فرص التعاون وتكريم المتميزين.",
+      en: "An annual gathering of partners and suppliers to discuss collaboration and recognise excellence.",
+    },
+    image: "/demo/gallery-5.svg",
+    publishedAt: "2026-10-05",
+  },
+  {
+    slug: "safety-week",
+    kind: "news",
+    title: { ar: "اختتام أسبوع الصحة والسلامة المهنية", en: "Occupational Health & Safety Week Concludes" },
+    excerpt: {
+      ar: "ورش عمل وتدريبات عملية بمشاركة جميع فرق المواقع لتعزيز ثقافة السلامة.",
+      en: "Workshops and hands-on drills with all site teams to strengthen safety culture.",
+    },
+    image: "/demo/gallery-9.svg",
+    publishedAt: "2026-05-22",
+  },
 ];

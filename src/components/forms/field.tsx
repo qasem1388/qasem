@@ -125,3 +125,26 @@ export function Honeypot() {
     </div>
   );
 }
+
+export function FileField({ accept, hint, ...props }: Common & { accept: string; hint: string }) {
+  return (
+    <Wrapper {...props}>
+      <input
+        id={`f-${props.name}`}
+        name={props.name}
+        type="file"
+        accept={accept}
+        required={props.required}
+        aria-invalid={props.error ? true : undefined}
+        aria-describedby={`f-${props.name}-hint${props.error ? ` f-${props.name}-error` : ""}`}
+        className={cn(
+          control,
+          "file:bg-primary hover:file:bg-primary-900 h-auto py-2.5 file:me-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white",
+        )}
+      />
+      <p id={`f-${props.name}-hint`} className="text-muted mt-1.5 text-xs">
+        {hint}
+      </p>
+    </Wrapper>
+  );
+}

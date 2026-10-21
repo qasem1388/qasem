@@ -102,10 +102,19 @@ export function SiteFooter({ settings, locale, dict }: { settings: SiteSettings;
       </div>
 
       <div className="relative border-t border-white/10">
-        <div className="container-page flex flex-col gap-3 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="container-page flex flex-col gap-3 py-6 text-xs lg:flex-row lg:items-center lg:justify-between">
           <p>
             © {year} {tr(footer.copyright, locale)}
           </p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            {(["privacy", "terms", "cookies"] as const).map((k) => (
+              <li key={k}>
+                <Link href={localizeHref(`/${k}`, locale)} className="hover:text-secondary">
+                  {dict.sitemapLinks[k]}
+                </Link>
+              </li>
+            ))}
+          </ul>
           <p className="flex flex-wrap gap-x-4 gap-y-1">
             <span>
               {dict.footer.cr}: <span dir="ltr">{legal.crNumber}</span>

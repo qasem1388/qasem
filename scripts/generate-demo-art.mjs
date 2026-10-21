@@ -337,6 +337,16 @@ const files = {
   "service-logistics.svg": warehouseScene({ w: 640, h: 420, palette: "dusk", seed: 44 }),
   "service-consulting.svg": abstractFacade({ w: 640, h: 420, seed: 45 }),
   "service-tech.svg": cityScene({ w: 640, h: 420, palette: "night", seed: 46, night: true, sunR: 0.1, sunY: 0.2 }),
+  "gallery-1.svg": cityScene({ w: 800, h: 600, palette: "day", seed: 51, sunX: 0.2, sunY: 0.25, sunR: 0.2 }),
+  "gallery-2.svg": warehouseScene({ w: 800, h: 600, palette: "dusk", seed: 52 }),
+  "gallery-3.svg": warehouseScene({ w: 800, h: 600, palette: "golden", seed: 53 }),
+  "gallery-4.svg": industrialScene({ w: 800, h: 600, palette: "golden", seed: 54 }),
+  "gallery-5.svg": hotelScene({ w: 800, h: 600, palette: "night", seed: 55 }),
+  "gallery-6.svg": abstractFacade({ w: 800, h: 600, seed: 56, tint: "#e3c77c" }),
+  "gallery-7.svg": campusScene({ w: 800, h: 600, palette: "dusk", seed: 57, cross: true }),
+  "gallery-8.svg": cityScene({ w: 800, h: 600, palette: "night", seed: 58, night: true, sunX: 0.8, sunY: 0.15, sunR: 0.1 }),
+  "gallery-9.svg": industrialScene({ w: 800, h: 600, palette: "day", seed: 59 }),
+  "page-header.svg": cityScene({ w: 1600, h: 500, palette: "night", seed: 61, night: true, sunX: 0.85, sunY: 0.2, sunR: 0.08 }),
 };
 for (let i = 0; i < 8; i++) files[`client-${i + 1}.svg`] = clientLogo(i);
 

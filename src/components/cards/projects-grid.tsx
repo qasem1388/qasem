@@ -12,6 +12,7 @@ export type ProjectCard = {
   title: string;
   summary: string;
   sector: string;
+  sectorId: string;
   status: "completed" | "ongoing";
   statusLabel: string;
   location: string;
@@ -25,32 +26,71 @@ export function ProjectsGrid({
   projects,
   labels,
   filterLabel,
+  sectors,
+  sectorLabels,
+  emptyLabel,
+  showFilters = true,
 }: {
   projects: ProjectCard[];
   labels: Record<Filter, string>;
   filterLabel: string;
+  /** When provided, a sector filter is shown next to the status filter. */
+  sectors?: { id: string; label: string }[];
+  sectorLabels?: { label: string; all: string };
+  emptyLabel?: string;
+  showFilters?: boolean;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
-  const visible = projects.filter((p) => filter === "all" || p.status === filter);
+  const [sector, setSector] = useState("all");
+  const visible = projects.filter(
+    (p) => (filter === "all" || p.status === filter) && (sector === "all" || p.sectorId === sector),
+  );
 
   return (
     <>
-      <div role="group" aria-label={filterLabel} className="mt-10 flex flex-wrap justify-center gap-2">
-        {(Object.keys(labels) as Filter[]).map((key) => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={filter === key}
-            onClick={() => setFilter(key)}
-            className={cn(
-              "h-10 rounded-full px-5 text-sm font-medium transition-colors",
-              filter === key ? "bg-primary text-white" : "bg-primary-50 text-primary hover:bg-primary-100",
-            )}
+      {showFilters && (
+        <div role="group" aria-label={filterLabel} className="mt-10 flex flex-wrap justify-center gap-2">
+          {(Object.keys(labels) as Filter[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={filter === key}
+              onClick={() => setFilter(key)}
+              className={cn(
+                "h-10 rounded-full px-5 text-sm font-medium transition-colors",
+                filter === key ? "bg-primary text-white" : "bg-primary-50 text-primary hover:bg-primary-100",
+              )}
+            >
+              {labels[key]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {showFilters && sectors && sectorLabels && (
+        <div className="mx-auto mt-4 flex max-w-xs items-center gap-3">
+          <label htmlFor="sector-filter" className="text-primary shrink-0 text-sm font-medium">
+            {sectorLabels.label}
+          </label>
+          <select
+            id="sector-filter"
+            value={sector}
+            onChange={(e) => setSector(e.target.value)}
+            className="border-primary/15 text-primary focus:border-primary focus:ring-secondary/40 h-10 w-full rounded-full border bg-white px-4 text-sm focus:ring-2 focus:outline-none"
           >
-            {labels[key]}
-          </button>
-        ))}
-      </div>
+            <option value="all">{sectorLabels.all}</option>
+            {sectors.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {visible.length === 0 && emptyLabel && (
+        <p className="rounded-brand-lg text-muted mt-10 bg-white p-10 text-center">{emptyLabel}</p>
+      )}
 
       <ul className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite">
         {visible.map((p) => (

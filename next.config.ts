@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
     // Add your CDN / storage host here (e.g. S3 bucket or Cloudflare R2 domain).
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
   },
+  experimental: {
+    // Room for the largest upload (8 MB attachment) plus multipart overhead.
+    serverActions: { bodySizeLimit: "9mb" },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -151,3 +151,90 @@ export type NewsPost = {
   image: string;
   publishedAt: string;
 };
+
+/* ---------- Phase 2: inner pages ---------- */
+
+/** Long-form text. Paragraphs are separated by blank lines; lines starting with "- " become list items. */
+export type RichText = Localized;
+
+export type ServiceDetail = {
+  body: RichText;
+  features: { title: Localized; body: Localized }[];
+  gallery: string[];
+};
+
+export type ProjectDetail = {
+  client: Localized;
+  body: RichText;
+  scope: Localized[];
+  gallery: string[];
+};
+
+export type SectorDetail = { body: RichText; challenges: Localized[] };
+
+export type NewsBody = { body: RichText; eventDate?: string; eventLocation?: Localized };
+
+export type TeamMember = { id: string; name: Localized; role: Localized; bio: Localized };
+
+export type Certification = { id: string; title: Localized; issuer: Localized; year: number; icon: IconName };
+
+export type Milestone = { year: number; title: Localized; body: Localized };
+
+export type OrgUnit = { id: string; title: Localized; children?: OrgUnit[] };
+
+export type AboutPage = {
+  intro: RichText;
+  image: string;
+  values: { icon: IconName; title: Localized; body: Localized }[];
+  goals: Localized[];
+  history: Milestone[];
+  leaderMessage: { name: Localized; role: Localized; body: RichText };
+  team: TeamMember[];
+  orgChart: OrgUnit;
+  certifications: Certification[];
+};
+
+export type Branch = {
+  id: string;
+  name: Localized;
+  address: Localized;
+  phone: string;
+  phoneDisplay: string;
+  email: string;
+  hours: Localized;
+  lat: number;
+  lng: number;
+  isMain?: boolean;
+};
+
+export type Job = {
+  slug: string;
+  title: Localized;
+  department: Localized;
+  location: Localized;
+  type: "full-time" | "part-time" | "contract" | "internship";
+  experience: Localized;
+  postedAt: string;
+  summary: Localized;
+  responsibilities: Localized[];
+  requirements: Localized[];
+  open: boolean;
+};
+
+export type GalleryPhoto = { id: string; src: string; caption: Localized; album: Localized };
+
+export type Video = { id: string; title: Localized; poster: string; youtubeId?: string; duration: string };
+
+export type SuccessStory = {
+  id: string;
+  title: Localized;
+  sectorId: string;
+  challenge: Localized;
+  solution: Localized;
+  result: Localized;
+  metric: { value: string; label: Localized };
+};
+
+export type Faq = { id: string; category: Localized; question: Localized; answer: Localized };
+
+export type LegalPage = { slug: "privacy" | "terms" | "cookies"; title: Localized; updatedAt: string; body: RichText };

@@ -24,7 +24,7 @@ export default function NotFound() {
           <Link href={`/${locale}`} className={buttonClasses("secondary")}>
             {dict.notFound.home}
           </Link>
-          <Link href={`/${locale}#contact`} className={buttonClasses("outline")}>
+          <Link href={`/${locale}/contact`} className={buttonClasses("outline")}>
             <Compass className="size-4" aria-hidden />
             {dict.contact.call}
           </Link>

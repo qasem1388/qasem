@@ -28,9 +28,9 @@ export const homePage: HomePage = {
     },
     image: "/demo/hero.svg",
     ctas: [
-      { label: { ar: "اكتشف خدماتنا", en: "Explore Our Services" }, href: "#services", variant: "primary" },
-      { label: { ar: "اطلب عرض سعر", en: "Request a Quote" }, href: "#quote", variant: "secondary" },
-      { label: { ar: "تواصل معنا", en: "Contact Us" }, href: "#contact", variant: "ghost" },
+      { label: { ar: "اكتشف خدماتنا", en: "Explore Our Services" }, href: "/services", variant: "primary" },
+      { label: { ar: "اطلب عرض سعر", en: "Request a Quote" }, href: "/quote", variant: "secondary" },
+      { label: { ar: "تواصل معنا", en: "Contact Us" }, href: "/contact", variant: "ghost" },
     ],
     highlights: [
       { ar: "فريق معتمد ومتخصص", en: "Certified specialist team" },
