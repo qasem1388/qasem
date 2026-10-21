@@ -12,7 +12,7 @@ User=riyada
 Group=riyada
 WorkingDirectory=/var/www/riyada
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/env npx next start -H 127.0.0.1 -p 3000
+ExecStart=/var/www/riyada/node_modules/.bin/next start -H 127.0.0.1 -p 3000
 Restart=always
 RestartSec=5
 # Hardening
