@@ -1,5 +1,5 @@
 // يحفظ واجهة التطبيق لتفتح بسرعة وحتى بدون إنترنت. بيانات الملفات تُطلب دائماً من الخادم.
-const CACHE = 'archive-shell-v4';
+const CACHE = 'archive-shell-v5';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/vendor/purify.min.js', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {

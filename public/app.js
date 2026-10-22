@@ -461,7 +461,7 @@ function openItem(f) {
 function fileCard(f) {
   const t = typeInfo(f.type);
   const selected = state.selected.has(f.id);
-  const showPath = !isBrowsing() && f.folderPath.length;
+  const showPath = !isBrowsing() && f.folderPath.length > 0;
   const iconBox = h('div', { class: 'file-icon', onclick: () => openItem(f), title: t.label },
     f.thumb ? h('img', { src: f.thumb, alt: '', loading: 'lazy' }) : iconLabel(f));
   return h('article', { class: 'file' + (selected ? ' selected' : ''), '--type-color': t.color },
@@ -488,7 +488,7 @@ function fileCard(f) {
         showPath && h('span', { class: 'path' }, '📁 ' + f.folderPath.map((p) => p.name).join(' › ')),
         f.tags && f.tags.split('، ').map((tag) => h('span', { class: 'tag optional' }, '#' + tag)),
       ),
-      f.transcriptHits?.length && h('div', { class: 'hits' }, f.transcriptHits.map((s) =>
+      f.transcriptHits?.length > 0 && h('div', { class: 'hits' }, f.transcriptHits.map((s) =>
         h('button', { class: 'hit', onclick: () => openPreview(f, s.start) }, h('time', {}, fmtTime(s.start)), `🎙 «${s.text}»`))),
     ),
     h('div', { class: 'file-actions' },
